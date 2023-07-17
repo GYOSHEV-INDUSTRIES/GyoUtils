@@ -4,7 +4,7 @@
 #define max(a, b) (((a) < (b)) ? (b) : (a))
 #define abs(a) (((a) >= 0) ? (a) : (-(a)))
 #define sgn(a) (((a) == 0) ? (0) : (((a) > 0) ? 1 : -1))
-#define clamp(val, min_, max_) max(min(val, max_), min_);
+#define clamp(val, min_, max_) max(min(val, max_), min_)
 #define lerp(start, dest, t) (dest - start) * t + start
 #define trunc(x) float(int(x))
 #define fmod(x, y) ((x) - trunc((x) / (y)) * (y))
@@ -37,19 +37,20 @@ struct vec2{
     union{
         float ptr[2];
         struct {float x, y;};
-        __m128 v;
+        // __m128 v;
     };
 };
-inline vec2 operator +(vec2 a, vec2 b)  {vec2 res;  res.v = _mm_add_ps(a.v, b.v);  return res;}
-inline vec2 operator -(vec2 a, vec2 b)  {vec2 res;  res.v = _mm_sub_ps(a.v, b.v);  return res;}
-inline vec2 operator *(vec2 a, float s) {vec2 res;  res.v = _mm_mul_ps(a.v, _mm_set1_ps(s));  return res;}
-inline vec2 operator /(vec2 a, float s) {vec2 res;  res.v = _mm_div_ps(a.v, _mm_set1_ps(s));  return res;}
-inline vec2 operator -(vec2 a)  {vec2 res;  res.v = _mm_sub_ps(_mm_set1_ps(0), a.v);  return res;}
-inline vec2 operator +=(vec2& a, const vec2& b) {a.v = _mm_add_ps(a.v, b.v);  return a;}
-inline vec2 operator -=(vec2& a, const vec2& b) {a.v = _mm_sub_ps(a.v, b.v);  return a;}
-inline u8 operator ==(vec2 a, vec2 b) {return _mm_movemask_ps(_mm_cmpeq_ps(a.v, b.v)) == 0b1111;}
-inline u8 operator !=(vec2 a, vec2 b) {return _mm_movemask_ps(_mm_cmpeq_ps(a.v, b.v)) != 0b1111;}
-inline vec2 rotate(vec2 v, float angle){
+inline vec2 operator +(vec2 a, vec2 b)  {return {a.x + b.x, a.y + b.y};}
+inline vec2 operator -(vec2 a, vec2 b)  {return {a.x - b.x, a.y - b.y};}
+inline vec2 operator *(vec2 a, float s) {return {a.x * s, a.y * s};}
+inline vec2 operator /(vec2 a, float s) {return {a.x / s, a.y / s};}
+inline vec2 operator -(vec2 a)  {return {-a.x, -a.y};}
+inline vec2 operator +=(vec2& a, const vec2& b) {a = a + b;  return a;}
+inline vec2 operator -=(vec2& a, const vec2& b) {a = a - b;  return a;}
+inline u8 operator ==(vec2 a, vec2 b) {return (a.x == b.x) && (a.y == b.y);}
+inline u8 operator !=(vec2 a, vec2 b) {return !(a == b);}
+// Todo(Quattro)
+/*inline vec2 rotate(vec2 v, float angle){
     float cos_value = fast_cos(angle);
     float sin_value = fast_sin(angle);
     
@@ -72,17 +73,18 @@ inline vec2 normalize(vec2 v){
 }
 inline vec2 round(vec2 v) {vec2 res;  res.v = _mm_round_ps(v.v, _MM_FROUND_TO_NEAREST_INT);  return res;}
 inline vec2 floor(vec2 v) {vec2 res;  res.v = _mm_floor_ps(v.v);  return res;}
-inline vec2 ceil(vec2 v)  {vec2 res;  res.v = _mm_ceil_ps(v.v);  return res;}
+inline vec2 ceil(vec2 v)  {vec2 res;  res.v = _mm_ceil_ps(v.v);  return res;}*/
 inline void printsl(vec2 v) {printf("(%.3f, %.3f)", v.x, v.y);}
 
 struct vec3{
     union{
         float ptr[3];
         struct {float x, y, z;};
-        __m128 v;
+        // __m128 v;
     };
 };
-inline vec3 operator +(vec3 a, vec3 b)  {vec3 res;  res.v = _mm_add_ps(a.v, b.v);  return res;}
+// Todo(Quattro)
+/*inline vec3 operator +(vec3 a, vec3 b)  {vec3 res;  res.v = _mm_add_ps(a.v, b.v);  return res;}
 inline vec3 operator -(vec3 a, vec3 b)  {vec3 res;  res.v = _mm_sub_ps(a.v, b.v);  return res;}
 inline vec3 operator *(vec3 a, float s) {vec3 res;  res.v = _mm_mul_ps(a.v, _mm_set1_ps(s));  return res;}
 inline vec3 operator /(vec3 a, float s) {vec3 res;  res.v = _mm_div_ps(a.v, _mm_set1_ps(s));  return res;}
@@ -91,7 +93,6 @@ inline vec3 operator +=(vec3& a, const vec3& b) {a.v = _mm_add_ps(a.v, b.v);  re
 inline vec3 operator -=(vec3& a, const vec3& b) {a.v = _mm_sub_ps(a.v, b.v);  return a;}
 inline u8 operator ==(vec3 a, vec3 b)  {return _mm_movemask_ps(_mm_cmpeq_ps(a.v, b.v)) == 0b1111;}
 inline u8 operator !=(vec3 a, vec3 b)  {return _mm_movemask_ps(_mm_cmpeq_ps(a.v, b.v)) != 0b1111;}
-inline void printsl(vec3 v) {printf("(%.3f, %.3f, %.3f)", v.x, v.y, v.z);}
 inline float length(vec3 v){
     vec3 res;
     res.v = _mm_dp_ps(v.v, v.v, 0b01110001);
@@ -106,7 +107,8 @@ inline vec3 normalize(vec3 v){
 }
 inline vec3 round(vec3 v) {vec3 res;  res.v = _mm_round_ps(v.v, _MM_FROUND_TO_NEAREST_INT);  return res;}
 inline vec3 floor(vec3 v) {vec3 res;  res.v = _mm_floor_ps(v.v);  return res;}
-inline vec3 ceil(vec3 v)  {vec3 res;  res.v = _mm_ceil_ps(v.v);  return res;}
+inline vec3 ceil(vec3 v)  {vec3 res;  res.v = _mm_ceil_ps(v.v);  return res;}*/
+inline void printsl(vec3 v) {printf("(%.3f, %.3f, %.3f)", v.x, v.y, v.z);}
 
 // Todo(Quattro) maybe it's better to make two different structures for colors and rectangle
 struct vec4{

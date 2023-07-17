@@ -60,6 +60,33 @@ TEST_CASE("Simple Math", "[single-file]"){
         REQUIRE(fast_cos(1) == 1);
     }
 }
+
+TEST_CASE("SIMD Math", "[single-file]"){
+    SECTION("SIMD sizes"){
+        REQUIRE(sizeof(vec2) == 8);
+        // REQUIRE(sizeof(vec3) == 12);
+        // REQUIRE(sizeof(vec4) == 16);
+        REQUIRE(sizeof(mat4) == 64);
+    }
+    SECTION("vec2 sum"){
+        vec2 a = {1, 3}, b = {5, 4};
+        vec2 c = {-4, 2}, d = {0, 3};
+        REQUIRE((a + b).x == 6);
+        REQUIRE((a + b).y == 7);
+        REQUIRE((c + d).x == -4);
+        REQUIRE((c + d).y == 5);
+    }
+    SECTION("vec2 sub"){
+        vec2 a = {1, 3}, b = {5, 4};
+        vec2 c = {-4, 2}, d = {0, 3};
+        REQUIRE((a - b).x == -4);
+        REQUIRE((a - b).y == -1);
+        REQUIRE((c - d).x == -4);
+        REQUIRE((c - d).y == -1);
+    }
+    // ...
+}
+
 #ifdef WE_NEED_TO_ADD_THOSE_TESTS_TO_THE_LIB
 #if 1
 #include <stdio.h>
