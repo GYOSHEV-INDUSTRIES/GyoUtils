@@ -1,9 +1,70 @@
+#include "catch_amalgamated.hpp"
+
+#include "../utils.h"
+
+
+TEST_CASE("Simple Math", "[single-file]"){
+    SECTION("min function"){
+        REQUIRE(min(2, 4) == 2);
+        REQUIRE(min(0, 3) == 0);
+        REQUIRE(min(-4, 5) == -4);
+        REQUIRE(min(-4, -2) == -4);
+        REQUIRE(min(0, 0) == 0);
+    }
+    SECTION("max function"){
+        REQUIRE(max(2, 4) == 4);
+        REQUIRE(max(0, 3) == 3);
+        REQUIRE(max(-4, 5) == 5);
+        REQUIRE(max(-4, -2) == -2);
+        REQUIRE(max(0, 0) == 0);
+    }
+    SECTION("abs function"){
+        REQUIRE(abs(4) == 4);
+        REQUIRE(abs(0) == 0);
+        REQUIRE(abs(-4) == 4);
+    }
+    SECTION("sgn function"){
+        REQUIRE(sgn(4) == 1);
+        REQUIRE(sgn(0) == 0);
+        REQUIRE(sgn(-4) == -1);
+    }
+    SECTION("clamp function"){
+        REQUIRE(clamp(0, -2, 2) == 0);
+        REQUIRE(clamp(1, -2, 2) == 1);
+        REQUIRE(clamp(3, -2, 2) == 2);
+        REQUIRE(clamp(-4, -2, 2) == -2);
+    }
+    // lerp (?)
+    // trunc (?)
+    // fmod (?)
+    SECTION("sine function"){
+        REQUIRE(fast_sin(-1) == 0);
+        REQUIRE(fast_sin(-0.75) == 1);
+        REQUIRE(fast_sin(-0.5) == 0);
+        REQUIRE(fast_sin(-0.25) == -1);
+        REQUIRE(fast_sin(0) == 0);
+        REQUIRE(fast_sin(0.25) == 1);
+        REQUIRE(fast_sin(0.5) == 0);
+        REQUIRE(fast_sin(0.75) == -1);
+        REQUIRE(fast_sin(1) == 0);
+    }
+    SECTION("cosine function"){
+        REQUIRE(fast_cos(-1) == 1);
+        REQUIRE(fast_cos(-0.75) == 0);
+        REQUIRE(fast_cos(-0.5) == -1);
+        REQUIRE(fast_cos(-0.25) == 0);
+        REQUIRE(fast_cos(0) == 1);
+        REQUIRE(fast_cos(0.25) == 0);
+        REQUIRE(fast_cos(0.5) == -1);
+        REQUIRE(fast_cos(0.75) == 0);
+        REQUIRE(fast_cos(1) == 1);
+    }
+}
+#ifdef WE_NEED_TO_ADD_THOSE_TESTS_TO_THE_LIB
 #if 1
 #include <stdio.h>
 
 #include "utils.h"
-
-// Todo(Quattro) use single-header called catch
 
 void test_simple_operations(){
     printf("testing min function\n");
@@ -119,4 +180,5 @@ int main(){
     printf("transpose sum: %lldns\n", duration.count());
     return 0;
 }
+#endif
 #endif
