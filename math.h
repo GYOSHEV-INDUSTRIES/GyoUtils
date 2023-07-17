@@ -4,7 +4,7 @@
 #define max(a, b) (((a) < (b)) ? (b) : (a))
 #define abs(a) (((a) >= 0) ? (a) : (-(a)))
 #define sgn(a) (((a) == 0) ? (0) : (((a) > 0) ? 1 : -1))
-#define clamp(val, min_, max_) max(min(val, max_), min_);
+#define clamp(val, min_, max_) max(min(val, max_), min_)
 #define lerp(start, dest, t) (dest - start) * t + start
 #define trunc(x) float(int(x))
 #define fmod(x, y) ((x) - trunc((x) / (y)) * (y))
