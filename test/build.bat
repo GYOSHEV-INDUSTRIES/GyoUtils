@@ -1,6 +1,6 @@
 @echo off
 
-cl /EHsc test.cpp /link /LIBPATH:. catch_amalgamated.lib
+cl /EHsc test.cpp
 
 del -f test.obj
 
