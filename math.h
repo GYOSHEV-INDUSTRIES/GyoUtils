@@ -18,7 +18,7 @@ inline float floor(float x){
     if(x >= 0){
         return (s32)x;
     }else{
-        return (s32)(x - 0.9999999999999999);
+        return (s32)(x - 0.9999999999f);
     }
 }
 inline float ceil(float x){
@@ -95,7 +95,7 @@ inline vec2 rotate(vec2 v, float angle){
     
     vec2 res;
     res.v = _mm_mul_ps(_mm_setr_ps(v.x, -v.y, v.x, v.y), _mm_setr_ps(cos_value, sin_value, sin_value, cos_value));
-    res.v = _mm_hadd_ps(res.v, _mm_set_ps1(0));
+    res.v = _mm_hadd_ps(res.v, _mm_set1_ps(0));
     return res;
 }
 inline float length(vec2 v){
@@ -107,7 +107,7 @@ inline float length(vec2 v){
 inline vec2 normalize(vec2 v){
     vec2 res;
     float len = length(v);
-    res.v = _mm_div_ps(v.v, _mm_set_ps1(len));
+    res.v = _mm_div_ps(v.v, _mm_set1_ps(len));
     return res;
 }
 inline vec2 round(vec2 v) {vec2 res;  res.v = _mm_round_ps(v.v, _MM_FROUND_TO_NEAREST_INT);  return res;}
@@ -120,28 +120,33 @@ struct vec3{
     union{
         float ptr[3];
         struct {float x, y, z;};
+        __m128 v;
     };
 };
-// Todo(Quattro)
-inline vec3 operator +(vec3 a, vec3 b)  {return {a.x + b.x, a.y + b.y, a.z + b.z};}
-inline vec3 operator -(vec3 a, vec3 b)  {return {a.x - b.x, a.y - b.y, a.z - b.z};}
-inline vec3 operator *(vec3 a, float s) {return {a.x * s, a.y * s, a.z * s};}
-inline vec3 operator /(vec3 a, float s) {return {a.x / s, a.y / s, a.z / s};}
-inline vec3 operator -(vec3 a)  {return {-a.x, -a.y, -a.z};}
+inline vec3 operator +(vec3 a, vec3 b)  {vec3 res; res.v = _mm_add_ps(a.v, b.v); return res;}
+inline vec3 operator -(vec3 a, vec3 b)  {vec3 res; res.v = _mm_sub_ps(a.v, b.v); return res;}
+inline vec3 operator *(vec3 a, float s) {vec3 res; res.v = _mm_mul_ps(a.v, _mm_set1_ps(s)); return res;}
+inline vec3 operator /(vec3 a, float s) {vec3 res; res.v = _mm_div_ps(a.v, _mm_set1_ps(s)); return res;}
+inline vec3 operator -(vec3 a)  {vec3 res;  res.v = _mm_sub_ps(_mm_setzero_ps(), a.v);  return res;}
 inline vec3 operator +=(vec3& a, const vec3& b) {a = a + b;  return a;}
 inline vec3 operator -=(vec3& a, const vec3& b) {a = a - b;  return a;}
-inline u8 operator ==(vec3 a, vec3 b)  {return (a.x == b.x) && (a.y == b.y) && (a.z == b.z);}
-inline u8 operator !=(vec3 a, vec3 b)  {return !(a == b);}
+inline u8 operator ==(vec3 a, vec3 b) {return _mm_movemask_ps(_mm_cmpeq_ps(a.v, b.v)) == 0b1111;}
+inline u8 operator !=(vec3 a, vec3 b) {return _mm_movemask_ps(_mm_cmpeq_ps(a.v, b.v)) != 0b1111;}
 inline float length(vec3 v){
-    return sqrt(v.x * v.x + v.y * v.y + v.z * v.z);
+    vec3 res;
+    res.v = _mm_dp_ps(v.v, v.v, 0b01110001);
+    res.v = _mm_sqrt_ss(res.v);
+    return _mm_cvtss_f32(res.v);
 }
 inline vec3 normalize(vec3 v){
+    vec3 res;
     float len = length(v);
-    return {v.x / len, v.y / len, v.z / len};
+    res.v = _mm_div_ps(v.v, _mm_set1_ps(len));
+    return res;
 }
-// inline vec3 round(vec3 v)  {return {math_round(v.x), math_round(v.y), math_round(v.z)};}
-// inline vec3 floor(vec3 v)  {return {math_floor(v.x), math_floor(v.y), math_floor(v.z)};}
-// inline vec3 ceil (vec3 v)  {return {math_ceil(v.x), math_ceil(v.y), math_ceil(v.z)};}
+inline vec3 round(vec3 v) {vec3 res;  res.v = _mm_round_ps(v.v, _MM_FROUND_TO_NEAREST_INT);  return res;}
+inline vec3 floor(vec3 v) {vec3 res;  res.v = _mm_floor_ps(v.v);  return res;}
+inline vec3 ceil(vec3 v)  {vec3 res;  res.v = _mm_ceil_ps(v.v);  return res;}
 // inline vec3 trunc(vec3 v)  {return {math_trunc(v.x), math_trunc(v.y), math_trunc(v.z)};}
 inline void printsl(vec3 v) {printf("(%.3f, %.3f, %.3f)", v.x, v.y, v.z);}
 
@@ -149,21 +154,33 @@ struct vec4{
     union{
         float ptr[4];
         struct {float x, y, z, w;};
+        __m128 v;
     };
 };
-inline vec4 operator +(vec4 a, vec4 b)  {return {a.x + b.x, a.y + b.y, a.z + b.z, a.w + b.w};}
-inline vec4 operator -(vec4 a, vec4 b)  {return {a.x - b.x, a.y - b.y, a.z - b.z, a.w - b.w};}
-inline vec4 operator *(vec4 a, float s) {return {a.x * s, a.y * s, a.z * s, a.w * s};}
-inline vec4 operator /(vec4 a, float s) {return {a.x / s, a.y / s, a.z / s, a.w / s};}
-inline vec4 operator -(vec4 a)  {return {-a.x, -a.y, -a.z, -a.w};}
+inline vec4 operator +(vec4 a, vec4 b)  {vec4 res; res.v = _mm_add_ps(a.v, b.v); return res;}
+inline vec4 operator -(vec4 a, vec4 b)  {vec4 res; res.v = _mm_sub_ps(a.v, b.v); return res;}
+inline vec4 operator *(vec4 a, float s) {vec4 res; res.v = _mm_mul_ps(a.v, _mm_set1_ps(s)); return res;}
+inline vec4 operator /(vec4 a, float s) {vec4 res; res.v = _mm_div_ps(a.v, _mm_set1_ps(s)); return res;}
+inline vec4 operator -(vec4 a)  {vec4 res;  res.v = _mm_sub_ps(_mm_setzero_ps(), a.v);  return res;}
 inline vec4 operator +=(vec4& a, const vec4& b) {a = a + b;  return a;}
 inline vec4 operator -=(vec4& a, const vec4& b) {a = a - b;  return a;}
-inline u8 operator ==(vec4 a, vec4 b)  {return (a.x == b.x) && (a.y == b.y) && (a.z == b.z) && (a.w == b.w);}
-inline u8 operator !=(vec4 a, vec4 b)  {return !(a == b);}
-// Todo(Quattro) add these functions after implemented custom round, floor and ceil (or maybe implement, benchmark and check)
-// inline vec4 round(vec4 v)  {...}
-// inline vec4 floor(vec4 v)  {...}
-// inline vec4 ceil (vec4 v)  {...}
+inline u8 operator ==(vec4 a, vec4 b) {return _mm_movemask_ps(_mm_cmpeq_ps(a.v, b.v)) == 0b1111;}
+inline u8 operator !=(vec4 a, vec4 b) {return _mm_movemask_ps(_mm_cmpeq_ps(a.v, b.v)) != 0b1111;}
+inline float length(vec4 v){
+    vec4 res;
+    res.v = _mm_dp_ps(v.v, v.v, 0b11110001);
+    res.v = _mm_sqrt_ss(res.v);
+    return _mm_cvtss_f32(res.v);
+}
+inline vec4 normalize(vec4 v){
+    vec4 res;
+    float len = length(v);
+    res.v = _mm_div_ps(v.v, _mm_set1_ps(len));
+    return res;
+}
+inline vec4 round(vec4 v) {vec4 res;  res.v = _mm_round_ps(v.v, _MM_FROUND_TO_NEAREST_INT);  return res;}
+inline vec4 floor(vec4 v) {vec4 res;  res.v = _mm_floor_ps(v.v);  return res;}
+inline vec4 ceil(vec4 v)  {vec4 res;  res.v = _mm_ceil_ps(v.v);  return res;}
 // inline vec4 trunc(vec4 v)  {...}
 inline void printsl(vec4 v) {printf("(%.3f, %.3f, %.3f, %.3f)", v.x, v.y, v.z, v.w);}
 
@@ -171,9 +188,10 @@ struct col{
     union{
         float ptr[4];
         struct {float r, g, b, a;};
+        __m128 v;
     };
 };
-inline col normalize(col c) {return {c.r / 255.0f, c.g / 255.0f, c.b / 255.0f, c.a /255.0f};}
+inline col normalize(col c) {col res; res.v = _mm_div_ps(c.v, _mm_set1_ps(255)); return res;}
 
 struct mat4{
     union{
