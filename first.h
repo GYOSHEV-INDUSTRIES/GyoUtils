@@ -1,13 +1,6 @@
 #pragma once
+#include <stdio.h>
 #include <stdint.h>
-
-//TODO(cogno): have a define to deactivate asserts (slow path vs fast path)
-//TODO(cogno): put __debugbreak(); so using a debugger stops the program on the macro
-#define ASSERT(expr, message, ...)                                                             \
-if (!(expr)) {                                                                                 \
-    printf("Assertion failed file %s, line %d: " message, __FILE__, __LINE__, ##__VA_ARGS__);  \
-    abort();                                                                                   \
-}
 
 typedef int8_t   s8;
 typedef uint8_t  u8;
@@ -19,23 +12,24 @@ typedef int64_t  s64;
 typedef uint64_t u64;
 
 //variant of the print below without the ending newline (\n)
-template<typename T> void printsl(T v)  { printf("(unknown type)"); }
-template<typename T> void printsl(T* v) { printf("0x%p", v); } // NOTE(cogno): leave this before const char* s so strings are printed as such (and not as pointers)
+char _print_buff[0xFFFF] = "";
+template<typename T> void printsl(T v)  { sprintf_s(_print_buff, "(unknown type)"); fputs(_print_buff, stdout); }
+template<typename T> void printsl(T* v) { sprintf_s(_print_buff, "0x%p", v); fputs(_print_buff, stdout); } // NOTE(cogno): leave this before const char* s so strings are printed as such (and not as pointers)
 
 //print standard specializations
-inline void printsl(const char* s) { printf("%s", s); }
+inline void printsl(const char* s) { sprintf_s(_print_buff, "%s", s);  fputs(_print_buff, stdout); }
 inline void printsl(char c)        { putchar(c); }
-inline void printsl(s8  d)         { printf("%d", d); }
-inline void printsl(s16 d)         { printf("%d", d); }
-inline void printsl(s32 d)         { printf("%d", d); }
-inline void printsl(s64 d)         { printf("%lld", d); }
-inline void printsl(u8  d)         { printf("%d", d); }
-inline void printsl(u16 d)         { printf("%d", d); }
-inline void printsl(u32 d)         { printf("%d", d); }
-inline void printsl(u64 d)         { printf("%lld", d); }
-inline void printsl(float f)       { printf("%f", f); }
-inline void printsl(double f)      { printf("%f", f); }
-inline void printsl(bool b)        { printf("%s", b ? "true" : "false" ); }
+inline void printsl(s8  d)         { sprintf_s(_print_buff, "%d", d);  fputs(_print_buff, stdout); }
+inline void printsl(s16 d)         { sprintf_s(_print_buff, "%d", d);  fputs(_print_buff, stdout); }
+inline void printsl(s32 d)         { sprintf_s(_print_buff, "%d", d);  fputs(_print_buff, stdout); }
+inline void printsl(s64 d)         { sprintf_s(_print_buff, "%lld", d);  fputs(_print_buff, stdout); }
+inline void printsl(u8  d)         { sprintf_s(_print_buff, "%d", d);  fputs(_print_buff, stdout); }
+inline void printsl(u16 d)         { sprintf_s(_print_buff, "%d", d);  fputs(_print_buff, stdout); }
+inline void printsl(u32 d)         { sprintf_s(_print_buff, "%d", d);  fputs(_print_buff, stdout); }
+inline void printsl(u64 d)         { sprintf_s(_print_buff, "%lld", d);  fputs(_print_buff, stdout); }
+inline void printsl(float f)       { sprintf_s(_print_buff, "%f", f);  fputs(_print_buff, stdout); }
+inline void printsl(double f)      { sprintf_s(_print_buff, "%f", f);  fputs(_print_buff, stdout); }
+inline void printsl(bool b)        { sprintf_s(_print_buff, "%s", b ? "true" : "false"); fputs(_print_buff, stdout); }
 
 //equal to printsl but with automatic \n after the string
 template<typename T> inline void print(T v) { printsl(v); putchar('\n'); }
@@ -85,3 +79,14 @@ void print(const char* s, T t1, Types... others) {
     printsl(t1);
     print(s + current_index, others...);
 }
+
+#ifdef NO_ASSERT
+#define ASSERT(expr, message, ...)
+#else
+#define ASSERT(expr, message, ...)                                                             \
+if (!(expr)) {                                                                                 \
+    printf("Assertion failed file %s, line %d: " message, __FILE__, __LINE__, ##__VA_ARGS__);  \
+    __debugbreak();                                                                            \
+    exit(1);                                                                                   \
+}
+#endif

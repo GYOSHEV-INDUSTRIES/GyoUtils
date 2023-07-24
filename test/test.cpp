@@ -3,7 +3,7 @@
 
 #include "../utils.h"
 
-// #define PRINT_TESTS
+#define PRINT_TESTS
 
 #include "src/lib.cpp"
 
@@ -13,6 +13,8 @@
 #include "src/math/vec4.cpp"
 #include "src/math/mat4.cpp"
 
+#include "src/prints.cpp"
+
 int main(){
     test_simple_math();
     test_vec2_math();
@@ -20,6 +22,8 @@ int main(){
     test_vec4_math();
     
     test_mat4_math();
+    
+    // test_print();
     
     printf("\nAll %d tests passed succesfully\n", _cnt);
     return 0;
