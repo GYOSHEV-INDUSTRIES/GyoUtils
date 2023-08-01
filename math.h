@@ -114,6 +114,8 @@ inline vec2 round(vec2 v) {vec2 res;  res.v = _mm_round_ps(v.v, _MM_FROUND_TO_NE
 inline vec2 floor(vec2 v) {vec2 res;  res.v = _mm_floor_ps(v.v);  return res;}
 inline vec2 ceil(vec2 v)  {vec2 res;  res.v = _mm_ceil_ps(v.v);  return res;}
 // inline vec2 trunc(vec2 v)  {return {math_trunc(v.x), math_trunc(v.y)};}
+
+//PERF(cogno): we can make this fast like other prints (look at first.h)
 inline void printsl(vec2 v) {printf("(%.3f, %.3f)", v.x, v.y);}
 
 struct vec3{
@@ -148,6 +150,8 @@ inline vec3 round(vec3 v) {vec3 res;  res.v = _mm_round_ps(v.v, _MM_FROUND_TO_NE
 inline vec3 floor(vec3 v) {vec3 res;  res.v = _mm_floor_ps(v.v);  return res;}
 inline vec3 ceil(vec3 v)  {vec3 res;  res.v = _mm_ceil_ps(v.v);  return res;}
 // inline vec3 trunc(vec3 v)  {return {math_trunc(v.x), math_trunc(v.y), math_trunc(v.z)};}
+
+//PERF(cogno): we can make this fast like other prints (look at first.h)
 inline void printsl(vec3 v) {printf("(%.3f, %.3f, %.3f)", v.x, v.y, v.z);}
 
 struct vec4{
@@ -182,6 +186,8 @@ inline vec4 round(vec4 v) {vec4 res;  res.v = _mm_round_ps(v.v, _MM_FROUND_TO_NE
 inline vec4 floor(vec4 v) {vec4 res;  res.v = _mm_floor_ps(v.v);  return res;}
 inline vec4 ceil(vec4 v)  {vec4 res;  res.v = _mm_ceil_ps(v.v);  return res;}
 // inline vec4 trunc(vec4 v)  {...}
+
+//PERF(cogno): we can make this fast like other prints (look at first.h)
 inline void printsl(vec4 v) {printf("(%.3f, %.3f, %.3f, %.3f)", v.x, v.y, v.z, v.w);}
 
 struct col{
@@ -240,6 +246,7 @@ inline mat4 ortho(float left, float right, float bottom, float top, float z_near
     return res;
 }
 
+//PERF(cogno): we can make this fast like other prints (look at first.h)
 inline void printsl(mat4 m) {printf("|%.3f %.3f %.3f %.3f|\n|%.3f %.3f %.3f %.3f|\n|%.3f %.3f %.3f %.3f|\n|%.3f %.3f %.3f %.3f|\n", m.m11, m.m12, m.m13, m.m14, m.m21, m.m22, m.m23, m.m24, m.m31, m.m32, m.m33, m.m34, m.m41, m.m42, m.m43, m.m44);}
 inline mat4 transpose(mat4 m) {_MM_TRANSPOSE4_PS(m.r1, m.r2, m.r3, m.r4);  return m;}
 inline mat4 operator *(mat4 m1, mat4 m2){

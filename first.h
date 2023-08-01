@@ -80,13 +80,20 @@ void print(const char* s, T t1, Types... others) {
     print(s + current_index, others...);
 }
 
+//API(cogno): should these use our print? should we have 2 different asserts where you can choose?
 #ifdef NO_ASSERT
 #define ASSERT(expr, message, ...)
+#define ASSERT_BOUNDS(var, min_val, max_val)
 #else
+
 #define ASSERT(expr, message, ...)                                                             \
 if (!(expr)) {                                                                                 \
     printf("Assertion failed file %s, line %d: " message, __FILE__, __LINE__, ##__VA_ARGS__);  \
     __debugbreak();                                                                            \
     exit(1);                                                                                   \
 }
+
+//NOTE(cogno): careful, the max_val is NOT included (so you can directly pass array.size instead of array.size - 1)
+#define ASSERT_BOUNDS(var, min_val, max_val) ASSERT(((var) >= (min_val)) && ((var) < (max_val)), "OUT OF BOUNDS! expected between %d and %d but was %d", (min_val), (max_val - 1), (var))
+
 #endif
