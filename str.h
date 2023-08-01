@@ -6,6 +6,8 @@ int c_string_length(const char* s) {
     return len - 1;
 }
 
+//TODO(cogno): test all of this file
+
 //TODO: unicode (?) (currently str kind of does not support it, I mean utf8 is just an array of bytes but these functions don't take it into account so they might be wrong)
 //TODO: str builder
 //TODO: str concat

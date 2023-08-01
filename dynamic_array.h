@@ -4,6 +4,7 @@ struct Array {
     u32 reserved_size;
     T* ptr;
 };
+//API(cogno): maybe add operator overload [] with bounds check?
 
 template<typename T>
 Array<T> array_new(u32 size) {
