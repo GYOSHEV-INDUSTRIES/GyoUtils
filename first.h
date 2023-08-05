@@ -17,6 +17,7 @@ template<typename T> void printsl(T v)  { sprintf_s(_print_buff, "(unknown type)
 template<typename T> void printsl(T* v) { sprintf_s(_print_buff, "0x%p", v); fputs(_print_buff, stdout); } // NOTE(cogno): leave this before const char* s so strings are printed as such (and not as pointers)
 
 //print standard specializations
+//TODO(cogno): s64 use %lld, but I think s32 need %ld, same for unsigned, check these
 inline void printsl(const char* s) { sprintf_s(_print_buff, "%s", s);  fputs(_print_buff, stdout); }
 inline void printsl(char c)        { putchar(c); }
 inline void printsl(s8  d)         { sprintf_s(_print_buff, "%d", d);  fputs(_print_buff, stdout); }
