@@ -268,3 +268,44 @@ inline mat4 operator +(mat4 m1, mat4 m2){
     res.r4 = _mm_add_ps(m1.r4, m1.r4);
     return res;
 }
+
+/*
+NOTE: CastOperatorBackAndForth
+I know we wanted to make a cast from one type to another and also in the other
+direction (like casting Vec2 to Vec2i and vice versa), but we couldn't figure out
+how to do it.
+Well I've figured out how but I don't remember where we needed it, so I'm gonna
+add it here and let someone else handle it
+                          - Cogno 2023/08/05
+
+
+struct Vec2;
+struct Vec2i;
+
+struct Vec2i {
+    s32 x = 0;
+    s32 y = 0;
+    operator Vec2();
+};
+
+struct Vec2 {
+    f32 x = 0.0f;
+    f32 y = 0.0f;
+    operator Vec2i();
+};
+
+inline Vec2i::operator Vec2() {
+    Vec2 out;
+    out.x = (f32)x;
+    out.y = (f32)y;
+    return out;
+}
+
+inline Vec2::operator Vec2i() {
+    Vec2i out;
+    out.x = (s32)x;
+    out.y = (s32)y;
+    return out;
+}
+
+*/
