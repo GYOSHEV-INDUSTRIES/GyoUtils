@@ -120,3 +120,24 @@ if (!(expr)) {                     \
 #define ASSERT_BOUNDS(var, min_val, max_val) ASSERT(((var) >= (min_val)) && ((var) < (max_val)), "OUT OF BOUNDS! expected between % and % but was %", (min_val), (max_val - 1), (var))
 
 #endif
+
+
+//defer macros. calls code inside a defer(...) macro when the current scope closes (function exit, if ending, for cycle ending, ...)
+//API(cogno): I've seen a macro where you can do defer { code } instead of defer({ code }), can you figure out how?
+//TODO(cogno): test if these really work
+template <typename F>
+struct ScopeExit {
+    ScopeExit(F f) : f(f) {}
+    ~ScopeExit() { f(); }
+    F f;
+};
+
+template <typename F>
+ScopeExit<F> MakeScopeExit(F f) {
+    return ScopeExit<F>(f);
+};
+
+//API(cogno): I think scope_exit with counter can be avoided, you're never gonna have 2 defer on the same line, replace
+#define DO_STRING_JOIN2(arg1, arg2) arg1 ## arg2
+#define STRING_JOIN2(arg1, arg2) DO_STRING_JOIN2(arg1, arg2)
+#define defer(code) auto STRING_JOIN2(scope_exit_, __COUNTER__) = MakeScopeExit([=](){code;})

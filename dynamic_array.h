@@ -1,6 +1,6 @@
 template <typename T>
 struct Array {
-    u32 size;
+    u32 size; // API(cogno): maybe int is more useful? it's annoying having to convert every time
     u32 reserved_size;
     T* ptr;
 };
@@ -101,3 +101,17 @@ void array_free_all(Array<T>* array) {
     array->size = 0;
     array->reserved_size = 0;
 }
+
+
+//macros for improved for cycle. only works with Array's and compatible structs (structs with 'size' and 'ptr'). Can return values (by-copy) and pointers (by-refs)
+// usage: For(array) { code }
+// TODO(cogno): what if the array is empty? out of bounds/undefined behaviour?
+// TODO(cogno): what if you put an array inside another? "it" name conflict?
+// BUG(cogno): For(str) gives a segfault after the first cycle, (so at array read?)
+#define For(arr) for(struct {s32 index; decltype(arr.ptr[0]) value; } it = {0, arr.ptr[0]}; it.index < arr.size; it.index++, it.value = arr.ptr[it.index])
+#define For_ptr(arr) for(struct {s32 index; decltype(arr.ptr) ptr; } it = {0, &arr.ptr[0]}; it.index < arr.size; it.index++, it.ptr = &arr.ptr[it.index])
+
+// usage: for(Range(10, 30)) OR for(Range(50)) or stuff like this
+// TODO(cogno): what if you put an array inside another? "it" name conflict?
+#define FOR_RANGE(min, max) s32 it = min; it < max; it++
+#define Range(min, max) FOR_RANGE(min, max)
