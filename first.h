@@ -11,27 +11,30 @@ typedef uint32_t u32;
 typedef int64_t  s64;
 typedef uint64_t u64;
 
-//variant of the print below without the ending newline (\n)
+
+// variant of the print below without the ending newline (\n)
 char _print_buff[0xFFFF] = "";
-template<typename T> void printsl(T v)  { sprintf_s(_print_buff, "(unknown type)"); fputs(_print_buff, stdout); }
-template<typename T> void printsl(T* v) { sprintf_s(_print_buff, "0x%p", v); fputs(_print_buff, stdout); } // NOTE(cogno): leave this before const char* s so strings are printed as such (and not as pointers)
+#define fast_print(fmt, ...) sprintf_s(_print_buff, fmt, __VA_ARGS__);  fputs(_print_buff, stdout)
 
-//print standard specializations
-inline void printsl(const char* s) { sprintf_s(_print_buff, "%s", s);  fputs(_print_buff, stdout); }
+template<typename T> void printsl(T v)  { fast_print("(unknown type)"); }
+template<typename T> void printsl(T* v) { fast_print("0x%p", v); } // NOTE(cogno): leave this before const char* s so strings are printed as such (and not as pointers)
+
+// print standard specializations
+inline void printsl(const char* s) { fast_print("%s", s); }
 inline void printsl(char c)        { putchar(c); }
-inline void printsl(s8  d)         { sprintf_s(_print_buff, "%d", d);  fputs(_print_buff, stdout); }
-inline void printsl(s16 d)         { sprintf_s(_print_buff, "%d", d);  fputs(_print_buff, stdout); }
-inline void printsl(s32 d)         { sprintf_s(_print_buff, "%d", d);  fputs(_print_buff, stdout); }
-inline void printsl(s64 d)         { sprintf_s(_print_buff, "%lld", d);  fputs(_print_buff, stdout); }
-inline void printsl(u8  d)         { sprintf_s(_print_buff, "%d", d);  fputs(_print_buff, stdout); }
-inline void printsl(u16 d)         { sprintf_s(_print_buff, "%d", d);  fputs(_print_buff, stdout); }
-inline void printsl(u32 d)         { sprintf_s(_print_buff, "%d", d);  fputs(_print_buff, stdout); }
-inline void printsl(u64 d)         { sprintf_s(_print_buff, "%lld", d);  fputs(_print_buff, stdout); }
-inline void printsl(float f)       { sprintf_s(_print_buff, "%f", f);  fputs(_print_buff, stdout); }
-inline void printsl(double f)      { sprintf_s(_print_buff, "%f", f);  fputs(_print_buff, stdout); }
-inline void printsl(bool b)        { sprintf_s(_print_buff, "%s", b ? "true" : "false"); fputs(_print_buff, stdout); }
+inline void printsl(s8  d)         { fast_print("%d", d); }
+inline void printsl(s16 d)         { fast_print("%d", d); }
+inline void printsl(s32 d)         { fast_print("%d", d); }
+inline void printsl(s64 d)         { fast_print("%lld", d); }
+inline void printsl(u8  d)         { fast_print("%d", d); }
+inline void printsl(u16 d)         { fast_print("%d", d); }
+inline void printsl(u32 d)         { fast_print("%d", d); }
+inline void printsl(u64 d)         { fast_print("%lld", d); }
+inline void printsl(float f)       { fast_print("%f", f); }
+inline void printsl(double f)      { fast_print("%f", f); }
+inline void printsl(bool b)        { fast_print("%s", b ? "true" : "false"); }
 
-//equal to printsl but with automatic \n after the string
+// equal to printsl but with automatic \n after the string
 template<typename T> inline void print(T v) { printsl(v); putchar('\n'); }
 
 template <typename T, typename... Types>
@@ -42,12 +45,12 @@ void printsl(const char* s, T t1, Types... others) {
         if(c == 0) return;
         else if(c == '\\') {
             char next = s[current_index];
-            //escape characters
+            // escape characters
             if(next == '%') { putchar('%'); current_index++; }
         } else if(c == '%') {
             break; // put formatted input
         } else {
-            //just a character to print
+            // just a character to print
             putchar(c);
             continue;
         }
@@ -66,12 +69,12 @@ void print(const char* s, T t1, Types... others) {
             return;
         } else if(c == '\\') {
             char next = s[current_index];
-            //escape characters
+            // escape characters
             if(next == '%') { putchar('%'); current_index++; }
         } else if(c == '%') {
             break; // put formatted input
         } else {
-            //just a character to print
+            // just a character to print
             putchar(c);
             continue;
         }
@@ -80,7 +83,7 @@ void print(const char* s, T t1, Types... others) {
     print(s + current_index, others...);
 }
 
-//API(cogno): should these use our print? should we have 2 different asserts where you can choose?
+// API(cogno): should these use our print? should we have 2 different asserts where you can choose?
 #ifdef NO_ASSERT
 #define ASSERT(expr, message, ...)
 #define ASSERT_BOUNDS(var, min_val, max_val)
