@@ -10,6 +10,15 @@ typedef int32_t  s32;
 typedef uint32_t u32;
 typedef int64_t  s64;
 typedef uint64_t u64;
+typedef float    f32;
+typedef double   f64;
+
+#define MAX_U8  0xff
+#define MAX_U16 0xffff
+#define MAX_U32 0xffffffff
+#define MAX_U64 0xffffffffffffffff
+//TODO(cogno): add max s8, s16, s32, s64
+//TODO(cogno): add min s8, s16, s32, s64
 
 
 // variant of the print below without the ending newline (\n)
@@ -24,18 +33,20 @@ inline void printsl(const char* s) { fast_print("%s", s); }
 inline void printsl(char c)        { putchar(c); }
 inline void printsl(s8  d)         { fast_print("%d", d); }
 inline void printsl(s16 d)         { fast_print("%d", d); }
-inline void printsl(s32 d)         { fast_print("%d", d); }
+inline void printsl(s32 d)         { fast_print("%ld", d); }
 inline void printsl(s64 d)         { fast_print("%lld", d); }
-inline void printsl(u8  d)         { fast_print("%d", d); }
-inline void printsl(u16 d)         { fast_print("%d", d); }
-inline void printsl(u32 d)         { fast_print("%d", d); }
-inline void printsl(u64 d)         { fast_print("%lld", d); }
+inline void printsl(u8  d)         { fast_print("%u", d); }
+inline void printsl(u16 d)         { fast_print("%u", d); }
+inline void printsl(u32 d)         { fast_print("%lu", d); }
+inline void printsl(u64 d)         { fast_print("%llu", d); }
 inline void printsl(float f)       { fast_print("%f", f); }
 inline void printsl(double f)      { fast_print("%f", f); }
 inline void printsl(bool b)        { fast_print("%s", b ? "true" : "false"); }
+inline void printsl() { }
 
 // equal to printsl but with automatic \n after the string
 template<typename T> inline void print(T v) { printsl(v); putchar('\n'); }
+inline void print() { }
 
 template <typename T, typename... Types>
 void printsl(const char* s, T t1, Types... others) {
@@ -89,14 +100,23 @@ void print(const char* s, T t1, Types... others) {
 #define ASSERT_BOUNDS(var, min_val, max_val)
 #else
 
-#define ASSERT(expr, message, ...)                                                             \
-if (!(expr)) {                                                                                 \
-    printf("Assertion failed file %s, line %d: " message, __FILE__, __LINE__, ##__VA_ARGS__);  \
-    __debugbreak();                                                                            \
-    exit(1);                                                                                   \
+void print_tab_if_there_is_a_message(const char* msg) { printsl("    "); }
+void print_tab_if_there_is_a_message() { }
+
+#define ASSERT(expr, message, ...) \
+if (!(expr)) {                     \
+    print("### Assertion failed: '%'", #expr); \
+    print_tab_if_there_is_a_message(message); \
+    print(message, __VA_ARGS__);  \
+    print("    File: %", __FILE__); \
+    print("    Line: %", __LINE__); \
+    print("    Function: %", __FUNCTION__); \
+    print("Stack Trace:");  \
+    __debugbreak();                \
+    abort();                       \
 }
 
 //NOTE(cogno): careful, the max_val is NOT included (so you can directly pass array.size instead of array.size - 1)
-#define ASSERT_BOUNDS(var, min_val, max_val) ASSERT(((var) >= (min_val)) && ((var) < (max_val)), "OUT OF BOUNDS! expected between %d and %d but was %d", (min_val), (max_val - 1), (var))
+#define ASSERT_BOUNDS(var, min_val, max_val) ASSERT(((var) >= (min_val)) && ((var) < (max_val)), "OUT OF BOUNDS! expected between % and % but was %", (min_val), (max_val - 1), (var))
 
 #endif

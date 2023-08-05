@@ -75,8 +75,8 @@ bool str_split_left(str to_split, str splitter, str* left_side, str* right_side)
         for(int to_split_index = 0; to_split_index < splitter.size; to_split_index++) {
             if(original_index + to_split_index >= to_split.size) return false; //string finished, couldn't find anything
             
-            ASSERT(original_index + to_split_index < to_split.size, "reading outside memory\n");
-            ASSERT(to_split_index < to_split.size, "reading outside memory\n");
+            ASSERT(original_index + to_split_index < to_split.size, "reading outside memory");
+            ASSERT(to_split_index < to_split.size, "reading outside memory");
             
             if(to_split.ptr[original_index + to_split_index] != to_split.ptr[to_split_index]) {
                 matches = false;
