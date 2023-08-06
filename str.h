@@ -1,3 +1,31 @@
+//UNICODE UTILS
+s32 unicode_utf8_to_size(u8 val) {
+    if (val < 128) return 1;
+    if (val < 224) return 2;
+    if (val < 240) return 3;
+    else           return 4;
+}
+
+u32 unicode_codepoint_to_size(u32 codepoint) {
+    if (codepoint < 0x80)    return 1;
+    if (codepoint < 0x800)   return 2;
+    if (codepoint < 0x10000) return 3;
+    else                     return 4;
+}
+
+u32 unicode_codepoint_to_utf8(u32 codepoint) {
+    if (codepoint < 0x80)    return codepoint; //no need to convert
+    if (codepoint < 0x800)   return (0x0000c080) + (codepoint & 0x3f) + ((codepoint << 2) & 0x1f00);
+    if (codepoint < 0x10000) return (0x00e08080) + (codepoint & 0x3f) + ((codepoint << 2) & 0x3f00) + ((codepoint << 4) & 0x0f0000);
+    else                     return (0xf0808080) + (codepoint & 0x3f) + ((codepoint << 2) & 0x3f00) + ((codepoint << 4) & 0x3f0000) + ((codepoint << 6) & 0x07000000);
+}
+
+bool unicode_is_header(u8 byte) {
+    return (byte & 0xc0) != 0x80;
+}
+
+//TODO(cogno): utf8 to codepoint (u32 to u32)
+//TODO(cogno): overload utf8 to codepoint (array of u8 to u32)
 
 // implemented manually to avoid the strlen dependency
 int c_string_length(const char* s) {
@@ -8,17 +36,17 @@ int c_string_length(const char* s) {
 
 //TODO(cogno): test all of this file
 
-//TODO: unicode (?) (currently str kind of does not support it, I mean utf8 is just an array of bytes but these functions don't take it into account so they might be wrong)
-//TODO: str builder
-//TODO: str concat
-//TODO: str matches
-//TODO: str substring
-//TODO: str split all
-//TODO: str parse to s32
-//TODO: str parse to float/double
-//TODO: str is number (?)
-//TODO: str is alphanumeric (?)
-//TODO: str is whitespace (?)
+//TODO(cogno): more unicode support (currently str kind of does not support it, I mean utf8 is just an array of bytes but these functions don't take it into account so they might be wrong, alternatively we can make 2 different strings, one with unicode and one without, it might make stuff a lot simpler, I'd say str and unicode_str)
+//TODO(cogno): str builder
+//TODO(cogno): str concat
+//TODO(cogno): str matches
+//TODO(cogno): str substring
+//TODO(cogno): str split all
+//TODO(cogno): str parse to s32
+//TODO(cogno): str parse to float/double
+//TODO(cogno): str is number (?)
+//TODO(cogno): str is alphanumeric (?)
+//TODO(cogno): str is whitespace (?)
 
 struct str{
     u8* ptr;
@@ -35,15 +63,37 @@ struct str{
         size = len;
     }
     
+    str(u8* p) { // when you have the ptr but not the size we calculate it
+        ptr = p;
+        for(size = 0; p[size]; size++); //TODO(cogno): isn't this too much by 1??
+    }
+    
     str() = default; //NOTE(cogno): c++ is shit so we need to define this to do "str{};"
 };
-//TODO(cogno): operator overload [] to do string[i] instead of string.ptr[i] with bounds checking to avoid undefined behaviour
+//TODO(cogno): operator overload [] to do string[i] instead of string.ptr[i] with bounds checking to avoid undefined behaviour (many asserts will disappear because of this)
+
+// makes a new string from a c_str allocating a new buffer for it
+str str_new_alloc(const char* c_str) {
+    str new_str = {};
+    new_str.size = c_string_length(c_str);
+    new_str.ptr = (u8*)calloc(new_str.size, sizeof(u8));
+    memcpy(new_str.ptr, c_str, sizeof(u8) * new_str.size);
+    return new_str;
+}
 
 //PERF(cogno): can we make this fast like other prints or is it already fast like those because of the putchar() ? (look at first.h)
 inline void printsl(str v) {
     for(int i = 0; i < v.size; i++) putchar(v.ptr[i]);
 }
 
+char* str_to_c_string(str to_convert) {
+    ASSERT(to_convert.size != MAX_U32, "str is full, cannot convert to c str");
+    u32 c_size = to_convert.size + 1;
+    char* ptr = (char*)malloc(c_size);
+    memcpy(ptr, to_convert.ptr, to_convert.size);
+    ptr[to_convert.size] = 0;
+    return ptr;
+}
 
 
 // splits a single str in 2 parts on the first occurrence of a char, no allocations necessary.
@@ -165,4 +215,18 @@ bool str_starts_with(str to_check, str checker) {
     }
     
     return true;
+}
+
+// supports unicode utf8
+u32 str_length_in_char(str string) {
+    u32 char_count = 0;
+    u32 read_index = 0;
+    while(true) {
+        if (read_index >= string.size) return char_count;
+        ASSERT(read_index < string.size, "reading out of memory");
+        u8 unicode_header = string.ptr[read_index];
+        u8 unicode_size = unicode_utf8_to_size(unicode_header);
+        read_index += unicode_size;
+        char_count++;
+    }
 }
