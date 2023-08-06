@@ -168,8 +168,8 @@ bool str_split_newline_left(str to_split, str* left_side, str* right_side) {
 
 void str_trim_left(str* to_trim) {
     //API(cogno): I don't think space and \t are enough...
-    //TODO(cogno): bounds check?
     while(true) {
+        if(to_trim->size <= 0) return; // nothing left to trim
         if(to_trim->ptr[0] == ' ' || to_trim->ptr[0] == '\t') {
             to_trim->ptr++;
             to_trim->size--;
@@ -179,8 +179,8 @@ void str_trim_left(str* to_trim) {
 
 void str_trim_right(str* to_trim) {
     //API(cogno): I don't think space and \t are enough...
-    //TODO(cogno): bounds check?
     while(true) {
+        if(to_trim->size <= 0) return; // nothing left to trim
         if(to_trim->ptr[to_trim->size - 1] == ' ' || to_trim->ptr[to_trim->size - 1] == '\t') {
             to_trim->size--;
         } else break;
