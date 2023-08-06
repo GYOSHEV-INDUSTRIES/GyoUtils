@@ -44,13 +44,13 @@ int c_string_length(const char* s) {
 //TODO(cogno): str split all
 //TODO(cogno): str parse to s32
 //TODO(cogno): str parse to float/double
-//TODO(cogno): str is number (?)
+//TODO(cogno): str is s32, float, maybe even variants like s8, u8, s16, u16 ?
 //TODO(cogno): str is alphanumeric (?)
 //TODO(cogno): str is whitespace (?)
 
 struct str{
     u8* ptr;
-    int size;
+    int size; // API(cogno): wtf negative numbers? does this make the api simpler or dumber?
     
     // conversion constructor from const char* to str (so you can do 'str s = "a string";')
     str(const char* c) {
@@ -201,6 +201,16 @@ bool str_to_u32(str to_convert, u32* out_value) {
     return true;
 }
 
+//variant of the above without error checking
+u32 str_to_u32(str to_convert) {
+    u32 out_value = 0;
+    for(int i = 0; i < to_convert.size; i++) {
+        char ch = to_convert.ptr[i];
+        out_value = out_value * 10 + (ch - '0');
+    }
+    return out_value;
+}
+
 bool str_starts_with(str to_check, char ch) {
     return to_check.size > 0 && to_check.ptr[0] == ch;
 }
@@ -229,4 +239,13 @@ u32 str_length_in_char(str string) {
         read_index += unicode_size;
         char_count++;
     }
+}
+
+bool str_is_u32(str to_check) {
+    if (to_check.size <= 0) return false;
+    for(int i = 0; i < to_check.size; i++) {
+        u8 ch = to_check.ptr[i];
+        if(ch > '9' || ch < '0') return false;
+    }
+    return true;
 }
