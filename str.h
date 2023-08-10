@@ -1,12 +1,12 @@
 //UNICODE UTILS
-s32 unicode_utf8_to_size(u8 val) {
+u8 unicode_utf8_to_size(u8 val) {
     if (val < 128) return 1;
     if (val < 224) return 2;
     if (val < 240) return 3;
     else           return 4;
 }
 
-u32 unicode_codepoint_to_size(u32 codepoint) {
+u8 unicode_codepoint_to_size(u32 codepoint) {
     if (codepoint < 0x80)    return 1;
     if (codepoint < 0x800)   return 2;
     if (codepoint < 0x10000) return 3;
@@ -230,7 +230,7 @@ bool str_starts_with(str to_check, str checker) {
 // supports unicode utf8
 u32 str_length_in_char(str string) {
     u32 char_count = 0;
-    u32 read_index = 0;
+    int read_index = 0;
     while(true) {
         if (read_index >= string.size) return char_count;
         ASSERT(read_index < string.size, "reading out of memory");

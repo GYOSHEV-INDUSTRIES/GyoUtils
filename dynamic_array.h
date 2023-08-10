@@ -23,7 +23,7 @@ void array_resize(Array<T>* array, u32 new_size) {
 
 template<typename T>
 void array_add(Array<T>* array, T data, s32 index) {
-    ASSERT(index >= 0 && index < array->reserved_size * 2, "index out of range, index is %, 2*reserved is %", index, array->reserved_size * 2);
+    ASSERT(index >= 0 && index < (s32)array->reserved_size * 2, "index out of range, index is %, 2*reserved is %", index, array->reserved_size * 2);
     
     //allocate if necessary
     if (array->size + 1 > array->reserved_size) {
@@ -58,11 +58,11 @@ void array_append(Array<T>* array, T data) {
 template<typename T>
 void array_remove_at(Array<T>* array, s32 index) {
     ASSERT(array->size > 0, "cannot remove an element of an empty array");
-    ASSERT(index >= 0 && index < array->size, "index out of range, index is %, buffer size is %", index, array->size);
+    ASSERT(index >= 0 && index < (s32)array->size, "index out of range, index is %, buffer size is %", index, array->size);
     
     //move every data from index to end back by 1
-    for(s32 i = index; i < array->size - 1; i++) {
-        ASSERT(i >= 0 && i + 1 < array->size, "out of memory access");
+    for(s32 i = index; i < (s32)array->size - 1; i++) {
+        ASSERT(i >= 0 && i + 1 < (s32)array->size, "out of memory access");
         array->ptr[i] = array->ptr[i + 1];
     }
     
@@ -74,19 +74,19 @@ void array_remove_at(Array<T>* array, s32 index) {
 
 template<typename T>
 T array_get_data(Array<T>* array, s32 index) {
-    ASSERT(index >= 0 && index < array->size, "index out of range, index is %, buffer size is %", index, array->size);
+    ASSERT(index >= 0 && index < (s32)array->size, "index out of range, index is %, buffer size is %", index, array->size);
     return array->ptr[index];
 }
 
 template<typename T>
 T array_set(Array<T>* array, s32 index, s32 value) {
-    ASSERT(index >= 0 && index < array->size, "index out of range, index is %, buffer size is %", index, array->size);
+    ASSERT(index >= 0 && index < (s32)array->size, "index out of range, index is %, buffer size is %", index, array->size);
     array->ptr[index] = value;
 }
 
 template<typename T>
 T* array_get_ptr(Array<T>* array, s32 index) {
-    ASSERT(index >= 0 && index < array->size, "index out of range, index is %, buffer size is %", index, array->size);
+    ASSERT(index >= 0 && index < (s32)array->size, "index out of range, index is %, buffer size is %", index, array->size);
     return &array->ptr[index];
 }
 
