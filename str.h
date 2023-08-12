@@ -69,8 +69,9 @@ struct str{
     }
     
     str() = default; //NOTE(cogno): c++ is shit so we need to define this to do "str{};"
+
+    u8& operator[](s32 i) { ASSERT_BOUNDS(i, 0, size); return ptr[i]; }
 };
-//TODO(cogno): operator overload [] to do string[i] instead of string.ptr[i] with bounds checking to avoid undefined behaviour (many asserts will disappear because of this)
 
 // makes a new string from a c_str allocating a new buffer for it
 str str_new_alloc(const char* c_str) {
@@ -104,7 +105,7 @@ char* str_to_c_string(str to_convert) {
 // right_side will be empty
 bool str_split_left(str to_split, u8 char_to_split, str* left_side, str* right_side) {
     for(int i = 0; i < to_split.size; i++) {
-        if(to_split.ptr[i] == char_to_split) {
+        if(to_split[i] == char_to_split) {
             left_side->ptr = to_split.ptr;
             left_side->size = i;
             right_side->ptr  = to_split.ptr  + (i + 1); //remember, we skip the character
@@ -128,7 +129,7 @@ bool str_split_left(str to_split, str splitter, str* left_side, str* right_side)
             ASSERT(original_index + to_split_index < to_split.size, "reading outside memory");
             ASSERT(to_split_index < to_split.size, "reading outside memory");
             
-            if(to_split.ptr[original_index + to_split_index] != to_split.ptr[to_split_index]) {
+            if(to_split[original_index + to_split_index] != to_split[to_split_index]) {
                 matches = false;
                 break;
             }
@@ -151,7 +152,7 @@ bool str_split_left(str to_split, str splitter, str* left_side, str* right_side)
 //splits on newline (\n) and removes \r if found (fuck \r\n, fuck windows)
 bool str_split_newline_left(str to_split, str* left_side, str* right_side) {
     for(int i = 0; i < to_split.size; i++) {
-        if(to_split.ptr[i] == '\n') {
+        if(to_split[i] == '\n') {
             left_side->ptr = to_split.ptr;
             left_side->size = i;
             right_side->ptr  = to_split.ptr  + (i + 1);
@@ -194,7 +195,7 @@ void str_trim(str* to_trim) {
 
 bool str_to_u32(str to_convert, u32* out_value) {
     for(int i = 0; i < to_convert.size; i++) {
-        char ch = to_convert.ptr[i];
+        char ch = to_convert[i];
         if(ch > '9' || ch < '0') return false;
         *out_value = (*out_value) * 10 + (ch - '0');
     }
@@ -205,14 +206,14 @@ bool str_to_u32(str to_convert, u32* out_value) {
 u32 str_to_u32(str to_convert) {
     u32 out_value = 0;
     for(int i = 0; i < to_convert.size; i++) {
-        char ch = to_convert.ptr[i];
+        char ch = to_convert[i];
         out_value = out_value * 10 + (ch - '0');
     }
     return out_value;
 }
 
 bool str_starts_with(str to_check, char ch) {
-    return to_check.size > 0 && to_check.ptr[0] == ch;
+    return to_check.size > 0 && to_check[0] == ch;
 }
 
 bool str_starts_with(str to_check, str checker) {
@@ -221,7 +222,7 @@ bool str_starts_with(str to_check, str checker) {
     for(int i = 0; i < checker.size; i++) {
         ASSERT_BOUNDS(i, 0, to_check.size); //should never happen because of check above
         ASSERT_BOUNDS(i, 0, checker.size);  //should never happen because of check above
-        if(to_check.ptr[i] != checker.ptr[i]) return false;
+        if(to_check[i] != checker[i]) return false;
     }
     
     return true;
@@ -234,7 +235,7 @@ u32 str_length_in_char(str string) {
     while(true) {
         if (read_index >= string.size) return char_count;
         ASSERT(read_index < string.size, "reading out of memory");
-        u8 unicode_header = string.ptr[read_index];
+        u8 unicode_header = string[read_index];
         u8 unicode_size = unicode_utf8_to_size(unicode_header);
         read_index += unicode_size;
         char_count++;
@@ -244,7 +245,7 @@ u32 str_length_in_char(str string) {
 bool str_is_u32(str to_check) {
     if (to_check.size <= 0) return false;
     for(int i = 0; i < to_check.size; i++) {
-        u8 ch = to_check.ptr[i];
+        u8 ch = to_check[i];
         if(ch > '9' || ch < '0') return false;
     }
     return true;

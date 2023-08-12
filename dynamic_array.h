@@ -3,8 +3,8 @@ struct Array {
     s32 size;
     s32 reserved_size;
     T* ptr;
+    T& operator[](s32 i) { ASSERT_BOUNDS(i, 0, size); return ptr[i]; }
 };
-//API(cogno): maybe add operator overload [] with bounds check?
 
 template<typename T>
 Array<T> array_new(s32 size) {
