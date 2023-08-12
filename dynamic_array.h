@@ -1,13 +1,13 @@
 template <typename T>
 struct Array {
-    u32 size; // API(cogno): maybe int is more useful? it's annoying having to convert every time
-    u32 reserved_size;
+    s32 size;
+    s32 reserved_size;
     T* ptr;
 };
 //API(cogno): maybe add operator overload [] with bounds check?
 
 template<typename T>
-Array<T> array_new(u32 size) {
+Array<T> array_new(s32 size) {
     Array<T> array;
     array.reserved_size = size;
     array.size = 0;
@@ -16,14 +16,14 @@ Array<T> array_new(u32 size) {
 }
 
 template<typename T>
-void array_resize(Array<T>* array, u32 new_size) {
+void array_resize(Array<T>* array, s32 new_size) {
     array->ptr = (T*)realloc(array->ptr, sizeof(*array->ptr) * new_size);
     array->reserved_size = new_size;
 }
 
 template<typename T>
 void array_add(Array<T>* array, T data, s32 index) {
-    ASSERT(index >= 0 && index < (s32)array->reserved_size * 2, "index out of range, index is %, 2*reserved is %", index, array->reserved_size * 2);
+    ASSERT(index >= 0 && index < array->reserved_size * 2, "index out of range, index is %, 2*reserved is %", index, array->reserved_size * 2);
     
     //allocate if necessary
     if (array->size + 1 > array->reserved_size) {
@@ -42,7 +42,7 @@ void array_add(Array<T>* array, T data, s32 index) {
 
 template<typename T>
 void array_append(Array<T>* array, T data) {
-    u32 index = array->size;
+    s32 index = array->size;
     ASSERT(index >= 0 && index < array->reserved_size * 2, "index out of range, index is %, 2*reserved is %", index, array->reserved_size * 2);
     
     //allocate if necessary
@@ -58,11 +58,11 @@ void array_append(Array<T>* array, T data) {
 template<typename T>
 void array_remove_at(Array<T>* array, s32 index) {
     ASSERT(array->size > 0, "cannot remove an element of an empty array");
-    ASSERT(index >= 0 && index < (s32)array->size, "index out of range, index is %, buffer size is %", index, array->size);
+    ASSERT(index >= 0 && index < array->size, "index out of range, index is %, buffer size is %", index, array->size);
     
     //move every data from index to end back by 1
-    for(s32 i = index; i < (s32)array->size - 1; i++) {
-        ASSERT(i >= 0 && i + 1 < (s32)array->size, "out of memory access");
+    for(s32 i = index; i < array->size - 1; i++) {
+        ASSERT(i >= 0 && i + 1 < array->size, "out of memory access");
         array->ptr[i] = array->ptr[i + 1];
     }
     
@@ -74,19 +74,19 @@ void array_remove_at(Array<T>* array, s32 index) {
 
 template<typename T>
 T array_get_data(Array<T>* array, s32 index) {
-    ASSERT(index >= 0 && index < (s32)array->size, "index out of range, index is %, buffer size is %", index, array->size);
+    ASSERT(index >= 0 && index < array->size, "index out of range, index is %, buffer size is %", index, array->size);
     return array->ptr[index];
 }
 
 template<typename T>
 T array_set(Array<T>* array, s32 index, s32 value) {
-    ASSERT(index >= 0 && index < (s32)array->size, "index out of range, index is %, buffer size is %", index, array->size);
+    ASSERT(index >= 0 && index < array->size, "index out of range, index is %, buffer size is %", index, array->size);
     array->ptr[index] = value;
 }
 
 template<typename T>
 T* array_get_ptr(Array<T>* array, s32 index) {
-    ASSERT(index >= 0 && index < (s32)array->size, "index out of range, index is %, buffer size is %", index, array->size);
+    ASSERT(index >= 0 && index < array->size, "index out of range, index is %, buffer size is %", index, array->size);
     return &array->ptr[index];
 }
 
