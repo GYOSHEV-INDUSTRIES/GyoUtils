@@ -96,6 +96,18 @@ char* str_to_c_string(str to_convert) {
     return ptr;
 }
 
+str str_concat(const char* s1, const char* s2) {
+    str total;
+    int length_1 = c_string_length(s1);
+    int length_2 = c_string_length(s2);
+    total.ptr = (u8*)malloc(length_1 + length_2);
+    total.size = length_1 + length_2;
+    
+    memcpy(total.ptr, s1, length_1);
+    memcpy(total.ptr + length_1, s2, length_2);
+    
+    return total;
+}
 
 // splits a single str in 2 parts on the first occurrence of a char, no allocations necessary.
 // the character split is NOT included in the final strings, 
