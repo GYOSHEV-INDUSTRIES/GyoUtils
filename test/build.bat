@@ -1,6 +1,6 @@
 @echo off
 
-cl /nologo /EHsc test.cpp /link /OUT:test.exe
+cl /nologo /W0 /O2 /EHsc test.cpp /link /OUT:test.exe
 
 del -f test.obj
 

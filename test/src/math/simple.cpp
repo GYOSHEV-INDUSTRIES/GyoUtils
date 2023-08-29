@@ -74,7 +74,8 @@ void test_simple_math(){
         REQUIRE(sqrt(2), SQRT2);
         REQUIRE(sqrt(3), SQRT3);
     )
-    SECTION("sine",
+    SECTION("sin",
+        REQUIRE(sin(-1.25), -1);
         REQUIRE(sin(-1), 0);
         REQUIRE(sin(-0.75), 1);
         REQUIRE(sin(-0.5), 0);
@@ -84,8 +85,9 @@ void test_simple_math(){
         REQUIRE(sin(0.5), 0);
         REQUIRE(sin(0.75), -1);
         REQUIRE(sin(1), 0);
+        REQUIRE(sin(1.25), 1);
     )
-    SECTION("cosine",
+    SECTION("cos",
         REQUIRE(cos(-1), 1);
         REQUIRE(cos(-0.75), 0);
         REQUIRE(cos(-0.5), -1);

@@ -10,19 +10,24 @@ typedef int32_t  s32;
 typedef uint32_t u32;
 typedef int64_t  s64;
 typedef uint64_t u64;
-typedef float    f32;
-typedef double   f64;
+typedef float    f32;  // Check(Quattro) do we even use those?
+typedef double   f64;  // Check(Quattro) do we even use those?
 
-#define MAX_U8  0xff
-#define MAX_U16 0xffff
-#define MAX_U32 0xffffffff
-#define MAX_U64 0xffffffffffffffff
-//TODO(cogno): add max s8, s16, s32, s64
-//TODO(cogno): add min s8, s16, s32, s64
-
+#define MAX_U8  0xFF
+#define MAX_U16 0xFFFF
+#define MAX_U32 0xFFFFFFFF
+#define MAX_U64 0xFFFFFFFFFFFFFFFF
+#define MAX_S8  0x7F
+#define MAX_S16 0x7FFF
+#define MAX_S32 0x7FFFFFFF
+#define MAX_S64 0x7FFFFFFFFFFFFFFF
+#define MIN_S8  0x80
+#define MIN_S16 0x8000
+#define MIN_S32 0x80000000
+#define MIN_S64 0x8000000000000000
 
 // variant of the print below without the ending newline (\n)
-char _print_buff[0xFFFF] = "";
+char _print_buff[0xFF] = "";
 #define fast_print(fmt, ...) sprintf_s(_print_buff, fmt, __VA_ARGS__);  fputs(_print_buff, stdout)
 
 template<typename T> void printsl(T v)  { fast_print("(unknown type)"); }
@@ -94,7 +99,6 @@ void print(const char* s, T t1, Types... others) {
     print(s + current_index, others...);
 }
 
-// API(cogno): should these use our print? should we have 2 different asserts where you can choose?
 #ifdef NO_ASSERT
 #define ASSERT(expr, message, ...)
 #define ASSERT_BOUNDS(var, min_val, max_val)
@@ -121,7 +125,6 @@ if (!(expr)) {                     \
 
 #endif
 
-
 //defer macros. calls code inside a defer(...) macro when the current scope closes (function exit, if ending, for cycle ending, ...)
 //API(cogno): I've seen a macro where you can do defer { code } instead of defer({ code }), can you figure out how?
 //TODO(cogno): test if these really work
@@ -138,6 +141,6 @@ ScopeExit<F> MakeScopeExit(F f) {
 };
 
 //API(cogno): I think scope_exit with counter can be avoided, you're never gonna have 2 defer on the same line, replace
-#define DO_STRING_JOIN2(arg1, arg2) arg1 ## arg2
-#define STRING_JOIN2(arg1, arg2) DO_STRING_JOIN2(arg1, arg2)
+#define STRING_JOIN2_(arg1, arg2) arg1 ## arg2
+#define STRING_JOIN2(arg1, arg2) STRING_JOIN2_(arg1, arg2)
 #define defer(code) auto STRING_JOIN2(scope_exit_, __COUNTER__) = MakeScopeExit([=](){code;})
