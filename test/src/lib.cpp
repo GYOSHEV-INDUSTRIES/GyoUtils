@@ -64,7 +64,7 @@ inline void REQUIRE(vec4 test, vec4 expected){
     array_free_all(&durations);}
 
 #ifdef PRINT_TESTS
-#define SECTION(sec, ...) printf("Testing section %-20s", sec); {__VA_ARGS__}; printf("Passed %d tests\n", _local_cnt); _local_cnt = 1;
+#define SECTION(sec, ...) printf("Testing section %-20s", sec); {__VA_ARGS__}; printf("Passed %d tests\n", _local_cnt - 1); _local_cnt = 1;
 #define TITLE(t)        printf("\n%s\n", t);
 #else
 #define SECTION(sec, ...)  {__VA_ARGS__}
