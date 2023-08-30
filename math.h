@@ -21,16 +21,16 @@ inline float trunc(float x)          { return float(int(x)); }
 #define fmod(x, y) ((x) - trunc((x) / (y)) * (y))
 #define lerp(start, dest, t) (dest - start) * t + start
 
-#define PI       3.1415926535f
-#define E        2.7182818284f
-#define SQRT2    1.4142135623f
-#define SQRT3    1.7320508075f
-#define DEG2RAD  2.0f * PI / 360.0f
-#define DEG2TURN 1.0f / 360.0f
-#define RAD2DEG  360.0f / 2.0f / PI
-#define RAD2TURN 1.0f / 2.0f / PI
-#define TURN2DEG 360.00000000f
-#define TURN2RAD 2.0f * PI
+#define PI       (3.1415926535f)
+#define E        (2.7182818284f)
+#define SQRT2    (1.4142135623f)
+#define SQRT3    (1.7320508075f)
+#define DEG2RAD  (PI / 180.0f)
+#define DEG2TURNS (1.0f / 360.0f)
+#define RAD2DEG  (180.0f / PI)
+#define RAD2TURNS (1.0f / (2.0f * PI))
+#define TURNS2DEG (360.0f)
+#define TURNS2RAD (2.0f * PI)
 
 inline float _sin_internal(float x){
     float q = 8 * x - 16 * x * x;
