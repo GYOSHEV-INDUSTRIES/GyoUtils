@@ -301,17 +301,19 @@ inline mat4 operator *(mat4 m1, mat4 m2){
     return res;
 }
 inline mat4 perspective(float fov, float aspectRatio, float z_near, float z_far){
-    mat4 res = mat4_new(1);
-    float Cotangent = 1.0f / tan(fov / 2.0f);
-    res.m11 = -1 / (aspectRatio * tan(fov / 2.0f));
-    res.m22 = Cotangent;
+    mat4 res = {};
+    float tan_value = tan(fov / 2.0f);
+    float cotangent = 1.0f / tan_value;
+    res.m11 = -1 / (aspectRatio * tan_value);
+    res.m22 = cotangent;
     res.m33 = - (z_far + z_near) / (z_far - z_near);
     res.m34 = -1.0;
     res.m43 = -(2.0 * z_near * z_far) / (z_far - z_near);
+    res.m44 = 1;
     return res;
 }
 inline mat4 rotate(mat4 m, float r,  vec3 v){
-    mat4 res = mat4_new(1); 
+    mat4 res = {}; 
     float a = r;
     float c = cos(a);
     float s = sin(a);
@@ -330,6 +332,8 @@ inline mat4 rotate(mat4 m, float r,  vec3 v){
     res.m31 = temp.z * axis.x + s * axis.y;
     res.m32 = temp.z * axis.y - s * axis.x;
     res.m33 = c + temp.z * axis.z;
+    
+    res.m44 = 1;
     return m * res;
 }
 inline mat4 scale(mat4 m, vec3 v){
