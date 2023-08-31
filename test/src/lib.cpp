@@ -36,6 +36,15 @@ inline void REQUIRE(vec4 test, vec4 expected){
         exit(1);
     }
 }
+inline void REQUIRE(mat4 test, mat4 expected){
+    if(test.v1 == expected.v1 && test.v2 == expected.v2 && test.v3 == expected.v3 && test.v4 == expected.v4){
+        ++_cnt;
+        ++_local_cnt;
+    }else{
+        print("Assertion failed, got % instead of % in REQUIRE %", test, expected, _local_cnt);
+        exit(1);
+    }
+}
 #define BENCHMARK(tests, amt, func, res_type, ...)                         \
     {Array<double> durations = array_new<double>(1);             \
     for(int k = 0; k < tests; k++){                              \

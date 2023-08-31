@@ -21,13 +21,13 @@ inline float trunc(float x)          { return float(int(x)); }
 #define fmod(x, y) ((x) - trunc((x) / (y)) * (y))
 #define lerp(start, dest, t) (dest - start) * t + start
 
-#define PI       (3.1415926535f)
-#define E        (2.7182818284f)
-#define SQRT2    (1.4142135623f)
-#define SQRT3    (1.7320508075f)
-#define DEG2RAD  (PI / 180.0f)
+#define PI        (3.1415926535f)
+#define E         (2.7182818284f)
+#define SQRT2     (1.4142135623f)
+#define SQRT3     (1.7320508075f)
+#define DEG2RAD   (PI / 180.0f)
 #define DEG2TURNS (1.0f / 360.0f)
-#define RAD2DEG  (180.0f / PI)
+#define RAD2DEG   (180.0f / PI)
 #define RAD2TURNS (1.0f / (2.0f * PI))
 #define TURNS2DEG (360.0f)
 #define TURNS2RAD (2.0f * PI)
@@ -89,13 +89,9 @@ struct mat4{
             float m31, m32, m33, m34;
             float m41, m42, m43, m44;
         };
-        struct {
-            __m128 r1, r2, r3, r4;
-        };
-        __m128 mat[4];
-        struct {
-            vec4 v1, v2, v3, v4;
-        };
+        struct { __m128 r1, r2, r3, r4; };
+        __m128 mat_r[4];
+        struct { vec4 v1, v2, v3, v4; };
         vec4 mat_v[4];
     };
     inline float* operator [](int idx){
@@ -126,12 +122,12 @@ inline vec4 operator /(float s, vec4 a) {vec4 res; res.v = _mm_div_ps(_mm_set1_p
 inline vec2 operator -(vec2 a)  {return {-a.x, -a.y};}
 inline vec3 operator -(vec3 a)  {return {-a.x, -a.y, -a.z};}
 inline vec4 operator -(vec4 a)  {vec4 res;  res.v = _mm_sub_ps({}, a.v);  return res;}
-inline vec2 operator +=(vec2& a, const vec2& b) {vec2 res = {a.x + b.x, a.y + b.y};  a = res;  return a;}
-inline vec3 operator +=(vec3& a, const vec3& b) {vec3 res = {a.x + b.x, a.y + b.y, a.z + b.z};  a = res;  return a;}
-inline vec4 operator +=(vec4& a, const vec4& b) {vec4 res; res.v = _mm_add_ps(a.v, b.v); a = res;  return a;}
-inline vec2 operator -=(vec2& a, const vec2& b) {vec2 res = {a.x - b.x, a.y - b.y};  a = res;  return a;}
-inline vec3 operator -=(vec3& a, const vec3& b) {vec3 res = {a.x - b.x, a.y - b.y, a.z - b.z};  a = res;  return a;}
-inline vec4 operator -=(vec4& a, const vec4& b) {vec4 res; res.v = _mm_sub_ps(a.v, b.v); a = res;  return a;}
+inline vec2 operator +=(vec2& a, const vec2& b) {a = a + b;  return a;}
+inline vec3 operator +=(vec3& a, const vec3& b) {a = a + b;  return a;}
+inline vec4 operator +=(vec4& a, const vec4& b) {a = a + b;  return a;}
+inline vec2 operator -=(vec2& a, const vec2& b) {a = a - b;  return a;}
+inline vec3 operator -=(vec3& a, const vec3& b) {a = a - b;  return a;}
+inline vec4 operator -=(vec4& a, const vec4& b) {a = a - b;  return a;}
 inline bool operator ==(vec2 a, vec2 b) {return (a.x == b.x) && (a.y == b.y);}
 inline bool operator ==(vec3 a, vec3 b) {return (a.x == b.x) && (a.y == b.y) && (a.z == b.z);}
 inline bool operator ==(vec4 a, vec4 b) {return _mm_movemask_ps(_mm_cmpeq_ps(a.v, b.v)) == 0b1111;}
@@ -145,8 +141,8 @@ inline vec2 floor(vec2 v) {return {floor(v.x), floor(v.y)};}
 inline vec3 floor(vec3 v) {return {floor(v.x), floor(v.y), floor(v.z)};}
 inline vec4 floor(vec4 v) {return {floor(v.x), floor(v.y), floor(v.z), floor(v.w)};}
 inline vec2 ceil(vec2 v)  {return {ceil(v.x), ceil(v.y)};}
-inline vec3 ceil(vec3 v)  {return {ceil(v.x),  ceil(v.y),  ceil(v.z)};}
-inline vec4 ceil(vec4 v)  {return {ceil(v.x),  ceil(v.y),  ceil(v.z), ceil(v.w)};}
+inline vec3 ceil(vec3 v)  {return {ceil(v.x), ceil(v.y), ceil(v.z)};}
+inline vec4 ceil(vec4 v)  {return {ceil(v.x), ceil(v.y), ceil(v.z), ceil(v.w)};}
 inline vec2 trunc(vec2 v) {return {trunc(v.x), trunc(v.y)};}
 inline vec3 trunc(vec3 v) {return {trunc(v.x), trunc(v.y), trunc(v.z)};}
 inline vec4 trunc(vec4 v) {return {trunc(v.x), trunc(v.y), trunc(v.z), trunc(v.w)};}
@@ -194,13 +190,6 @@ inline mat4 mat4_new(float n){
     res.r4 = _mm_setr_ps(0, 0, 0, n);
     return res;
 }
-inline mat4 translate(mat4 m, vec3 v){
-    mat4 res = m;
-    res.m14 += v.x;
-    res.m24 += v.y;
-    res.m34 += v.z;
-    return res;
-}
 inline mat4 ortho(float left, float right, float bottom, float top, float z_near, float z_far){
     mat4 res = {};
     res.m11 = 2.0f / (right - left);
@@ -223,35 +212,25 @@ inline mat4 transpose(mat4 m) {
 inline mat4 operator +(mat4 m1, mat4 m2){
     mat4 res;
     res.r1 = _mm_add_ps(m1.r1, m2.r1);
-    res.r2 = _mm_add_ps(m1.r2, m1.r2);
-    res.r3 = _mm_add_ps(m1.r3, m1.r3);
-    res.r4 = _mm_add_ps(m1.r4, m1.r4);
+    res.r2 = _mm_add_ps(m1.r2, m2.r2);
+    res.r3 = _mm_add_ps(m1.r3, m2.r3);
+    res.r4 = _mm_add_ps(m1.r4, m2.r4);
     return res;
 }
 inline mat4 operator +=(mat4& m1, const mat4& m2) {
-    mat4 res;
-    res.r1 = _mm_add_ps(m1.r1, m2.r1);
-    res.r2 = _mm_add_ps(m1.r2, m1.r2);
-    res.r3 = _mm_add_ps(m1.r3, m1.r3);
-    res.r4 = _mm_add_ps(m1.r4, m1.r4);
-    m1 = res;
+    m1 = m1 + m2;
     return m1;
 }
 inline mat4 operator -(mat4 m1, mat4 m2){
     mat4 res;
     res.r1 = _mm_sub_ps(m1.r1, m2.r1);
-    res.r2 = _mm_sub_ps(m1.r2, m1.r2);
-    res.r3 = _mm_sub_ps(m1.r3, m1.r3);
-    res.r4 = _mm_sub_ps(m1.r4, m1.r4);
+    res.r2 = _mm_sub_ps(m1.r2, m2.r2);
+    res.r3 = _mm_sub_ps(m1.r3, m2.r3);
+    res.r4 = _mm_sub_ps(m1.r4, m2.r4);
     return res;
 }
 inline mat4 operator -=(mat4& m1, const mat4& m2) {
-    mat4 res;
-    res.r1 = _mm_sub_ps(m1.r1, m2.r1);
-    res.r2 = _mm_sub_ps(m1.r2, m1.r2);
-    res.r3 = _mm_sub_ps(m1.r3, m1.r3);
-    res.r4 = _mm_sub_ps(m1.r4, m1.r4);
-    m1 = res;
+    m1 = m1 - m2;
     return m1;
 }
 inline mat4 operator *(mat4 m, float s){
@@ -336,12 +315,35 @@ inline mat4 rotate(mat4 m, float r,  vec3 v){
     res.m44 = 1;
     return m * res;
 }
+inline mat4 translate(mat4 m, vec3 v){
+    mat4 res = m;
+    res.m14 += v.x;
+    res.m24 += v.y;
+    res.m34 += v.z;
+    return res;
+}
 inline mat4 scale(mat4 m, vec3 v){
+    // Todo(Quattro) check this
     mat4 res = mat4_new(1.0f);
     res.v1 = m.v1 * v.x;
     res.v2 = m.v2 * v.y;
     res.v3 = m.v3 * v.z;
     res.v4 = m.v4;
+    return res;
+}
+inline mat4 translation_mat(vec3 v){
+    mat4 res = mat4_new(1);
+    res.m14 = v.x;
+    res.m24 = v.y;
+    res.m34 = v.z;
+    return res;
+}
+inline mat4 scale_mat(vec3 v){
+    mat4 res = {};
+    res.m11 = v.x;
+    res.m22 = v.y;
+    res.m33 = v.z;
+    res.m44 = 1;
     return res;
 }
 
