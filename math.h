@@ -17,9 +17,9 @@ inline float trunc(float x)          { return float(int(x)); }
 #define max(a, b) (((a) < (b)) ? (b) : (a))
 #define abs(a) (((a) >= 0) ? (a) : (-(a)))
 #define sgn(a) (((a) == 0) ? (0) : (((a) > 0) ? 1 : -1))
-#define clamp(val, min_, max_) max(min(val, max_), min_)
+#define clamp(val, min_, max_) (max(min((val), (max_)), (min_)))
 #define fmod(x, y) ((x) - trunc((x) / (y)) * (y))
-#define lerp(start, dest, t) (dest - start) * t + start
+#define lerp(start, dest, t) ((dest - start) * t + start)
 
 #define PI        (3.1415926535f)
 #define TAU       (6.2831853072f)
