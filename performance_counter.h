@@ -21,7 +21,6 @@ It has a limit of 4086 timed blocks.
 
 #if _WIN32
 
-#include <x86intrin.h>
 #include <windows.h>
 
 static u64 get_os_timer_freq() {
@@ -99,7 +98,8 @@ struct TimeAnchor {
     const char* label;
 };
 
-TimeAnchor anchors[4086] = {};
+#define ANCHORS_AMT 4096
+TimeAnchor anchors[ANCHORS_AMT] = {};
 int current_parent_index = 0;
 u64 profile_start = 0;
 u64 profile_end = 0;
@@ -135,12 +135,9 @@ struct time_block {
     int _old_elapsed_at_root = 0;
 };
 
-#define ArrayCount(Array) (sizeof(Array) / sizeof((Array)[0]))
-#define CONCAT2(a, b) a##b
-#define CONCAT(a,b) CONCAT2(a, b)
-#define TIME_BLOCK time_block CONCAT(t_, __LINE__)(__COUNTER__ + 1, __FUNCTION__)
-#define TIME_NAMED(name) time_block CONCAT(t_, __LINE__)(__COUNTER__ + 1, name)
-#define END_OF_COMPILATION_UNIT static_assert(__COUNTER__ < ArrayCount(anchors), "Number of profile points exceeds size of profiler::Anchors array")
+#define TIME_BLOCK time_block STRING_JOIN(t_, __LINE__)(__COUNTER__ + 1, __FUNCTION__)
+#define TIME_NAMED(name) time_block STRING_JOIN(t_, __LINE__)(__COUNTER__ + 1, name)
+#define END_OF_COMPILATION_UNIT static_assert(__COUNTER__ < ANCHORS_AMT, "Number of profile points exceeds size of profiler::Anchors array")
 
 void begin_profile() {
     profile_start = read_cpu_timer();

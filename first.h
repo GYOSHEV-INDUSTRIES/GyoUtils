@@ -10,8 +10,8 @@ typedef int32_t  s32;
 typedef uint32_t u32;
 typedef int64_t  s64;
 typedef uint64_t u64;
-typedef float    f32;  // Check(Quattro): do we even use those? REPLY(cogno): yes we do, it's like u32/u64, it's just faster to write and clearer
-typedef double   f64;  // Check(Quattro): do we even use those? REPLY(cogno): yes we do, it's like u32/u64, it's just faster to write and clearer
+typedef float    f32;
+typedef double   f64;
 
 #define MAX_U8  0xFF
 #define MAX_U16 0xFFFF
@@ -35,6 +35,7 @@ template<typename T> void printsl(T* v) { fast_print("0x%p", v); } // NOTE(cogno
 
 // print standard specializations
 inline void printsl(const char* s) { fast_print("%s", s); }
+inline void printsl(char* s)       { fast_print("%s", s); }
 inline void printsl(char c)        { putchar(c); }
 inline void printsl(s8  d)         { fast_print("%d", d); }
 inline void printsl(s16 d)         { fast_print("%d", d); }
@@ -44,8 +45,8 @@ inline void printsl(u8  d)         { fast_print("%u", d); }
 inline void printsl(u16 d)         { fast_print("%u", d); }
 inline void printsl(u32 d)         { fast_print("%lu", d); }
 inline void printsl(u64 d)         { fast_print("%llu", d); }
-inline void printsl(float f)       { fast_print("%f", f); }
-inline void printsl(double f)      { fast_print("%f", f); }
+inline void printsl(float f)       { fast_print("%.3f", f); }
+inline void printsl(double f)      { fast_print("%.3f", f); }
 inline void printsl(bool b)        { fast_print("%s", b ? "true" : "false"); }
 inline void printsl() { }
 
@@ -141,6 +142,6 @@ ScopeExit<F> MakeScopeExit(F f) {
 };
 
 //API(cogno): I think scope_exit with counter can be avoided, you're never gonna have 2 defer on the same line, replace
-#define STRING_JOIN2_(arg1, arg2) arg1 ## arg2
-#define STRING_JOIN2(arg1, arg2) STRING_JOIN2_(arg1, arg2)
-#define defer(code) auto STRING_JOIN2(scope_exit_, __COUNTER__) = MakeScopeExit([=](){code;})
+#define STRING_JOIN_(arg1, arg2) arg1 ## arg2
+#define STRING_JOIN(arg1, arg2) STRING_JOIN_(arg1, arg2)
+#define defer(code) auto STRING_JOIN(scope_exit_, __COUNTER__) = MakeScopeExit([=](){code;})

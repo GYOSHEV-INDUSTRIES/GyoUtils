@@ -80,6 +80,7 @@ struct col{
 };
 struct mat4{
     union{
+        float ptr[16];
         float mat_f[4][4];
         struct {
             float m11, m12, m13, m14;
@@ -108,9 +109,9 @@ inline vec4 operator *(vec4 a, float s) {vec4 res; res.v = _mm_mul_ps(a.v, _mm_s
 inline vec2 operator *(float s, vec2 a) {return {a.x * s, a.y * s};}
 inline vec3 operator *(float s, vec3 a) {return {a.x * s, a.y * s, a.z * s};}
 inline vec4 operator *(float s, vec4 a) {vec4 res; res.v = _mm_mul_ps(a.v, _mm_set1_ps(s)); return res;}
-inline float operator *(vec2 a, vec2 b) {return a.x * b.x + a.y * b.y;} // WARN(cogno): I think this might not be a very good idea... should vec * vec return a vec {x1*x2, y1*y2} ? either that or just DON'T make one, let the user decide for itself. In airforce we have vec = vec * vec (and a function for the dot product)
-inline float operator *(vec3 a, vec3 b) {return a.x * b.x + a.y * b.y + a.z * b.z;} // WARN(cogno): I think this might not be a very good idea... should vec * vec return a vec {x1*x2, y1*y2, z1*z2} ? either that or just DON'T make one, let the user decide for itself. In airforce we have vec = vec * vec (and a function for the dot product)
-inline float operator *(vec4 a, vec4 b) {return _mm_cvtss_f32(_mm_dp_ps(a.v, b.v, 0b11110001));} // WARN(cogno): I think this might not be a very good idea... should vec * vec return a vec {x1*x2, y1*y2, z1*z2, w1*w2} ? either that or just DON'T make one, let the user decide for itself. In airforce we have vec = vec * vec (and a function for the dot product)
+inline vec2 operator *(vec2 a, vec2 b) {return {a.x * b.x, a.y * b.y};}
+inline vec3 operator *(vec3 a, vec3 b) {return {a.x * b.x, a.y * b.y, a.z * b.z};}
+inline vec4 operator *(vec4 a, vec4 b) {vec4 res; res.v = _mm_mul_ps(a.v, b.v); return res;}
 inline vec2 operator /(vec2 a, float s) {return {a.x / s, a.y / s};}
 inline vec3 operator /(vec3 a, float s) {return {a.x / s, a.y / s, a.z / s};}
 inline vec4 operator /(vec4 a, float s) {vec4 res; res.v = _mm_div_ps(a.v, _mm_set1_ps(s)); return res;}
@@ -120,19 +121,24 @@ inline vec4 operator /(float s, vec4 a) {vec4 res; res.v = _mm_div_ps(_mm_set1_p
 inline vec2 operator -(vec2 a)  {return {-a.x, -a.y};}
 inline vec3 operator -(vec3 a)  {return {-a.x, -a.y, -a.z};}
 inline vec4 operator -(vec4 a)  {vec4 res;  res.v = _mm_sub_ps({}, a.v);  return res;}
-inline vec2 operator +=(vec2& a, const vec2& b) {a = a + b;  return a;}
-inline vec3 operator +=(vec3& a, const vec3& b) {a = a + b;  return a;}
-inline vec4 operator +=(vec4& a, const vec4& b) {a = a + b;  return a;}
-inline vec2 operator -=(vec2& a, const vec2& b) {a = a - b;  return a;}
-inline vec3 operator -=(vec3& a, const vec3& b) {a = a - b;  return a;}
-inline vec4 operator -=(vec4& a, const vec4& b) {a = a - b;  return a;}
+inline vec2 operator +=(vec2& a, const vec2 &b) {a = a + b;  return a;}
+inline vec3 operator +=(vec3& a, const vec3 &b) {a = a + b;  return a;}
+inline vec4 operator +=(vec4& a, const vec4 &b) {a = a + b;  return a;}
+inline vec2 operator -=(vec2& a, const vec2 &b) {a = a - b;  return a;}
+inline vec3 operator -=(vec3& a, const vec3 &b) {a = a - b;  return a;}
+inline vec4 operator -=(vec4& a, const vec4 &b) {a = a - b;  return a;}
+inline vec2 operator *=(vec2& a, const float &b) {a = a * b;  return a;}
+inline vec3 operator *=(vec3& a, const float &b) {a = a * b;  return a;}
+inline vec4 operator *=(vec4& a, const float &b) {a = a * b;  return a;}
+inline vec2 operator /=(vec2& a, const float &b) {a = a / b;  return a;}
+inline vec3 operator /=(vec3& a, const float &b) {a = a / b;  return a;}
+inline vec4 operator /=(vec4& a, const float &b) {a = a / b;  return a;}
 inline bool operator ==(vec2 a, vec2 b) {return (a.x == b.x) && (a.y == b.y);}
 inline bool operator ==(vec3 a, vec3 b) {return (a.x == b.x) && (a.y == b.y) && (a.z == b.z);}
 inline bool operator ==(vec4 a, vec4 b) {return _mm_movemask_ps(_mm_cmpeq_ps(a.v, b.v)) == 0b1111;}
 inline bool operator !=(vec2 a, vec2 b) {return !((a.x == b.x) && (a.y == b.y));}
 inline bool operator !=(vec3 a, vec3 b) {return !((a.x == b.x) && (a.y == b.y) && (a.z == b.z));}
 inline bool operator !=(vec4 a, vec4 b) {return _mm_movemask_ps(_mm_cmpeq_ps(a.v, b.v)) != 0b1111;}
-//TODO(cogno): vec *= float, vec /= float
 inline vec2 round(vec2 v) {return {round(v.x), round(v.y)};}
 inline vec3 round(vec3 v) {return {round(v.x), round(v.y), round(v.z)};}
 inline vec4 round(vec4 v) {return {round(v.x), round(v.y), round(v.z), round(v.w)};}
@@ -145,7 +151,6 @@ inline vec4 ceil(vec4 v)  {return {ceil(v.x), ceil(v.y), ceil(v.z), ceil(v.w)};}
 inline vec2 trunc(vec2 v) {return {trunc(v.x), trunc(v.y)};}
 inline vec3 trunc(vec3 v) {return {trunc(v.x), trunc(v.y), trunc(v.z)};}
 inline vec4 trunc(vec4 v) {return {trunc(v.x), trunc(v.y), trunc(v.z), trunc(v.w)};}
-// API(cogno): maybe magn is better?
 inline float length(vec2 v) { return sqrt(v.x * v.x + v.y * v.y); }
 inline float length(vec3 v) { return sqrt(v.x * v.x + v.y * v.y + v.z * v.z); }
 inline float length(vec4 v) {
@@ -166,6 +171,16 @@ inline vec4 normalize(vec4 v){
     vec4 res;
     float len = length(v);
     res.v = _mm_div_ps(v.v, _mm_set1_ps(len));
+    return res;
+}
+inline float dot(vec2 a, vec2 b){ return a.x * b.x + a.y * b.y; }
+inline float dot(vec3 a, vec3 b){ return a.x * b.x + a.y * b.y + a.z * b.z; }
+inline float dot(vec4 a, vec4 b){ return _mm_cvtss_f32(_mm_dp_ps(a.v, b.v, 0b11110001)); }
+inline vec3 cross(vec3 a, vec3 b){
+    vec3 res;
+    res.x = a.y * b.z - b.y * a.z;
+    res.y = b.x * a.z - a.x * b.z;
+    res.z = a.x * b.y - b.x * a.y;
     return res;
 }
 inline void printsl(vec2 v) {fast_print("(%.3f, %.3f)", v.x, v.y);}
@@ -190,17 +205,6 @@ inline mat4 mat4_new(float n){
     res.r4 = _mm_setr_ps(0, 0, 0, n);
     return res;
 }
-inline mat4 ortho(float left, float right, float bottom, float top, float z_near, float z_far){
-    mat4 res = {};
-    res.m11 = 2.0f / (right - left);
-    res.m22 = 2.0f / (top - bottom);
-    res.m33 = -2.0f / (z_far - z_near);
-    res.m41 = -(right + left) / (right - left);
-    res.m42 = -(top + bottom) / (top - bottom);
-    res.m43 = -(z_far + z_near) / (z_far - z_near);
-    res.m44 = 1;
-    return res;
-}
 inline mat4 transpose(mat4 m) {
     mat4 res;
     res.r1 = _mm_setr_ps(m.m11, m.m21, m.m31, m.m41);
@@ -217,10 +221,6 @@ inline mat4 operator +(mat4 m1, mat4 m2){
     res.r4 = _mm_add_ps(m1.r4, m2.r4);
     return res;
 }
-inline mat4 operator +=(mat4& m1, const mat4& m2) {
-    m1 = m1 + m2;
-    return m1;
-}
 inline mat4 operator -(mat4 m1, mat4 m2){
     mat4 res;
     res.r1 = _mm_sub_ps(m1.r1, m2.r1);
@@ -228,10 +228,6 @@ inline mat4 operator -(mat4 m1, mat4 m2){
     res.r3 = _mm_sub_ps(m1.r3, m2.r3);
     res.r4 = _mm_sub_ps(m1.r4, m2.r4);
     return res;
-}
-inline mat4 operator -=(mat4& m1, const mat4& m2) {
-    m1 = m1 - m2;
-    return m1;
 }
 inline mat4 operator *(mat4 m, float s){
     mat4 res;
@@ -279,7 +275,11 @@ inline mat4 operator *(mat4 m1, mat4 m2){
     res.r4 = _mm_or_ps(_mm_or_ps(_mm_dp_ps(m1.r4, temp.r1, 0b11110001), _mm_dp_ps(m1.r4, temp.r2, 0b11110010)), _mm_or_ps(_mm_dp_ps(m1.r4, temp.r3, 0b11110100), _mm_dp_ps(m1.r4, temp.r4, 0b11111000)));
     return res;
 }
-//TODO(cogno): matrix *= float, matrix *= matrix, matrix /= float
+inline mat4 operator +=(mat4& m1, const mat4& m2) { m1 = m1 + m2; return m1;}
+inline mat4 operator -=(mat4& m1, const mat4& m2) { m1 = m1 - m2; return m1;}
+inline mat4 operator *=(mat4& m1, const float& b) { m1 = m1 * b; return m1; }
+inline mat4 operator *=(mat4& m1, const mat4& m2) { m1 = m1 * m2; return m2; }
+inline mat4 operator /=(mat4& m1, const float& b) { m1 = m1 / b; return m1; }
 inline mat4 perspective(float fov, float aspect_ratio, float z_near, float z_far){
     mat4 res = {};
     float tan_value = tan(fov / 2.0f);
@@ -291,6 +291,29 @@ inline mat4 perspective(float fov, float aspect_ratio, float z_near, float z_far
     res.m43 = -(2.0 * z_near * z_far) / (z_far - z_near);
     res.m44 = 1;
     return res;
+}
+inline mat4 ortho(float left, float right, float bottom, float top, float z_near, float z_far){
+    mat4 res = {};
+    res.m11 = 2.0f / (right - left);
+    res.m22 = 2.0f / (top - bottom);
+    res.m33 = -2.0f / (z_far - z_near);
+    res.m41 = -(right + left) / (right - left);
+    res.m42 = -(top + bottom) / (top - bottom);
+    res.m43 = -(z_far + z_near) / (z_far - z_near);
+    res.m44 = 1;
+    return res;
+}
+inline float determinant(mat4 m){
+    // Note(Quattro) don't ask what it does. It does his job
+    vec4 i1, i2;
+    i1.v = _mm_hsub_ps(_mm_mul_ps(m.r3, _mm_shuffle_ps(m.r4, m.r4, _MM_SHUFFLE(2, 3, 0, 1))), _mm_mul_ps(_mm_shuffle_ps(m.r3, m.r3, _MM_SHUFFLE(3, 1, 2, 0)), _mm_shuffle_ps(m.r4, m.r4, _MM_SHUFFLE(1, 3, 0, 2))));
+    i2.v = _mm_hsub_ps(_mm_mul_ps(_mm_shuffle_ps(m.r3, m.r3, _MM_SHUFFLE(2, 1, 3, 0)), _mm_shuffle_ps(m.r4, m.r4, _MM_SHUFFLE(1, 2, 0, 3))), {});
+    
+    __m128 A = _mm_mul_ps(_mm_shuffle_ps(m.r2, m.r2, _MM_SHUFFLE(0, 0, 0, 1)), _mm_setr_ps(i1.y, i1.y, i1.w, i2.y));
+    __m128 B = _mm_mul_ps(_mm_shuffle_ps(m.r2, m.r2, _MM_SHUFFLE(1, 1, 2, 2)), _mm_setr_ps(i1.w, i2.x, i2.x, i1.z));
+    __m128 C = _mm_mul_ps(_mm_shuffle_ps(m.r2, m.r2, _MM_SHUFFLE(2, 3, 3, 3)), _mm_setr_ps(i2.y, i1.z, i1.x, i1.x));
+    __m128 res = _mm_dp_ps(_mm_setr_ps(m.m11, -m.m12, m.m13, -m.m14), _mm_add_ps(_mm_sub_ps(A, B), C), 0b11110001);
+    return _mm_cvtss_f32(res);
 }
 inline mat4 rotate(mat4 m, float r,  vec3 v){
     mat4 res = {}; 
