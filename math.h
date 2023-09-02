@@ -169,8 +169,7 @@ inline vec3 normalize(vec3 v){
 }
 inline vec4 normalize(vec4 v){
     vec4 res;
-    float len = length(v);
-    res.v = _mm_div_ps(v.v, _mm_set1_ps(len));
+    res.v = _mm_div_ps(v.v, _mm_sqrt_ps(_mm_dp_ps(v.v, v.v, 0b11111111)));
     return res;
 }
 inline float dot(vec2 a, vec2 b){ return a.x * b.x + a.y * b.y; }
