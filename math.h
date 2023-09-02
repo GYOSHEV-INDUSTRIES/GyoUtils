@@ -22,36 +22,34 @@ inline float trunc(float x)          { return float(int(x)); }
 #define lerp(start, dest, t) (dest - start) * t + start
 
 #define PI        (3.1415926535f)
+#define TAU       (6.2831853072f)
 #define E         (2.7182818284f)
 #define SQRT2     (1.4142135623f)
 #define SQRT3     (1.7320508075f)
 #define DEG2RAD   (PI / 180.0f)
 #define DEG2TURNS (1.0f / 360.0f)
 #define RAD2DEG   (180.0f / PI)
-#define RAD2TURNS (1.0f / (2.0f * PI))
+#define RAD2TURNS (1.0f / TAU)
 #define TURNS2DEG (360.0f)
-#define TURNS2RAD (2.0f * PI)
+#define TURNS2RAD (TAU)
 
-inline float _sin_internal(float x){
+inline float _sin_internal(float x) {
     float q = 8 * x - 16 * x * x;
     return 0.225 * (q * q - q) + q;
 }
-inline float sin(float angle){
+
+// trigonometric functions in turns (1 turn = 360 deg)
+inline float sin(float angle) {
     angle -= int(angle);
     
-    if(angle < 0){
-        angle += 1;
-    }
-    
-    if(angle > 0.5){
-        return -_sin_internal(angle - 0.5);
-    }
+    if(angle < 0) angle += 1;
+    if(angle > 0.5) return -_sin_internal(angle - 0.5);
     return _sin_internal(angle);
 }
+// Todo(Quattro): implement other trigonometric functions
 inline float cos(float angle)  { return sin(angle + 0.25); }
 inline float tan(float angle)  { return sin(angle) / cos(angle); }
 inline float cot(float angle)  { return cos(angle) / sin(angle); }
-// Todo(Quattro) implement other trigonometric functions
 inline float sqrt(float x)     { return _mm_cvtss_f32(_mm_sqrt_ss(_mm_set_ss(x))); }
 
 struct vec2{
@@ -110,9 +108,9 @@ inline vec4 operator *(vec4 a, float s) {vec4 res; res.v = _mm_mul_ps(a.v, _mm_s
 inline vec2 operator *(float s, vec2 a) {return {a.x * s, a.y * s};}
 inline vec3 operator *(float s, vec3 a) {return {a.x * s, a.y * s, a.z * s};}
 inline vec4 operator *(float s, vec4 a) {vec4 res; res.v = _mm_mul_ps(a.v, _mm_set1_ps(s)); return res;}
-inline float operator *(vec2 a, vec2 b) {return a.x * b.x + a.y * b.y;}
-inline float operator *(vec3 a, vec3 b) {return a.x * b.x + a.y * b.y + a.z * b.z;}
-inline float operator *(vec4 a, vec4 b) {return _mm_cvtss_f32(_mm_dp_ps(a.v, b.v, 0b11110001));}
+inline float operator *(vec2 a, vec2 b) {return a.x * b.x + a.y * b.y;} // WARN(cogno): I think this might not be a very good idea... should vec * vec return a vec {x1*x2, y1*y2} ? either that or just DON'T make one, let the user decide for itself. In airforce we have vec = vec * vec (and a function for the dot product)
+inline float operator *(vec3 a, vec3 b) {return a.x * b.x + a.y * b.y + a.z * b.z;} // WARN(cogno): I think this might not be a very good idea... should vec * vec return a vec {x1*x2, y1*y2, z1*z2} ? either that or just DON'T make one, let the user decide for itself. In airforce we have vec = vec * vec (and a function for the dot product)
+inline float operator *(vec4 a, vec4 b) {return _mm_cvtss_f32(_mm_dp_ps(a.v, b.v, 0b11110001));} // WARN(cogno): I think this might not be a very good idea... should vec * vec return a vec {x1*x2, y1*y2, z1*z2, w1*w2} ? either that or just DON'T make one, let the user decide for itself. In airforce we have vec = vec * vec (and a function for the dot product)
 inline vec2 operator /(vec2 a, float s) {return {a.x / s, a.y / s};}
 inline vec3 operator /(vec3 a, float s) {return {a.x / s, a.y / s, a.z / s};}
 inline vec4 operator /(vec4 a, float s) {vec4 res; res.v = _mm_div_ps(a.v, _mm_set1_ps(s)); return res;}
@@ -134,6 +132,7 @@ inline bool operator ==(vec4 a, vec4 b) {return _mm_movemask_ps(_mm_cmpeq_ps(a.v
 inline bool operator !=(vec2 a, vec2 b) {return !((a.x == b.x) && (a.y == b.y));}
 inline bool operator !=(vec3 a, vec3 b) {return !((a.x == b.x) && (a.y == b.y) && (a.z == b.z));}
 inline bool operator !=(vec4 a, vec4 b) {return _mm_movemask_ps(_mm_cmpeq_ps(a.v, b.v)) != 0b1111;}
+//TODO(cogno): vec *= float, vec /= float
 inline vec2 round(vec2 v) {return {round(v.x), round(v.y)};}
 inline vec3 round(vec3 v) {return {round(v.x), round(v.y), round(v.z)};}
 inline vec4 round(vec4 v) {return {round(v.x), round(v.y), round(v.z), round(v.w)};}
@@ -146,9 +145,10 @@ inline vec4 ceil(vec4 v)  {return {ceil(v.x), ceil(v.y), ceil(v.z), ceil(v.w)};}
 inline vec2 trunc(vec2 v) {return {trunc(v.x), trunc(v.y)};}
 inline vec3 trunc(vec3 v) {return {trunc(v.x), trunc(v.y), trunc(v.z)};}
 inline vec4 trunc(vec4 v) {return {trunc(v.x), trunc(v.y), trunc(v.z), trunc(v.w)};}
+// API(cogno): maybe magn is better?
 inline float length(vec2 v) { return sqrt(v.x * v.x + v.y * v.y); }
-inline float length(vec3 v){ return sqrt(v.x * v.x + v.y * v.y + v.z * v.z); }
-inline float length(vec4 v){
+inline float length(vec3 v) { return sqrt(v.x * v.x + v.y * v.y + v.z * v.z); }
+inline float length(vec4 v) {
     vec4 res;
     res.v = _mm_dp_ps(v.v, v.v, 0b11110001);
     res.v = _mm_sqrt_ss(res.v);
@@ -279,11 +279,12 @@ inline mat4 operator *(mat4 m1, mat4 m2){
     res.r4 = _mm_or_ps(_mm_or_ps(_mm_dp_ps(m1.r4, temp.r1, 0b11110001), _mm_dp_ps(m1.r4, temp.r2, 0b11110010)), _mm_or_ps(_mm_dp_ps(m1.r4, temp.r3, 0b11110100), _mm_dp_ps(m1.r4, temp.r4, 0b11111000)));
     return res;
 }
-inline mat4 perspective(float fov, float aspectRatio, float z_near, float z_far){
+//TODO(cogno): matrix *= float, matrix *= matrix, matrix /= float
+inline mat4 perspective(float fov, float aspect_ratio, float z_near, float z_far){
     mat4 res = {};
     float tan_value = tan(fov / 2.0f);
     float cotangent = 1.0f / tan_value;
-    res.m11 = -1 / (aspectRatio * tan_value);
+    res.m11 = -1 / (aspect_ratio * tan_value);
     res.m22 = cotangent;
     res.m33 = - (z_far + z_near) / (z_far - z_near);
     res.m34 = -1.0;
