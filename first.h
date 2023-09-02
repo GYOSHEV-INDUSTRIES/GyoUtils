@@ -10,8 +10,8 @@ typedef int32_t  s32;
 typedef uint32_t u32;
 typedef int64_t  s64;
 typedef uint64_t u64;
-typedef float    f32;  // Check(Quattro) do we even use those?
-typedef double   f64;  // Check(Quattro) do we even use those?
+typedef float    f32;  // Check(Quattro): do we even use those? REPLY(cogno): yes we do, it's like u32/u64, it's just faster to write and clearer
+typedef double   f64;  // Check(Quattro): do we even use those? REPLY(cogno): yes we do, it's like u32/u64, it's just faster to write and clearer
 
 #define MAX_U8  0xFF
 #define MAX_U16 0xFFFF
