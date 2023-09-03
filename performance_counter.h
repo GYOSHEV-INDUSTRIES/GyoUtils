@@ -5,7 +5,7 @@ USAGE:
 - add 'END_OF_COMPILATION_UNIT' as the last line of the file with your app entry point
 - call begin_profile() when you want to start profiling
 - call end_and_print_profile() when you want to get profiling information
-- add TIME_BLOCK or TIME_NAMED("name") to every block you want to profile (TIME_BLOCK takes the name of the function, you can specify the name yourself using TIME_NAMED("custom name"))
+- add TIME_FUNC or TIME_BLOCK("name") to every block you want to profile
 
 if you want to deactivate profiling simply add '#define PROFILING_V1 0` anywhere you want before this file
 
@@ -87,8 +87,34 @@ u64 estimate_cpu_frequency(int ms_to_wait = 1) {
 
 
 
-#if PROFILING_V1
+struct single_time_block {
+    single_time_block(const char* func_name) {
+        this->_label = func_name;
+        this->_start = read_cpu_timer();
+    }
+    
+    ~single_time_block() {
+        u64 total = read_cpu_timer() - this->_start;
+        u64 cpu_freq = estimate_cpu_frequency();
+        f64 nanoseconds = total * 1000000000.0f / cpu_freq;
+        if(nanoseconds < 1000) { print("function '%' took % cycles (%ns)", this->_label, total, nanoseconds); return; }
+        nanoseconds /= 1000;
+        if(nanoseconds < 1000) { print("function '%' took % cycles (%us)", this->_label, total, nanoseconds); return; }
+        nanoseconds /= 1000;
+        if(nanoseconds < 1000) { print("function '%' took % cycles (%ms)", this->_label, total, nanoseconds); return; }
+        nanoseconds /= 1000;
+        print("function '%' took % cycles (%s)", this->_label, total, nanoseconds);
+    }
+    
+    const char* _label;
+    u64 _start = 0;
+};
 
+#define PROFILE_FUNC single_time_block STRING_JOIN(t_, __LINE__)(__FUNCTION__)
+
+
+
+#if PROFILING_V1
 
 //API(cogno): we can very easily save the index of the parent to have better ui, but it costs more, is it worth it?
 struct TimeAnchor {
@@ -135,8 +161,8 @@ struct time_block {
     int _old_elapsed_at_root = 0;
 };
 
-#define TIME_BLOCK time_block STRING_JOIN(t_, __LINE__)(__COUNTER__ + 1, __FUNCTION__)
-#define TIME_NAMED(name) time_block STRING_JOIN(t_, __LINE__)(__COUNTER__ + 1, name)
+#define TIME_FUNC time_block STRING_JOIN(t_, __LINE__)(__COUNTER__ + 1, __FUNCTION__)
+#define TIME_BLOCK(name) time_block STRING_JOIN(t_, __LINE__)(__COUNTER__ + 1, name)
 #define END_OF_COMPILATION_UNIT static_assert(__COUNTER__ < ANCHORS_AMT, "Number of profile points exceeds size of profiler::Anchors array")
 
 void begin_profile() {
@@ -173,7 +199,7 @@ void end_and_print_profile() {
         if(t.elapsed_inclusive != t.elapsed_exclusive) one_has_childrens = true;
     }
     
-    //API(cogno): can be optimized for printing speed, no need for now since it's a report tool which prints once at the end of the whole program
+    // PERF(cogno): can be optimized for printing speed, no need for now since it's a report tool which prints once at the end of the whole program
     for(int i = 0; i < 4086; i++) {
         TimeAnchor t = anchors[i];
         if (t.label == nullptr) continue;
@@ -232,8 +258,8 @@ void end_and_print_profile() {
 
 #else
 
-#define TIME_BLOCK
-#define TIME_NAMED(name)
+#define TIME_FUNC
+#define TIME_BLOCK(name)
 #define END_OF_COMPILATION_UNIT
 
 

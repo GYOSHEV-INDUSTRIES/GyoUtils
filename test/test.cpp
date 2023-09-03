@@ -12,7 +12,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "../utils.h"
+#include "../gyoutils.h"
 
 #define PRINT_TESTS
 #include "src/lib.cpp"
@@ -25,7 +25,14 @@
 
 #include "src/prints.cpp"
 
-int main(){
+
+void test_func(int a, int b) {
+    PROFILE_FUNC;
+    print("hello world");
+}
+
+int main() {
+    test_func(10, 20);
     // test_simple_math();
     // test_vec2_math();
     // test_vec3_math();
