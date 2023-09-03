@@ -50,7 +50,8 @@ int main() {
     auto a = mat4_new(4);
     a.m23 = 25;
     print("t1: \n%", a);
-    BENCHMARK_VOID_FUNC(test_func, a);
+    // BENCHMARK_VOID_FUNC(test_func, a);
+    BENCHMARK_FUNC(test_func_empty, a);
     print("t2: \n%", a);
     // BENCHMARK_FUNC(test_func_empty, a);
     

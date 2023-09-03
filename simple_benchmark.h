@@ -5,6 +5,30 @@
 
 #if SIMPLE_BENCHMARK
 
+void print_benchmark_times(u64 min_cycles, u64 avg_cycles, u64 max_cycles) {
+    u64 cpu_frequency = estimate_cpu_frequency();
+    
+    f64 min_time = min_cycles * 1000000000.0f / cpu_frequency;
+    f64 avg_time = avg_cycles * 1000000000.0f / cpu_frequency;
+    f64 max_time = max_cycles * 1000000000.0f / cpu_frequency;
+    if(min_time < 1000) { print("%, %, % (ns)", min_time, avg_time, max_time); return; }
+    
+    min_time /= 1000;
+    avg_time /= 1000;
+    max_time /= 1000;
+    if(min_time < 1000) { print("%, %, % (us)", min_time, avg_time, max_time); return; }
+    
+    min_time /= 1000;
+    avg_time /= 1000;
+    max_time /= 1000;
+    if(min_time < 1000) { print("%, %, % (ms)", min_time, avg_time, max_time); return; }
+    
+    min_time /= 1000;
+    avg_time /= 1000;
+    max_time /= 1000;
+    print("%, %, % (s)", min_time, avg_time, max_time);
+}
+
 #define BENCHMARK_WITH_COUNT(count, func_name, ...) \
 do { \
     u64 min_cycles = MAX_U64; \
@@ -20,7 +44,9 @@ do { \
     } \
     u8 digits_count = log10(count) + 1; \
     printf("function '%s' x%-10d ", STRING_JOIN( STRING_JOIN( STRING_JOIN(#func_name, "("), #__VA_ARGS__  ) , ")" ), count); \
-    print("|> cycles (min, avg, max): %, %, %", min_cycles, total_cycles / count, max_cycles ); \
+    printsl("|> cycles (min, avg, max): %, %, %", min_cycles, total_cycles / count, max_cycles ); \
+    printsl(" | time (min, avg, max): "); \
+    print_benchmark_times(min_cycles, total_cycles / count, max_cycles); \
 } while(0)
 
 #define BENCHMARK_VOID_WITH_COUNT(count, func_name, ...) \
@@ -38,7 +64,9 @@ do { \
     } \
     u8 digits_count = log10(count) + 1; \
     printf("function '%s' x%-10d ", STRING_JOIN( STRING_JOIN( STRING_JOIN(#func_name, "("), #__VA_ARGS__  ) , ")" ), count); \
-    print("|> cycles (min, avg, max): %, %, %", min_cycles, total_cycles / count, max_cycles ); \
+    printsl("|> cycles (min, avg, max): %, %, %", min_cycles, total_cycles / count, max_cycles ); \
+    printsl(" | time (min, avg, max): "); \
+    print_benchmark_times(min_cycles, total_cycles / count, max_cycles); \
 } while(0)
 
 
