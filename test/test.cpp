@@ -27,12 +27,20 @@
 
 
 void test_func(int a, int b) {
-    PROFILE_FUNC;
+    volatile int c = a + b;
+}
+
+void test_another() {
+    volatile int a = 10;
+    volatile int b = 20;
     volatile int c = a + b;
 }
 
 int main() {
-    test_func(10, 20);
+    
+    BENCHMARK_FUNC(test_func, 10, 20);
+    BENCHMARK_FUNC(test_another);
+    
     // test_simple_math();
     // test_vec2_math();
     // test_vec3_math();

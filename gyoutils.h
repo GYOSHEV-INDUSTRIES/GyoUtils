@@ -7,3 +7,4 @@
 #include "performance_counter.h"
 #include "simple_profiling.h"
 #include "profiling_v1.h"
+#include "simple_benchmark.h"
