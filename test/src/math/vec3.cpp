@@ -57,13 +57,13 @@ void test_vec3_math(){
         REQUIRE(vec3{1, 1, 1} != vec3{0, 0, 0}, 1);
     )
     SECTION("vec3 length",
-        REQUIRE(length(vec3{2, 0, 0}), 2.0f);
-        REQUIRE(length(vec3{4, 0, 0}), 4.0f);
-        REQUIRE(length(vec3{sqrt(2), 3, 5}), 6.0f);
+        REQUIRE(vec3_length(vec3{2, 0, 0}), 2.0f);
+        REQUIRE(vec3_length(vec3{4, 0, 0}), 4.0f);
+        REQUIRE(vec3_length(vec3{sqrt(2), 3, 5}), 6.0f);
     )
     SECTION("vec3 normalize",
-        REQUIRE(normalize(vec3{3, 0, 0}), {1, 0, 0});
-        REQUIRE(normalize(vec3{2, 2, 2}), {SQRT3 / 3, SQRT3 / 3, SQRT3 / 3});
+        REQUIRE(vec3_normalize(vec3{3, 0, 0}), {1, 0, 0});
+        REQUIRE(vec3_normalize(vec3{2, 2, 2}), {SQRT3 / 3, SQRT3 / 3, SQRT3 / 3});
     )
     // round (?)
     // floor (?)
