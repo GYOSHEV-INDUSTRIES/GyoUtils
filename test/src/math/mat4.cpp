@@ -5,8 +5,8 @@ void test_mat4_math(){
         REQUIRE(mat4_new(4), {4, 0, 0, 0, 0, 4, 0, 0, 0, 0, 4, 0, 0, 0, 0, 4});
     )
     SECTION("transpose",
-        REQUIRE(transpose(mat4_new(1)), mat4_new(1));
-        REQUIRE(transpose({0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15}), {0, 4, 8, 12, 1, 5, 9, 13, 2, 6, 10, 14, 3, 7, 11, 15});
+        REQUIRE(mat4_transpose(mat4_new(1)), mat4_new(1));
+        REQUIRE(mat4_transpose({0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15}), {0, 4, 8, 12, 1, 5, 9, 13, 2, 6, 10, 14, 3, 7, 11, 15});
     )
     SECTION("add",
         REQUIRE(mat4_new(1) + mat4_new(2), mat4_new(3));

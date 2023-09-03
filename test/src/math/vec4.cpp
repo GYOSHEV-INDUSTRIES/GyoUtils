@@ -73,13 +73,13 @@ void test_vec4_math(){
         REQUIRE(vec4{1, 1, 1, 1} != vec4{0, 0, 0, 0}, 1);
     )
     SECTION("vec4 length",
-        REQUIRE(length(vec4{2, 0, 0, 0}), 2.0f);
-        REQUIRE(length(vec4{4, 0, 0, 0}), 4.0f);
-        REQUIRE(length(vec4{sqrt(8), 6, -2, 1}), 7.0f);
+        REQUIRE(vec4_length(vec4{2, 0, 0, 0}), 2.0f);
+        REQUIRE(vec4_length(vec4{4, 0, 0, 0}), 4.0f);
+        REQUIRE(vec4_length(vec4{sqrt(8), 6, -2, 1}), 7.0f);
     )
     SECTION("vec4 normalize",
-        REQUIRE(normalize(vec4{3, 0, 0, 0}), {1, 0, 0, 0});
-        REQUIRE(normalize(vec4{2, 2, 2, 0}), {SQRT3 / 3, SQRT3 / 3, SQRT3 / 3, 0});
+        REQUIRE(vec4_normalize(vec4{3, 0, 0, 0}), {1, 0, 0, 0});
+        REQUIRE(vec4_normalize(vec4{2, 2, 2, 0}), {SQRT3 / 3, SQRT3 / 3, SQRT3 / 3, 0});
     )
     // round (?)
     // floor (?)

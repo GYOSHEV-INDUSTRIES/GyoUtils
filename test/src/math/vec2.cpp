@@ -33,18 +33,18 @@ void test_vec2_math(){
         REQUIRE(vec2{5, 4} != vec2{3, 3}, 1);
     )
     SECTION("vec2 rotate",
-        REQUIRE(rotate(vec2{1, 0}, 0.25), vec2{0, 1});
-        REQUIRE(rotate(vec2{1, 0}, 1), vec2{1, 0});
-        REQUIRE(rotate(vec2{1, 0}, 0.125), vec2{cos(0.125), sin(0.125)});
+        REQUIRE(vec2_rotate(vec2{1, 0}, 0.25), vec2{0, 1});
+        REQUIRE(vec2_rotate(vec2{1, 0}, 1), vec2{1, 0});
+        REQUIRE(vec2_rotate(vec2{1, 0}, 0.125), vec2{cos(0.125), sin(0.125)});
     )
     SECTION("vec2 length",
-        REQUIRE(length(vec2{2, 0}), 2.0f);
-        REQUIRE(length(vec2{4, 0}), 4.0f);
-        REQUIRE(length(vec2{3, 4}), 5.0f);
+        REQUIRE(vec2_length(vec2{2, 0}), 2.0f);
+        REQUIRE(vec2_length(vec2{4, 0}), 4.0f);
+        REQUIRE(vec2_length(vec2{3, 4}), 5.0f);
     )
     SECTION("vec2 normalize",
-        REQUIRE(normalize(vec2{3, 0}), {1, 0});
-        REQUIRE(normalize(vec2{2, 2}), {SQRT2 / 2, SQRT2 / 2});
+        REQUIRE(vec2_normalize(vec2{3, 0}), {1, 0});
+        REQUIRE(vec2_normalize(vec2{2, 2}), {SQRT2 / 2, SQRT2 / 2});
     )
     SECTION("vec2 fast sum",
         vec2 a = vec2{-1, 5};

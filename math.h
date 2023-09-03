@@ -139,43 +139,43 @@ inline bool operator ==(vec4 a, vec4 b) {return _mm_movemask_ps(_mm_cmpeq_ps(a.v
 inline bool operator !=(vec2 a, vec2 b) {return !((a.x == b.x) && (a.y == b.y));}
 inline bool operator !=(vec3 a, vec3 b) {return !((a.x == b.x) && (a.y == b.y) && (a.z == b.z));}
 inline bool operator !=(vec4 a, vec4 b) {return _mm_movemask_ps(_mm_cmpeq_ps(a.v, b.v)) != 0b1111;}
-inline vec2 round(vec2 v) {return {round(v.x), round(v.y)};}
-inline vec3 round(vec3 v) {return {round(v.x), round(v.y), round(v.z)};}
-inline vec4 round(vec4 v) {return {round(v.x), round(v.y), round(v.z), round(v.w)};}
-inline vec2 floor(vec2 v) {return {floor(v.x), floor(v.y)};}
-inline vec3 floor(vec3 v) {return {floor(v.x), floor(v.y), floor(v.z)};}
-inline vec4 floor(vec4 v) {return {floor(v.x), floor(v.y), floor(v.z), floor(v.w)};}
-inline vec2 ceil(vec2 v)  {return {ceil(v.x), ceil(v.y)};}
-inline vec3 ceil(vec3 v)  {return {ceil(v.x), ceil(v.y), ceil(v.z)};}
-inline vec4 ceil(vec4 v)  {return {ceil(v.x), ceil(v.y), ceil(v.z), ceil(v.w)};}
-inline vec2 trunc(vec2 v) {return {trunc(v.x), trunc(v.y)};}
-inline vec3 trunc(vec3 v) {return {trunc(v.x), trunc(v.y), trunc(v.z)};}
-inline vec4 trunc(vec4 v) {return {trunc(v.x), trunc(v.y), trunc(v.z), trunc(v.w)};}
-inline float length(vec2 v) { return sqrt(v.x * v.x + v.y * v.y); }
-inline float length(vec3 v) { return sqrt(v.x * v.x + v.y * v.y + v.z * v.z); }
-inline float length(vec4 v) {
+inline vec2 vec2_round(vec2 v) {return {round(v.x), round(v.y)};}
+inline vec3 vec3_round(vec3 v) {return {round(v.x), round(v.y), round(v.z)};}
+inline vec4 vec4_round(vec4 v) {return {round(v.x), round(v.y), round(v.z), round(v.w)};}
+inline vec2 vec2_floor(vec2 v) {return {floor(v.x), floor(v.y)};}
+inline vec3 vec3_floor(vec3 v) {return {floor(v.x), floor(v.y), floor(v.z)};}
+inline vec4 vec4_floor(vec4 v) {return {floor(v.x), floor(v.y), floor(v.z), floor(v.w)};}
+inline vec2 vec2_ceil(vec2 v)  {return {ceil(v.x), ceil(v.y)};}
+inline vec3 vec3_ceil(vec3 v)  {return {ceil(v.x), ceil(v.y), ceil(v.z)};}
+inline vec4 vec4_ceil(vec4 v)  {return {ceil(v.x), ceil(v.y), ceil(v.z), ceil(v.w)};}
+inline vec2 vec2_trunc(vec2 v) {return {trunc(v.x), trunc(v.y)};}
+inline vec3 vec3_trunc(vec3 v) {return {trunc(v.x), trunc(v.y), trunc(v.z)};}
+inline vec4 vec4_trunc(vec4 v) {return {trunc(v.x), trunc(v.y), trunc(v.z), trunc(v.w)};}
+inline float vec2_length(vec2 v) { return sqrt(v.x * v.x + v.y * v.y); }
+inline float vec3_length(vec3 v) { return sqrt(v.x * v.x + v.y * v.y + v.z * v.z); }
+inline float vec4_length(vec4 v) {
     vec4 res;
     res.v = _mm_dp_ps(v.v, v.v, 0b11110001);
     res.v = _mm_sqrt_ss(res.v);
     return _mm_cvtss_f32(res.v);
 }
-inline vec2 normalize(vec2 v){
-    float len = length(v);
+inline vec2 vec2_normalize(vec2 v){
+    float len = vec2_length(v);
     return {v.x / len, v.y / len};
 }
-inline vec3 normalize(vec3 v){
-    float len = length(v);
+inline vec3 vec3_normalize(vec3 v){
+    float len = vec3_length(v);
     return {v.x / len, v.y / len, v.z / len};
 }
-inline vec4 normalize(vec4 v){
+inline vec4 vec4_normalize(vec4 v){
     vec4 res;
     res.v = _mm_div_ps(v.v, _mm_sqrt_ps(_mm_dp_ps(v.v, v.v, 0b11111111)));
     return res;
 }
-inline float dot(vec2 a, vec2 b){ return a.x * b.x + a.y * b.y; }
-inline float dot(vec3 a, vec3 b){ return a.x * b.x + a.y * b.y + a.z * b.z; }
-inline float dot(vec4 a, vec4 b){ return _mm_cvtss_f32(_mm_dp_ps(a.v, b.v, 0b11110001)); }
-inline vec3 cross(vec3 a, vec3 b){
+inline float vec2_dot(vec2 a, vec2 b){ return a.x * b.x + a.y * b.y; }
+inline float vec3_dot(vec3 a, vec3 b){ return a.x * b.x + a.y * b.y + a.z * b.z; }
+inline float vec4_dot(vec4 a, vec4 b){ return _mm_cvtss_f32(_mm_dp_ps(a.v, b.v, 0b11110001)); }
+inline vec3 vec3_cross(vec3 a, vec3 b){
     vec3 res;
     res.x = a.y * b.z - b.y * a.z;
     res.y = b.x * a.z - a.x * b.z;
@@ -186,8 +186,8 @@ inline void printsl(vec2 v) {fast_print("(%.3f, %.3f)", v.x, v.y);}
 inline void printsl(vec3 v) {fast_print("(%.3f, %.3f, %.3f)", v.x, v.y, v.z);}
 inline void printsl(vec4 v) {fast_print("(%.3f, %.3f, %.3f, %.3f)", v.x, v.y, v.z, v.w);}
 inline void printsl(mat4 m) {fast_print("|%.3f %.3f %.3f %.3f|\n|%.3f %.3f %.3f %.3f|\n|%.3f %.3f %.3f %.3f|\n|%.3f %.3f %.3f %.3f|\n", m.m11, m.m12, m.m13, m.m14, m.m21, m.m22, m.m23, m.m24, m.m31, m.m32, m.m33, m.m34, m.m41, m.m42, m.m43, m.m44);}
-inline col normalize(col c) {col res; res.v = _mm_div_ps(c.v, _mm_set1_ps(255)); return res;}
-inline vec2 rotate(vec2 v, float angle){
+inline col col_normalize(col c) {col res; res.v = _mm_div_ps(c.v, _mm_set1_ps(255)); return res;}
+inline vec2 vec2_rotate(vec2 v, float angle){
     float cos_value = cos(angle);
     float sin_value = sin(angle);
     
@@ -204,7 +204,7 @@ inline mat4 mat4_new(float n){
     res.r4 = _mm_setr_ps(0, 0, 0, n);
     return res;
 }
-inline mat4 transpose(mat4 m) {
+inline mat4 mat4_transpose(mat4 m) {
     mat4 res;
     res.r1 = _mm_setr_ps(m.m11, m.m21, m.m31, m.m41);
     res.r2 = _mm_setr_ps(m.m12, m.m22, m.m32, m.m42);
@@ -265,7 +265,7 @@ inline mat4 operator /(float s, mat4 m1){
     return res;
 }
 inline mat4 operator *(mat4 m1, mat4 m2){
-    mat4 temp = transpose(m2);
+    mat4 temp = mat4_transpose(m2);
     
     mat4 res;
     res.r1 = _mm_or_ps(_mm_or_ps(_mm_dp_ps(m1.r1, temp.r1, 0b11110001), _mm_dp_ps(m1.r1, temp.r2, 0b11110010)), _mm_or_ps(_mm_dp_ps(m1.r1, temp.r3, 0b11110100), _mm_dp_ps(m1.r1, temp.r4, 0b11111000)));
@@ -314,13 +314,13 @@ inline float determinant(mat4 m){
     __m128 res = _mm_dp_ps(_mm_setr_ps(m.m11, -m.m12, m.m13, -m.m14), _mm_add_ps(_mm_sub_ps(A, B), C), 0b11110001);
     return _mm_cvtss_f32(res);
 }
-inline mat4 rotate(mat4 m, float r,  vec3 v){
+inline mat4 mat4_rotate(mat4 m, float r, vec3 v){
     mat4 res = {}; 
     float a = r;
     float c = cos(a);
     float s = sin(a);
 
-    vec3 axis = normalize(v);
+    vec3 axis = vec3_normalize(v);
     vec3 temp = axis * (1 - c);
     
     res.m11 = c + temp.x * axis.x;
@@ -338,14 +338,14 @@ inline mat4 rotate(mat4 m, float r,  vec3 v){
     res.m44 = 1;
     return m * res;
 }
-inline mat4 translate(mat4 m, vec3 v){
+inline mat4 mat4_translate(mat4 m, vec3 v){
     mat4 res = m;
     res.m14 += v.x;
     res.m24 += v.y;
     res.m34 += v.z;
     return res;
 }
-inline mat4 scale(mat4 m, vec3 v){
+inline mat4 mat4_scale(mat4 m, vec3 v){
     // Todo(Quattro) check this
     mat4 res = mat4_new(1.0f);
     res.v1 = m.v1 * v.x;
@@ -354,14 +354,14 @@ inline mat4 scale(mat4 m, vec3 v){
     res.v4 = m.v4;
     return res;
 }
-inline mat4 translation_mat(vec3 v){
+inline mat4 mat4_translation_mat(vec3 v){
     mat4 res = mat4_new(1);
     res.m14 = v.x;
     res.m24 = v.y;
     res.m34 = v.z;
     return res;
 }
-inline mat4 scale_mat(vec3 v){
+inline mat4 mat4_scale_mat(vec3 v){
     mat4 res = {};
     res.m11 = v.x;
     res.m22 = v.y;
@@ -369,50 +369,9 @@ inline mat4 scale_mat(vec3 v){
     res.m44 = 1;
     return res;
 }
-
-/*
-NOTE: CastOperatorBackAndForth
-I know we wanted to make a cast from one type to another and also in the other
-direction (like casting Vec2 to Vec2i and vice versa), but we couldn't figure out
-how to do it.
-Well I've figured out how but I don't remember where we needed it, so I'm gonna
-add it here and let someone else handle it
-                          - Cogno 2023/08/05
-
-
-struct Vec2;
-struct Vec2i;
-
-struct Vec2i {
-    s32 x = 0;
-    s32 y = 0;
-    operator Vec2();
-};
-
-struct Vec2 {
-    f32 x = 0.0f;
-    f32 y = 0.0f;
-    operator Vec2i();
-};
-
-inline Vec2i::operator Vec2() {
-    Vec2 out;
-    out.x = (f32)x;
-    out.y = (f32)y;
-    return out;
+inline mat4 mat4_rotate_mat(){
+    // Todo(Quattro)
 }
-
-inline Vec2::operator Vec2i() {
-    Vec2i out;
-    out.x = (s32)x;
-    out.y = (s32)y;
-    return out;
-}
-
-*/
-
-
-
 
 //
 // WARN: UNSTABLE API HERE:

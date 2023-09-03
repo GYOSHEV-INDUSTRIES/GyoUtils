@@ -82,10 +82,8 @@ str str_new_alloc(const char* c_str) {
     return new_str;
 }
 
-// PERF(cogno): can we make this fast like other prints or is it already fast like those because of the putchar() ? (look at first.h)
-// └-->(Quattro) it's not as fast as the other print in 'first.h', but to make so we need to put a 0 ('\0') at the end of the string
 inline void printsl(str v) {
-    for(int i = 0; i < v.size; i++) putchar(v.ptr[i]);
+    fast_print("%s", v.ptr);
 }
 
 char* str_to_c_string(str to_convert) {

@@ -12,7 +12,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "../utils.h"
+#include "../gyoutils.h"
 
 #define PRINT_TESTS
 #include "src/lib.cpp"
@@ -31,6 +31,7 @@ int main(){
     // test_vec3_math();
     // test_vec4_math();
     // test_mat4_math();
+    
     // print("\nAll % tests passed succesfully", _cnt);
     return 0;
 }
