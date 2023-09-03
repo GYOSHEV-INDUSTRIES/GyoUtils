@@ -410,3 +410,115 @@ inline Vec2::operator Vec2i() {
 }
 
 */
+
+
+
+
+//
+// WARN: UNSTABLE API HERE:
+// everything we don't know if it works or if it's good enough is after this point
+// use this at your own risk
+//
+
+#if 0
+
+inline Vec3 vec3_project_on_plane(Vec3 to_project, Vec3 plane_norm) {
+    /*
+    A common way to project a vector on a plane is this:
+    (A = to_project, B = plane_normal)
+    B × (A×B / |B|) / |B|
+    
+    we instead ose another way from geometric algebra
+    because it seems to be more efficient!
+    A•B / B (where A•B is the dot product)
+    
+                    - Cogno 2023/07/21
+    */
+    
+    Vec3 a = to_project;
+    Vec3 b = plane_norm;
+    float dot = vec3_dot(a, b);
+    float magn = vec3_sqrd_magn(b);
+    float term = dot / magn;
+    Vec3 perp = term * b;
+    Vec3 proj = to_project - perp;
+    return proj;
+    /*
+    fallback just in case
+    TODO(cogno): compare performance:
+        Vec3 a = to_project;
+        Vec3 b = plane_norm;
+        float bmag = vec3_magn(b);
+        Vec3 c1 = vec3_cross(a, b);
+        Vec3 c1_norm = c1 / bmag;
+        Vec3 c2 = vec3_cross(b, c1_norm);
+        Vec3 c2_norm = c2 / bmag;
+        return c2_norm;
+    */
+}
+
+struct Rotor {
+    float s;
+    float e12, e13, e23;
+};
+
+inline Rotor make_rotor(Vec3 norm1, Vec3 norm2) {
+    Vec3 a = norm1;
+    Vec3 b = norm2;
+    Rotor r;
+    //TODO(cogno): I changed names from y z w to e12 e23 e13, might be wrong, check!
+    r.s = vec3_dot(a, b);
+    r.e12 = a.x * b.y - a.y * b.x;
+    r.e13 = a.y * b.z - a.z * b.y;
+    r.e23 = a.x * b.z - a.z * b.x;
+    return r;
+}
+
+inline Rotor make_rotor(Vec3 rot_axis, float turns) {
+    rot_axis = vec3_norm(rot_axis, Vec3{0, 0, 0});
+    float c = cos(turns / 2);
+    float s = sin(turns / 2);
+    Rotor r;
+    r.s = c;
+    r.e12 =  rot_axis.z * s;
+    r.e13 = -rot_axis.y * s;
+    r.e23 =  rot_axis.x * s;
+    /*
+    e1 * e123 = e23
+    e2 * e123 = -e2 * e213 = -e13
+    e3 * e123 = -e3 * e132 = e3 * e312 = e12
+    */
+    return r;
+}
+
+inline Rotor rotor_inverse(Rotor r) {
+    Rotor newr;
+    newr.x =  r.x;
+    newr.y = -r.e12;
+    newr.z = -r.e13;
+    newr.w = -r.e23;
+    return newr;
+}
+
+inline Vec3 vec3_rotate(Vec3 to_rotate, Rotor r) {
+    Vec3 v = to_rotate;
+    //r is ab
+    
+    //first product ((ba) * v)
+    float x = v.x * r.s   - v.y * r.e12 - v.z * r.e13; // e1
+    float y = v.y * r.s   + v.x * r.e12 - v.z * r.e23; // e2
+    float z = v.z * r.s   + v.x * r.e13 + v.y * r.e23; // e3
+    float w = v.y * r.e13 - v.z * r.e12 - v.x * r.e23; // e123
+    
+    //second product (first * r)
+    Vec3 out;
+    out.x = x * r.s   - y * r.e12 - z * r.e13 - w * r.e23;
+    out.y = x * r.e12 + y * r.s   + w * r.e13 - z * r.e23;
+    out.z = x * r.e13 + y * r.e23 + z * r.s   - w * r.e12;
+    
+    float sanity_check = w * r.s + z * r.e12 - y * r.e13 + x * r.e23;
+    sanity_check = absf(sanity_check);
+    ASSERT(sanity_check <= DEFAULT_EPSILON, "WRONG ROTOR CALCULATIONS, rotor was supposed to be fully 3d but it had a non zero bivector component");
+    return out;
+}
+#endif
