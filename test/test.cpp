@@ -28,7 +28,7 @@
 
 void test_func(int a, int b) {
     PROFILE_FUNC;
-    print("hello world");
+    volatile int c = a + b;
 }
 
 int main() {
