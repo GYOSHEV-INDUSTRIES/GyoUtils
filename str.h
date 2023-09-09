@@ -261,3 +261,117 @@ bool str_is_u32(str to_check) {
     }
     return true;
 }
+
+
+
+
+
+
+
+
+
+#define STR_BUILDER_DEFAULT_SIZE 100
+
+struct StringBuilder {
+    u8* data;
+    s32 size;
+    s32 reserved_size;
+};
+
+StringBuilder make_string_builder(u8* ptr, s32 size) {
+    StringBuilder s = {};
+    s.data = ptr;
+    s.reserved_size = size;
+    return s;
+}
+
+StringBuilder make_string_builder() {
+    auto* data = (u8*)malloc(STR_BUILDER_DEFAULT_SIZE); // default at 100 bytes
+    return make_string_builder(data, STR_BUILDER_DEFAULT_SIZE);
+}
+
+StringBuilder make_string_builder(s32 size) {
+    auto* data = (u8*)malloc(size);
+    return make_string_builder(data, size);
+}
+
+str string_builder_get_str(StringBuilder* b) {
+    str s = {};
+    s.ptr = b->data;
+    s.size = b->size;
+    return s;
+}
+
+void string_builder_resize(StringBuilder* b) {
+    u8 old_start = b->data[0];
+    s32 new_size = max(b->reserved_size * 2, STR_BUILDER_DEFAULT_SIZE);
+    b->data = (u8*)realloc(b->data, new_size);
+    ASSERT(b->data[0] == old_start, "ERROR ON REALLOC, initial byte unexpectedly change, Undefined Behaviour prevented");
+}
+
+void string_builder_resize(StringBuilder* b, s32 min_size) {
+    u8 old_start = b->data[0];
+    s32 new_size = max(b->reserved_size * 2, STR_BUILDER_DEFAULT_SIZE);
+    new_size = max(new_size, min_size);
+    b->data = (u8*)realloc(b->data, new_size);
+    ASSERT(b->data[0] == old_start, "ERROR ON REALLOC, initial byte unexpectedly change, Undefined Behaviour prevented");
+}
+
+void string_builder_reserve(StringBuilder* b, s32 to_reserve) {
+    if(b->reserved_size - b->size >= to_reserve) return; // there's already enough space
+    string_builder_resize(b, b->size + to_reserve);
+}
+
+void string_builder_append(StringBuilder* b, str to_append) {
+    s32 new_size = b->size + to_append.size;
+    if(new_size > b->reserved_size) string_builder_resize(b, new_size);
+    ASSERT(b->reserved_size >= new_size, "not enough memory allocated");
+    memcpy(b->data + b->size, to_append.ptr, to_append.size);
+    b->size = new_size;
+}
+
+// NOTE(cogno): since we're making a **string** builder, everything gets converted to a string representation (for example a bool becomes the string "true" or "false"). If you need to append without conversion you should use string_builder_append_raw()
+// API(cogno): I don't know yet if this is a good idea, maybe append should just add and not convert to str?
+
+void string_builder_append(StringBuilder* b, const char* to_append) {
+    str converted = to_append;
+    string_builder_append(b, converted);
+}
+
+void string_builder_append(StringBuilder* b, bool boolean) { string_builder_append(b, boolean? "true" : "false" ); }
+
+// TODO(cogno): string builder append u8, u16, s16, u32, s32, u64, s64, f32, f64, char
+
+
+// NOTE(cogno): all append_raw are little-endian
+
+void string_builder_append_raw(StringBuilder* b, u8* pointer_to_data, s32 data_size) {
+    string_builder_reserve(b, data_size);
+    ASSERT(b->size + data_size <= b->reserved_size, "out of memory after a reserve??");
+    for(int i = 0; i < data_size; i++) {
+        b->data[b->size + i] = pointer_to_data[i];
+    }
+    b->size += data_size;
+}
+
+void string_builder_append_raw(StringBuilder* b, u8 to_add) {
+    string_builder_reserve(b, 1);
+    ASSERT(b->size + 1 <= b->reserved_size, "out of memory after a reserve??");
+    b->data[b->size++] = to_add;
+}
+
+void string_builder_append_raw(StringBuilder* b, bool to_add) {
+    string_builder_append_raw(b, (u8)to_add);
+}
+
+void string_builder_append_raw(StringBuilder* b, u64 to_add) { string_builder_append_raw(b, (u8*)(&to_add), sizeof(to_add)); }
+void string_builder_append_raw(StringBuilder* b, u32 to_add) { string_builder_append_raw(b, (u8*)(&to_add), sizeof(to_add)); }
+void string_builder_append_raw(StringBuilder* b, u16 to_add) { string_builder_append_raw(b, (u8*)(&to_add), sizeof(to_add)); }
+void string_builder_append_raw(StringBuilder* b, s64 to_add) { string_builder_append_raw(b, (u8*)(&to_add), sizeof(to_add)); }
+void string_builder_append_raw(StringBuilder* b, s32 to_add) { string_builder_append_raw(b, (u8*)(&to_add), sizeof(to_add)); }
+void string_builder_append_raw(StringBuilder* b, s16 to_add) { string_builder_append_raw(b, (u8*)(&to_add), sizeof(to_add)); }
+void string_builder_append_raw(StringBuilder* b, f32 to_add) { string_builder_append_raw(b, (u8*)(&to_add), sizeof(to_add)); }
+void string_builder_append_raw(StringBuilder* b, f64 to_add) { string_builder_append_raw(b, (u8*)(&to_add), sizeof(to_add)); }
+
+// TODO(cogno): string builder insert at index
+// TODO(cogno): string builder replace
