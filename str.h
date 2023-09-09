@@ -304,15 +304,17 @@ str string_builder_get_str(StringBuilder* b) {
 
 void string_builder_resize(StringBuilder* b) {
     u8 old_start = b->data[0];
-    s32 new_size = max(b->reserved_size * 2, STR_BUILDER_DEFAULT_SIZE);
+    s32 new_size = b->reserved_size * 2;
+    new_size = new_size >= STR_BUILDER_DEFAULT_SIZE ? new_size : STR_BUILDER_DEFAULT_SIZE; // API(cogno): 'max' identifier not found error
     b->data = (u8*)realloc(b->data, new_size);
     ASSERT(b->data[0] == old_start, "ERROR ON REALLOC, initial byte unexpectedly change, Undefined Behaviour prevented");
 }
 
 void string_builder_resize(StringBuilder* b, s32 min_size) {
     u8 old_start = b->data[0];
-    s32 new_size = max(b->reserved_size * 2, STR_BUILDER_DEFAULT_SIZE);
-    new_size = max(new_size, min_size);
+    s32 new_size = b->reserved_size * 2;
+    new_size = new_size >= STR_BUILDER_DEFAULT_SIZE ? new_size : STR_BUILDER_DEFAULT_SIZE; // API(cogno): 'max' identifier not found error
+    new_size = new_size >= min_size ? new_size : min_size; // API(cogno): 'max' identifier not found error
     b->data = (u8*)realloc(b->data, new_size);
     ASSERT(b->data[0] == old_start, "ERROR ON REALLOC, initial byte unexpectedly change, Undefined Behaviour prevented");
 }
