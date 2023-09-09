@@ -37,9 +37,6 @@ int c_string_length(const char* s) {
 //TODO(cogno): test all of this file
 
 //TODO(cogno): more unicode support (currently str kind of does not support it, I mean utf8 is just an array of bytes but these functions don't take it into account so they might be wrong, alternatively we can make 2 different strings, one with unicode and one without, it might make stuff a lot simpler, I'd say str and unicode_str)
-//TODO(cogno): str builder
-//TODO(cogno): str concat
-//TODO(cogno): str matches
 //TODO(cogno): str substring
 //TODO(cogno): str split all
 //TODO(cogno): str parse to s32
@@ -106,6 +103,14 @@ str str_concat(str s1, str s2) {
 str str_concat(const char* s1, const char* s2) { return str_concat((str)s1, (str)s2); }
 str str_concat(str s1, const char* s2) { return str_concat(s1, (str)s2); }
 str str_concat(const char* s1, str s2) { return str_concat((str)s1, s2); }
+
+str str_copy(str to_copy) {
+    str copy;
+    copy.ptr = (u8*)malloc(to_copy.size);
+    copy.size = to_copy.size;
+    memcpy(copy.ptr, to_copy.ptr, to_copy.size);
+    return copy;
+}
 
 // splits a single str in 2 parts on the first occurrence of a char, no allocations necessary.
 // the character split is NOT included in the final strings, 
@@ -261,6 +266,19 @@ bool str_is_u32(str to_check) {
     return true;
 }
 
+bool str_matches(str a, str b) {
+    if(a.size != b.size) return false;
+    for(int i = 0; i < a.size; i++) {
+        u8 a1 = a[i];
+        u8 b1 = b[i];
+        if(a1 != b1) return false;
+    }
+    return true;
+}
+
+bool str_matches(const char* a, const char* b) {return str_matches((str)a, (str)b); }
+bool str_matches(str a, const char* b) {return str_matches(a, (str)b); }
+bool str_matches(const char* a, str b) {return str_matches((str)a, b); }
 
 
 
@@ -294,6 +312,10 @@ StringBuilder make_string_builder(s32 size) {
     return make_string_builder(data, size);
 }
 
+void string_builder_clear(StringBuilder* b) {
+    b->size = 0;
+}
+
 str string_builder_get_str(StringBuilder* b) {
     str s = {};
     s.ptr = b->data;
@@ -315,6 +337,7 @@ void string_builder_resize(StringBuilder* b, s32 min_size) {
     new_size = new_size >= STR_BUILDER_DEFAULT_SIZE ? new_size : STR_BUILDER_DEFAULT_SIZE; // API(cogno): 'max' identifier not found error
     new_size = new_size >= min_size ? new_size : min_size; // API(cogno): 'max' identifier not found error
     b->data = (u8*)realloc(b->data, new_size);
+    b->reserved_size = new_size;
     ASSERT(b->data[0] == old_start, "ERROR ON REALLOC, initial byte unexpectedly change, Undefined Behaviour prevented");
 }
 
@@ -326,7 +349,7 @@ void string_builder_reserve(StringBuilder* b, s32 to_reserve) {
 void string_builder_append(StringBuilder* b, str to_append) {
     s32 new_size = b->size + to_append.size;
     if(new_size > b->reserved_size) string_builder_resize(b, new_size);
-    ASSERT(b->reserved_size >= new_size, "not enough memory allocated");
+    ASSERT(b->reserved_size >= new_size, "not enough memory allocated, wanted % but allocated %", new_size, b->reserved_size);
     memcpy(b->data + b->size, to_append.ptr, to_append.size);
     b->size = new_size;
 }
@@ -376,3 +399,5 @@ void string_builder_append_raw(StringBuilder* b, f64 to_add) { string_builder_ap
 
 // TODO(cogno): string builder insert at index
 // TODO(cogno): string builder replace
+
+void string_builder_remove_last_bytes(StringBuilder* b, s32 bytes_to_remove) { b->size -= bytes_to_remove; }
