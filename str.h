@@ -203,6 +203,7 @@ void str_trim_right(str* to_trim) {
     }
 }
 
+// TODO(cogno): return a new string trimmed instead of replacing, to edit the original call str_trim_inplace
 void str_trim(str* to_trim) {
     str_trim_left(to_trim);
     str_trim_right(to_trim);
