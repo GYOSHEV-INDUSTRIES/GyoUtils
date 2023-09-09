@@ -82,9 +82,7 @@ str str_new_alloc(const char* c_str) {
     return new_str;
 }
 
-inline void printsl(str v) {
-    fast_print("%s", v.ptr);
-}
+inline void printsl(str v) { for(int i = 0; i < v.size; i++) putchar(v.ptr[i]); }
 
 char* str_to_c_string(str to_convert) {
     ASSERT(to_convert.size != MAX_U32, "str is full, cannot convert to c str");
