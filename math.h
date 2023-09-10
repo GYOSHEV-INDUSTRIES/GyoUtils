@@ -283,12 +283,11 @@ inline mat4 perspective(float fov, float aspect_ratio, float z_near, float z_far
     mat4 res = {};
     float tan_value = tan(fov / 2.0f);
     float cotangent = 1.0f / tan_value;
-    res.m11 = -1 / (aspect_ratio * tan_value);
+    res.m11 = 1 / (aspect_ratio * tan_value);
     res.m22 = cotangent;
     res.m33 = - (z_far + z_near) / (z_far - z_near);
     res.m34 = -1.0;
     res.m43 = -(2.0 * z_near * z_far) / (z_far - z_near);
-    res.m44 = 1;
     return res;
 }
 inline mat4 ortho(float left, float right, float bottom, float top, float z_near, float z_far){
