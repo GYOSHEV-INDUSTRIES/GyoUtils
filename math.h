@@ -360,7 +360,7 @@ inline mat4 mat4_scale_mat(vec3 v){
     res.m44 = 1;
     return res;
 }
-inline mat4 mat4_rotate_x_mat(float angle){
+inline mat4 mat4_rotation_x_mat(float angle){
     mat4 res = {};
     float c = cos(angle);
     float s = sin(angle);
@@ -371,7 +371,7 @@ inline mat4 mat4_rotate_x_mat(float angle){
     res.m44 = 1;
     return res;
 }
-inline mat4 mat4_rotate_y_mat(float angle){
+inline mat4 mat4_rotation_y_mat(float angle){
     mat4 res = {};
     float c = cos(angle);
     float s = sin(angle);
@@ -382,7 +382,7 @@ inline mat4 mat4_rotate_y_mat(float angle){
     res.m44 = 1;
     return res;
 }
-inline mat4 mat4_rotate_z_mat(float angle){
+inline mat4 mat4_rotation_z_mat(float angle){
     mat4 res = {};
     float c = cos(angle);
     float s = sin(angle);
@@ -393,7 +393,7 @@ inline mat4 mat4_rotate_z_mat(float angle){
     res.m44 = 1;
     return res;
 }
-inline mat4 mat4_rotate_mat(vec3 axis, float angle){
+inline mat4 mat4_rotation_mat(vec3 axis, float angle){
     mat4 res = {}; 
     float c = cos(angle);
     float s = sin(angle);
