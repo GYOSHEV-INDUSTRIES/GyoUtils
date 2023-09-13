@@ -58,12 +58,14 @@ struct vec2{
         struct {float x, y;};
     };
 };
+
 struct vec3{
     union{
         float ptr[3];
         struct {float x, y, z;};
     };
 };
+
 struct vec4{
     union{
         float ptr[4];
@@ -71,6 +73,7 @@ struct vec4{
         __m128 v;
     };
 };
+
 struct col{
     union{
         float ptr[4];
@@ -78,6 +81,7 @@ struct col{
         __m128 v;
     };
 };
+
 struct mat4{
     union{
         float ptr[16];
@@ -97,6 +101,15 @@ struct mat4{
         return this->mat_f[idx];
     }
 };
+
+
+inline void printsl(vec2 v) {fast_print("(%.3f, %.3f)", v.x, v.y);}
+inline void printsl(vec3 v) {fast_print("(%.3f, %.3f, %.3f)", v.x, v.y, v.z);}
+inline void printsl(vec4 v) {fast_print("(%.3f, %.3f, %.3f, %.3f)", v.x, v.y, v.z, v.w);}
+inline void printsl(mat4 m) {fast_print("|%.3f %.3f %.3f %.3f|\n|%.3f %.3f %.3f %.3f|\n|%.3f %.3f %.3f %.3f|\n|%.3f %.3f %.3f %.3f|\n", m.m11, m.m12, m.m13, m.m14, m.m21, m.m22, m.m23, m.m24, m.m31, m.m32, m.m33, m.m34, m.m41, m.m42, m.m43, m.m44);}
+// TODO(cogno): printsl col
+
+
 inline vec2 operator +(vec2 a, vec2 b)  {return {a.x + b.x, a.y + b.y};}
 inline vec3 operator +(vec3 a, vec3 b)  {return {a.x + b.x, a.y + b.y, a.z + b.z};}
 inline vec4 operator +(vec4 a, vec4 b)  {vec4 res; res.v = _mm_add_ps(a.v, b.v); return res;}
@@ -139,18 +152,24 @@ inline bool operator ==(vec4 a, vec4 b) {return _mm_movemask_ps(_mm_cmpeq_ps(a.v
 inline bool operator !=(vec2 a, vec2 b) {return !((a.x == b.x) && (a.y == b.y));}
 inline bool operator !=(vec3 a, vec3 b) {return !((a.x == b.x) && (a.y == b.y) && (a.z == b.z));}
 inline bool operator !=(vec4 a, vec4 b) {return _mm_movemask_ps(_mm_cmpeq_ps(a.v, b.v)) != 0b1111;}
+
+
 inline vec2 vec2_round(vec2 v) {return {round(v.x), round(v.y)};}
 inline vec3 vec3_round(vec3 v) {return {round(v.x), round(v.y), round(v.z)};}
 inline vec4 vec4_round(vec4 v) {return {round(v.x), round(v.y), round(v.z), round(v.w)};}
+
 inline vec2 vec2_floor(vec2 v) {return {floor(v.x), floor(v.y)};}
 inline vec3 vec3_floor(vec3 v) {return {floor(v.x), floor(v.y), floor(v.z)};}
 inline vec4 vec4_floor(vec4 v) {return {floor(v.x), floor(v.y), floor(v.z), floor(v.w)};}
+
 inline vec2 vec2_ceil(vec2 v)  {return {ceil(v.x), ceil(v.y)};}
 inline vec3 vec3_ceil(vec3 v)  {return {ceil(v.x), ceil(v.y), ceil(v.z)};}
 inline vec4 vec4_ceil(vec4 v)  {return {ceil(v.x), ceil(v.y), ceil(v.z), ceil(v.w)};}
+
 inline vec2 vec2_trunc(vec2 v) {return {trunc(v.x), trunc(v.y)};}
 inline vec3 vec3_trunc(vec3 v) {return {trunc(v.x), trunc(v.y), trunc(v.z)};}
 inline vec4 vec4_trunc(vec4 v) {return {trunc(v.x), trunc(v.y), trunc(v.z), trunc(v.w)};}
+
 inline float vec2_length(vec2 v) { return sqrt(v.x * v.x + v.y * v.y); }
 inline float vec3_length(vec3 v) { return sqrt(v.x * v.x + v.y * v.y + v.z * v.z); }
 inline float vec4_length(vec4 v) {
@@ -159,6 +178,7 @@ inline float vec4_length(vec4 v) {
     res.v = _mm_sqrt_ss(res.v);
     return _mm_cvtss_f32(res.v);
 }
+
 inline vec2 vec2_normalize(vec2 v){
     float len = vec2_length(v);
     return {v.x / len, v.y / len};
@@ -172,9 +192,12 @@ inline vec4 vec4_normalize(vec4 v){
     res.v = _mm_div_ps(v.v, _mm_sqrt_ps(_mm_dp_ps(v.v, v.v, 0b11111111)));
     return res;
 }
+
 inline float vec2_dot(vec2 a, vec2 b){ return a.x * b.x + a.y * b.y; }
 inline float vec3_dot(vec3 a, vec3 b){ return a.x * b.x + a.y * b.y + a.z * b.z; }
 inline float vec4_dot(vec4 a, vec4 b){ return _mm_cvtss_f32(_mm_dp_ps(a.v, b.v, 0b11110001)); }
+
+
 inline vec3 vec3_cross(vec3 a, vec3 b){
     vec3 res;
     res.x = a.y * b.z - b.y * a.z;
@@ -182,10 +205,7 @@ inline vec3 vec3_cross(vec3 a, vec3 b){
     res.z = a.x * b.y - b.x * a.y;
     return res;
 }
-inline void printsl(vec2 v) {fast_print("(%.3f, %.3f)", v.x, v.y);}
-inline void printsl(vec3 v) {fast_print("(%.3f, %.3f, %.3f)", v.x, v.y, v.z);}
-inline void printsl(vec4 v) {fast_print("(%.3f, %.3f, %.3f, %.3f)", v.x, v.y, v.z, v.w);}
-inline void printsl(mat4 m) {fast_print("|%.3f %.3f %.3f %.3f|\n|%.3f %.3f %.3f %.3f|\n|%.3f %.3f %.3f %.3f|\n|%.3f %.3f %.3f %.3f|\n", m.m11, m.m12, m.m13, m.m14, m.m21, m.m22, m.m23, m.m24, m.m31, m.m32, m.m33, m.m34, m.m41, m.m42, m.m43, m.m44);}
+
 inline col col_normalize(col c) {col res; res.v = _mm_div_ps(c.v, _mm_set1_ps(255)); return res;}
 inline vec2 vec2_rotate(vec2 v, float angle){
     float cos_value = cos(angle);
@@ -196,6 +216,15 @@ inline vec2 vec2_rotate(vec2 v, float angle){
     res.y = v.x * sin_value + v.y * cos_value;
     return res;
 }
+inline vec2 vec2_project_point_on_line(vec2 point, vec2 line_start, vec2 line_dir) {
+    // API(cogno): can we make it faster with 2D PGA?
+    
+    auto dot_value = line_dir.x * (point.x - line_start.x) + line_dir.y * (point.y - line_start.y);
+    vec2 proj = line_start + line_dir * dot_value;
+    return proj;
+}
+
+
 inline mat4 mat4_new(float n){
     mat4 res;
     res.r1 = _mm_setr_ps(n, 0, 0, 0);
