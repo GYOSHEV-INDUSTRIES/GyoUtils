@@ -41,6 +41,12 @@ bool test(int a) {
 }
 
 int main() {
+
+    print("%\\%, %", 10, 15);
+    print("%\\%, %", 10, 15);
+    print("%\\%, %", 10, 15);
+
+    #if 0    
     Array<str> arr = array_new<str>(20);
     get_only_files_in_dir(".\\src", &arr);
     
@@ -97,7 +103,6 @@ int main() {
         print("file %=%", it_index, (char)it);
     }
 
-    #if 0    
     print("\nOLD FOR:");
     OLDFor(arr) {
         print("file %=%", it.index, it.value);
