@@ -1,6 +1,7 @@
 #pragma once
 #include <stdio.h>
 #include <stdint.h>
+#include <stdlib.h>
 
 typedef int8_t   s8;
 typedef uint8_t  u8;
@@ -26,11 +27,34 @@ typedef double   f64;
 #define MIN_S32 0x80000000
 #define MIN_S64 0x8000000000000000
 
-// variant of the print below without the ending newline (\n)
-// TODO(cogno): change print from %/% or whatever to %%
+//
+// alternative to printf, print and printsl:
+// any print is just printsl with a \n at the end (sl = single line)
+//
+// usage: either print(variable), or print("message with replacements", var1, var2, ...)
+// printf uses % followed by a character (or more) to know how to print your variable, for
+// example %d prints integers, %f floats, %p pointers etc, we don't do that, we decide how
+// to print the variable depending on it's type (floats will be printed as floats,
+// integers as integers, etc.).
+// to do so simply put '%' where you want your variable to be printed.
+// if you want to print % as a symbol, add \\ before the %
+//
+// if you want more advanted formatting (how many characters a float has, padding, identation, ...)
+// then simply use printf
+//
+// example usage:
+// int a = 15;
+// float b = 12.5;
+// print(a);
+// print("this is value %", a);
+// print("this is a percentage: %\\%", a);
+// print("values a=%, b=%", a, b);
+//
+
 char _print_buff[0xFF] = "";
 #define fast_print(fmt, ...) sprintf_s(_print_buff, fmt, __VA_ARGS__);  fputs(_print_buff, stdout)
 
+// default behaviour, unknown types prints "(unknown type)", while pointers are printed as such
 template<typename T> void printsl(T v)  { fast_print("(unknown type)"); }
 template<typename T> void printsl(T* v) { fast_print("0x%p", v); } // NOTE(cogno): leave this before const char* s so strings are printed as such (and not as pointers)
 
@@ -46,15 +70,16 @@ inline void printsl(u8  d)         { fast_print("%u", d); }
 inline void printsl(u16 d)         { fast_print("%u", d); }
 inline void printsl(u32 d)         { fast_print("%lu", d); }
 inline void printsl(u64 d)         { fast_print("%llu", d); }
-inline void printsl(float f)       { fast_print("%.3f", f); }
-inline void printsl(double f)      { fast_print("%.3f", f); }
+inline void printsl(float f)       { fast_print("%.5f", f); }
+inline void printsl(double f)      { fast_print("%.5f", f); }
 inline void printsl(bool b)        { fast_print("%s", b ? "true" : "false"); }
 inline void printsl() { }
 
-// equal to printsl but with automatic \n after the string
+// print is just printsl but with automatic \n after the string
 template<typename T> inline void print(T v) { printsl(v); putchar('\n'); }
 inline void print() { }
 
+// printsl formatting
 template <typename T, typename... Types>
 void printsl(const char* s, T t1, Types... others) {
     int current_index = 0;
@@ -70,35 +95,17 @@ void printsl(const char* s, T t1, Types... others) {
         } else {
             // just a character to print
             putchar(c);
-            continue;
         }
     }
     printsl(t1);
     printsl(s + current_index, others...);
 }
 
+// print formatting
 template <typename T, typename... Types>
 void print(const char* s, T t1, Types... others) {
-    int current_index = 0;
-    while(true) {
-        char c = s[current_index++];
-        if(c == 0) {
-            putchar('\n');
-            return;
-        } else if(c == '\\') {
-            char next = s[current_index];
-            // escape characters
-            if(next == '%') { putchar('%'); current_index++; }
-        } else if(c == '%') {
-            break; // put formatted input
-        } else {
-            // just a character to print
-            putchar(c);
-            continue;
-        }
-    }
-    printsl(t1);
-    print(s + current_index, others...);
+    printsl(s, t1, others...);
+    putchar('\n');
 }
 
 #ifdef NO_ASSERT

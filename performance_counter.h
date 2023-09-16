@@ -1,6 +1,6 @@
+#pragma once
+
 //TODO(cogno): TEST THIS
-
-
 
 #if _WIN32
 

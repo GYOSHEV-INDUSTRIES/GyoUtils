@@ -1,3 +1,5 @@
+#pragma once
+
 //
 // profiling of single blocks, usage: add PROFILE_FUNC or PROFILE_BLOCK("name") in the scope you want to profile,
 // it will be executed once and immediately print you profiling informations (location, cycle count and execution time)

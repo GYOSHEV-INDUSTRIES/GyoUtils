@@ -1,5 +1,16 @@
+#pragma once
+#define GYOMATH
+
 #include <smmintrin.h>
 
+inline int count_digits(u64 x){
+    int n = 0;
+    int p = x;
+    do{
+        n++;
+    }while(p /= 10);
+    return n;
+}
 inline float npow(float x, u32 n){
     float res = x;
     for(int i = 1; i < n; i++){
@@ -103,10 +114,10 @@ struct mat4{
 };
 
 
-inline void printsl(vec2 v) {fast_print("(%.3f, %.3f)", v.x, v.y);}
-inline void printsl(vec3 v) {fast_print("(%.3f, %.3f, %.3f)", v.x, v.y, v.z);}
-inline void printsl(vec4 v) {fast_print("(%.3f, %.3f, %.3f, %.3f)", v.x, v.y, v.z, v.w);}
-inline void printsl(mat4 m) {fast_print("|%.3f %.3f %.3f %.3f|\n|%.3f %.3f %.3f %.3f|\n|%.3f %.3f %.3f %.3f|\n|%.3f %.3f %.3f %.3f|\n", m.m11, m.m12, m.m13, m.m14, m.m21, m.m22, m.m23, m.m24, m.m31, m.m32, m.m33, m.m34, m.m41, m.m42, m.m43, m.m44);}
+inline void printsl(vec2 v) {fast_print("(%.5f, %.5f)", v.x, v.y);}
+inline void printsl(vec3 v) {fast_print("(%.5f, %.5f, %.5f)", v.x, v.y, v.z);}
+inline void printsl(vec4 v) {fast_print("(%.5f, %.5f, %.5f, %.5f)", v.x, v.y, v.z, v.w);}
+inline void printsl(mat4 m) {fast_print("|%.5f %.5f %.5f %.5f|\n|%.5f %.5f %.5f %.5f|\n|%.5f %.5f %.5f %.5f|\n|%.5f %.5f %.5f %.5f|\n", m.m11, m.m12, m.m13, m.m14, m.m21, m.m22, m.m23, m.m24, m.m31, m.m32, m.m33, m.m34, m.m41, m.m42, m.m43, m.m44);}
 // TODO(cogno): printsl col
 
 

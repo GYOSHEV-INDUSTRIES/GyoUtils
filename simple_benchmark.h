@@ -1,3 +1,4 @@
+#pragma once
 
 #ifndef SIMPLE_BENCHMARK
 #define SIMPLE_BENCHMARK 1

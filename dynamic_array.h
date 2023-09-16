@@ -1,3 +1,5 @@
+#pragma once
+
 template <typename T>
 struct Array {
     s32 size;
@@ -105,13 +107,32 @@ void array_free_all(Array<T>* array) {
 }
 
 
-//macros for improved for cycle. only works with Array's and compatible structs (structs with 'size' and 'ptr'). Can return values (by-copy) and pointers (by-refs)
-// usage: For(array) { code }
 // TODO(cogno): what if the array is empty? out of bounds/undefined behaviour?
 // TODO(cogno): what if you put an array inside another? "it" name conflict?
 // BUG(cogno): For(str) gives a segfault after the first cycle, (so at array read?)
-#define For(arr) for(struct {s32 index; decltype(arr.ptr[0]) value; } it = {0, arr.ptr[0]}; it.index < arr.size; it.index++, it.value = arr.ptr[it.index])
-#define For_ptr(arr) for(struct {s32 index; decltype(arr.ptr) ptr; } it = {0, &arr.ptr[0]}; it.index < arr.size; it.index++, it.ptr = &arr.ptr[it.index])
+// BUG(cogno): if you use For you edit arr[0] because decltype(arr.ptr[0]) returns a T& instead of a T (because C++ is shit)
+#define OLDFor(arr) for(struct {s32 index; decltype(*arr.ptr) value; } it = {0, arr.ptr[0]}; it.index < arr.size; it.index++, it.value = arr.ptr[it.index])
+#define OLDFor_ptr(arr) for(struct {s32 index; decltype(arr.ptr) ptr; } it = {0, &arr.ptr[0]}; it.index < arr.size; it.index++, it.ptr = &arr.ptr[it.index])
+
+//macros for improved for cycle. only works with Array's and compatible structs (structs with 'size' and 'ptr'). Can return values (by-copy) and pointers (by-refs)
+// usage: For(array) { code }
+#define For(arr) \
+for(int it_index = 0, _=1;_;_=0) \
+    for(auto it = (arr).ptr[it_index]; it_index < (arr).size; it = (arr).ptr[++it_index])
+
+#define For_ptr(arr) \
+for(int it_index = 0, _=1;_;_=0) \
+    for(auto* it = &((arr).ptr[it_index]); it_index < (arr).size; it = &((arr).ptr[++it_index]))
+
+#define For_rev(arr) \
+for(int it_index = (arr).size - 1, _=1;_;_=0) \
+    for(auto it = (arr).ptr[it_index]; it_index >= 0; it = (arr).ptr[--it_index])
+
+#define For_ptr_rev(arr) \
+for(int it_index = (arr).size - 1, _=1;_;_=0) \
+    for(auto* it = &((arr).ptr[it_index]); it_index >= 0; it = &((arr).ptr[--it_index]))
+
+#define For_rev_ptr(arr) For_ptr_rev((arr))
 
 // usage: for(Range(10, 30)) OR for(Range(50)) or stuff like this
 // TODO(cogno): what if you put an array inside another? "it" name conflict?
