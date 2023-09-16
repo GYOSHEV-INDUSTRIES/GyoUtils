@@ -1,7 +1,9 @@
 #pragma once
 
-// Todo(Quattro) create our memcpy implementation
-#include <string.h>
+#ifndef DISABLE_INCLUDES
+    // Todo(Quattro) create our memcpy implementation
+    #include <string.h>
+#endif
 
 //UNICODE UTILS
 u8 unicode_utf8_to_size(u8 val) {

@@ -7,8 +7,6 @@ USAGE:
 - call end_and_print_profile() when you want to get profiling information
 - add TIME_FUNC or TIME_BLOCK("name") to every block you want to profile
 
-if you want to deactivate profiling simply add '#define PROFILING_V1 0` anywhere you want before this file
-
 This simple profiling can handle functions both nested and recursive.
 It has a limit of 4096 timed blocks.
 */
@@ -21,9 +19,8 @@ It has a limit of 4096 timed blocks.
 //             - recursive function followed by the same function but NOT recursive
 
 #ifndef PROFILING_V1
-#define PROFILING_V1 1
+    #define PROFILING_V1 1
 #endif
-
 
 #if PROFILING_V1
 
@@ -85,14 +82,14 @@ void pad_right(int to_add) {
 }
 
 #ifndef GYOMATH
-inline int count_digits(u64 x){
-    int n = 0;
-    int p = x;
-    do{
-        n++;
-    }while(p /= 10);
-    return n;
-}
+    inline int count_digits(u64 x){
+        int n = 0;
+        int p = x;
+        do{
+            n++;
+        }while(p /= 10);
+        return n;
+    }
 #endif
 
 void end_and_print_profile() {

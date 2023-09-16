@@ -1,8 +1,8 @@
 
-Version: 1.0.0 2023/09/xx
+Version: 0.1.0 2023/09/16
 ---------------------------------
 
-First release of gyoutils. Here's everything it includes (in no particular order):
+First release of gyoutils. Here's most of the stuff it includes (in no particular order):
 
 Dynamic array 'Array<T>', a simple replacement to std::vector.
 Basic types s8, u8, s16, u16, s32, u32, s64, u64, f32, f64.
@@ -16,4 +16,4 @@ Basic performance counters.
 Basic function/block profiling, handling inner and recursive functions too.
 Basic benchmarking, repeating a piece of code many times to analyze it's performance.
 str and str_builders, a simple replacement to std::string.
-windows file handling utility functions.
+windows file handling utility functions to simplify working with files.

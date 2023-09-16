@@ -1,7 +1,9 @@
 #pragma once
 #define GYOMATH
 
-#include <smmintrin.h>
+#ifndef DISABLE_INCLUDES
+    #include <smmintrin.h>
+#endif
 
 inline int count_digits(u64 x){
     int n = 0;

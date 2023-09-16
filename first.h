@@ -1,7 +1,10 @@
 #pragma once
-#include <stdio.h>
-#include <stdint.h>
-#include <stdlib.h>
+
+#ifndef DISABLE_INCLUDES
+    #include <stdio.h>
+    #include <stdint.h>
+    #include <stdlib.h>
+#endif
 
 typedef int8_t   s8;
 typedef uint8_t  u8;
