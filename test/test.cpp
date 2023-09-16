@@ -44,6 +44,9 @@ int main() {
     Array<str> arr = array_new<str>(20);
     get_only_files_in_dir(".\\src", &arr);
     
+    Array<str> arr2 = array_new<str>(20);
+    get_only_files_in_dir(".\\src\\math", &arr2);
+    
     print("CLASSIC FOR:");
     for(int i = 0; i < arr.size; i++) {
         print("file %=%", i, arr[i]);
@@ -61,12 +64,37 @@ int main() {
     
     print("\nNEW FOR AGAIN:");
     For(arr) {
-        print("file %='%'", it_index, it);
+        print("file %=%", it_index, it);
+    }
+    
+    print("\nNEW FOR WITH PTR:");
+    For_ptr(arr) {
+        print("file %=%", it_index, *it);
+    }
+    
+    print("\nNEW FOR REV:");
+    For_rev(arr) {
+        print("file %=%", it_index, it);
+    }
+    
+    print("\nNEW FOR REV WITH PTR:");
+    For_ptr_rev(arr) {
+        print("file %=%", it_index, *it);
+    }
+    
+    print("\nNEW FOR REV WITH PTR:");
+    For_rev_ptr(arr) {
+        print("file %=%", it_index, *it);
     }
     
     print("\nCLASSIC FOR 2:");
     for(int i = 0; i < arr.size; i++) {
         print("file %=%", i, arr[i]);
+    }
+
+    print("\nNEW FOR OF STR:");
+    For(arr[0]) {
+        print("file %=%", it_index, (char)it);
     }
 
     #if 0    
