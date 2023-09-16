@@ -25,7 +25,31 @@
 
 #include "src/prints.cpp"
 
+#include "../win64_files.h"
+#include <Windows.h>
+
+bool test(int a) {
+    print("a %", a);
+    defer({print("b %", a); print("another one"); });
+    
+    if(a < 3) return false;
+    
+    print("c %", a);
+    defer(print("d %", a));
+    
+    return true;
+}
+
 int main() {
+    
+    Array<str> arr = array_new<str>(20);
+    get_only_files_in_dir(".\\src", &arr);
+    
+    for(int i = 0; i < arr.size; i++) {
+        str s = arr[i];
+        print("file %=%", i, s);
+    }
+    
     // test_simple_math();
     // test_vec2_math();
     // test_vec3_math();
