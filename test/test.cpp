@@ -41,14 +41,45 @@ bool test(int a) {
 }
 
 int main() {
-    
     Array<str> arr = array_new<str>(20);
     get_only_files_in_dir(".\\src", &arr);
     
+    print("CLASSIC FOR:");
     for(int i = 0; i < arr.size; i++) {
-        str s = arr[i];
-        print("file %=%", i, s);
+        print("file %=%", i, arr[i]);
     }
+    
+    print("\nCLASSIC FOR AGAIN:");
+    for(int i = 0; i < arr.size; i++) {
+        print("file %=%", i, arr[i]);
+    }
+    
+    print("\nNEW FOR:");
+    For(arr) {
+        print("file %='%'", it_index, it);
+    }
+    
+    print("\nNEW FOR AGAIN:");
+    For(arr) {
+        print("file %='%'", it_index, it);
+    }
+    
+    print("\nCLASSIC FOR 2:");
+    for(int i = 0; i < arr.size; i++) {
+        print("file %=%", i, arr[i]);
+    }
+
+    #if 0    
+    print("\nOLD FOR:");
+    OLDFor(arr) {
+        print("file %=%", it.index, it.value);
+    }
+    
+    print("\nOLD FOR AGAIN:");
+    OLDFor(arr) {
+        print("file %=%", it.index, it.value);
+    }
+    #endif
     
     // test_simple_math();
     // test_vec2_math();
