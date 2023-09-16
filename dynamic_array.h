@@ -21,6 +21,8 @@ void array_resize(Array<T>* array, s32 new_size) {
     array->reserved_size = new_size;
 }
 
+// TODO(cogno): array reserve
+
 template<typename T>
 void array_add(Array<T>* array, T data, s32 index) {
     ASSERT(index >= 0 && index < array->reserved_size * 2, "index out of range, index is %, 2*reserved is %", index, array->reserved_size * 2);

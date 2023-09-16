@@ -27,6 +27,7 @@ typedef double   f64;
 #define MIN_S64 0x8000000000000000
 
 // variant of the print below without the ending newline (\n)
+// TODO(cogno): change print from %/% or whatever to %%
 char _print_buff[0xFF] = "";
 #define fast_print(fmt, ...) sprintf_s(_print_buff, fmt, __VA_ARGS__);  fputs(_print_buff, stdout)
 
@@ -128,7 +129,6 @@ if (!(expr)) {                     \
 
 //defer macros. calls code inside a defer(...) macro when the current scope closes (function exit, if ending, for cycle ending, ...)
 //API(cogno): I've seen a macro where you can do defer { code } instead of defer({ code }), can you figure out how?
-//TODO(cogno): test if these really work
 template <typename F>
 struct ScopeExit {
     ScopeExit(F f) : f(f) {}
@@ -141,7 +141,6 @@ ScopeExit<F> MakeScopeExit(F f) {
     return ScopeExit<F>(f);
 };
 
-//API(cogno): I think scope_exit with counter can be avoided, you're never gonna have 2 defer on the same line, replace
 #define STRING_JOIN_(arg1, arg2) arg1 ## arg2
 #define STRING_JOIN(arg1, arg2) STRING_JOIN_(arg1, arg2)
-#define defer(code) auto STRING_JOIN(scope_exit_, __COUNTER__) = MakeScopeExit([=](){code;})
+#define defer(code) auto STRING_JOIN(scope_exit_, __LINE__) = MakeScopeExit([=](){code;})

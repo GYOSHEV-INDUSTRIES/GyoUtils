@@ -74,7 +74,7 @@ struct str{
 str str_new_alloc(const char* c_str) {
     str new_str = {};
     new_str.size = c_string_length(c_str);
-    new_str.ptr = (u8*)calloc(new_str.size, sizeof(u8));
+    new_str.ptr = (u8*)malloc(new_str.size * sizeof(u8));
     memcpy(new_str.ptr, c_str, sizeof(u8) * new_str.size);
     return new_str;
 }
@@ -330,8 +330,21 @@ StringBuilder make_string_builder(s32 size) {
     return make_string_builder(data, size);
 }
 
+void string_builder_free(StringBuilder* b) {
+    free(b->data);
+}
+
 void string_builder_clear(StringBuilder* b) {
     b->size = 0;
+}
+
+StringBuilder string_builder_copy(StringBuilder* b) {
+    StringBuilder copy;
+    copy.data = (u8*)malloc(b->reserved_size);
+    copy.size = b->size;
+    copy.reserved_size = b->reserved_size;
+    memcpy(copy.data, b->data, b->size);
+    return copy;
 }
 
 str string_builder_get_str(StringBuilder* b) {
