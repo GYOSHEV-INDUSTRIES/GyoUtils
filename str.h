@@ -1,3 +1,8 @@
+#pragma once
+
+// Todo(Quattro) create our memcpy implementation
+#include <string.h>
+
 //UNICODE UTILS
 u8 unicode_utf8_to_size(u8 val) {
     if (val < 128) return 1;
@@ -79,6 +84,7 @@ str str_new_alloc(const char* c_str) {
     return new_str;
 }
 
+// Todo(Quattro) maybe we could optimize this using fast print
 inline void printsl(str v) { for(int i = 0; i < v.size; i++) putchar(v.ptr[i]); }
 
 char* str_to_c_string(str to_convert) {
@@ -296,13 +302,6 @@ bool str_matches(const char* a, const char* b) {return str_matches((str)a, (str)
 bool str_matches(str a, const char* b) {return str_matches(a, (str)b); }
 bool str_matches(const char* a, str b) {return str_matches((str)a, b); }
 
-
-
-
-
-
-
-
 #define STR_BUILDER_DEFAULT_SIZE 100
 
 struct StrBuilder {
@@ -312,6 +311,7 @@ struct StrBuilder {
     u8& operator[](s32 i) { ASSERT_BOUNDS(i, 0, size); return ptr[i]; }
 };
 
+// Todo(Quattro) maybe we could optimize this using fast print
 inline void printsl(StrBuilder b) { for(int i = 0; i < b.size; i++) putchar(b.ptr[i]); }
 
 StrBuilder make_str_builder(u8* ptr, s32 size) {

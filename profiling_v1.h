@@ -1,3 +1,4 @@
+#pragma once
 
 /*
 USAGE:
@@ -83,6 +84,17 @@ void pad_right(int to_add) {
     for(int i = 0; i < to_add; i++) putchar(' ');
 }
 
+#ifndef GYOMATH
+inline int count_digits(u64 x){
+    int n = 0;
+    int p = x;
+    do{
+        n++;
+    }while(p /= 10);
+    return n;
+}
+#endif
+
 void end_and_print_profile() {
     profile_end = read_cpu_timer();
     u64 total_elapsed = profile_end - profile_start;
@@ -99,11 +111,11 @@ void end_and_print_profile() {
         int label_len = 0;
         while(t.label[label_len++]) {}
         if(label_len > max_label_len) max_label_len = label_len;
-        
-        int digits_count = log10(t.elapsed_exclusive) + 1;
+
+        int digits_count = count_digits(t.elapsed_exclusive);
         if (digits_count > max_time_length) max_time_length = digits_count;
         
-        int incl_digits_count = log10(t.elapsed_inclusive) + 1;
+        int incl_digits_count = count_digits(t.elapsed_inclusive);
         if (incl_digits_count > max_incl_time_length) max_incl_time_length = incl_digits_count;
         
         if(t.elapsed_inclusive != t.elapsed_exclusive) one_has_childrens = true;
@@ -138,7 +150,7 @@ void end_and_print_profile() {
         
         //total time
         printf("total=%lld ", t.elapsed_exclusive);
-        int digits_count = log10(t.elapsed_exclusive) + 1;
+        int digits_count = count_digits(t.elapsed_exclusive);
         pad_right(max_time_length - digits_count);
         
         //total time percentage
@@ -147,7 +159,7 @@ void end_and_print_profile() {
         //children time
         if(t.elapsed_inclusive != t.elapsed_exclusive) {
             printf("incl=%lld ", t.elapsed_inclusive);
-            int incl_digits_count = log10(t.elapsed_inclusive) + 1;
+            int incl_digits_count = count_digits(t.elapsed_inclusive);
             pad_right(max_incl_time_length - incl_digits_count);
             printf("(%5.2f%% w/ childs), ", percentage_with_children);
         } else if(one_has_childrens) {

@@ -1,5 +1,16 @@
+#pragma once
+#define GYOMATH
+
 #include <smmintrin.h>
 
+inline int count_digits(u64 x){
+    int n = 0;
+    int p = x;
+    do{
+        n++;
+    }while(p /= 10);
+    return n;
+}
 inline float npow(float x, u32 n){
     float res = x;
     for(int i = 1; i < n; i++){

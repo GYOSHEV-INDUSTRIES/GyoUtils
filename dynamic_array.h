@@ -1,3 +1,5 @@
+#pragma once
+
 template <typename T>
 struct Array {
     s32 size;
