@@ -1,6 +1,8 @@
 #pragma once
 
-#include <windows.h>
+#ifndef DISABLE_INCLUDES
+    #include <windows.h>
+#endif
 
 bool get_only_files_in_dir(const char* folder_path, Array<str>* filenames) {
     StrBuilder builder = make_str_builder();

@@ -4,7 +4,9 @@
 
 #if _WIN32
 
-#include <windows.h>
+#ifndef DISABLE_INCLUDES
+	#include <windows.h>
+#endif
 
 static u64 get_os_timer_freq() {
 	LARGE_INTEGER freq;
@@ -24,8 +26,10 @@ inline u64 read_cpu_timer() {
 
 #else
 
-#include <x86intrin.h>
-#include <sys/time.h>
+#ifndef DISABLE_INCLUDES
+	#include <x86intrin.h>
+	#include <sys/time.h>
+#endif
 
 static u64 get_os_timer_freq() {
 	return 1000000;
@@ -43,7 +47,6 @@ inline u64 read_cpu_timer() {
     return 0; //TODO(cogno): rdtsc on arm? I don't know which one to use
 }
 #endif
-
 
 u64 estimate_cpu_frequency(int ms_to_wait = 1) {
     // calculate how many os clocks to wait
@@ -67,5 +70,3 @@ u64 estimate_cpu_frequency(int ms_to_wait = 1) {
     u64 freq_estimate = (cpu_counter_end - cpu_counter_start) * os_timer_freq / os_clocks_elapsed;
     return freq_estimate;
 }
-
-
