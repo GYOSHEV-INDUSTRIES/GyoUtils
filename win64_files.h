@@ -1,30 +1,30 @@
 bool get_only_files_in_dir(const char* folder_path, Array<str>* filenames) {
-    StringBuilder builder = make_string_builder();
-    defer(free(builder.data));
-    string_builder_append(&builder, folder_path);
-    string_builder_append(&builder, "\\*");
-    string_builder_append_raw(&builder, (u8)0);
+    StrBuilder builder = make_str_builder();
+    defer(free(builder.ptr));
+    str_builder_append(&builder, folder_path);
+    str_builder_append(&builder, "\\*");
+    str_builder_append_raw(&builder, (u8)0);
     
     WIN32_FIND_DATA win_file_data = {};
-    HANDLE handle = FindFirstFile((char*)builder.data, &win_file_data);
+    HANDLE handle = FindFirstFile((char*)builder.ptr, &win_file_data);
     defer(FindClose(handle));
     if(handle == INVALID_HANDLE_VALUE) {
         print("no initial file found");
         return false;
     }
     
-    string_builder_remove_last_bytes(&builder, 2);
-    StringBuilder copy = string_builder_copy(&builder);
-    defer(free(copy.data));
+    str_builder_remove_last_bytes(&builder, 2);
+    StrBuilder copy = str_builder_copy(&builder);
+    defer(free(copy.ptr));
     
     do {
         // reset str builder into the initial folder path
         copy.size = builder.size;
-        string_builder_append(&copy, win_file_data.cFileName);
-        string_builder_append_raw(&copy, (u8)0);
+        str_builder_append(&copy, win_file_data.cFileName);
+        str_builder_append_raw(&copy, (u8)0);
         
         // get info if it's a file or not
-        auto result = GetFileAttributes((const char*)copy.data);
+        auto result = GetFileAttributes((const char*)copy.ptr);
         if((int)result < 0) {
             print("ERROR: invalid file attributes");
             return false;
