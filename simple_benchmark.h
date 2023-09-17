@@ -6,6 +6,13 @@
 
 #if SIMPLE_BENCHMARK
 
+#ifndef GYOFIRST
+    #include "first.h"
+#endif
+#ifndef GYOPERFORMANCE_COUNTER
+    #include "performance_counter.h"
+#endif
+
 void print_benchmark_times(u64 min_cycles, u64 avg_cycles, u64 max_cycles) {
     u64 cpu_frequency = estimate_cpu_frequency();
     

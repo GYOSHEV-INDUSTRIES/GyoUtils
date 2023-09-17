@@ -11,6 +11,13 @@
 
 #if SIMPLE_PROFILE
 
+#ifndef GYOFIRST
+    #include "first.h"
+#endif
+#ifndef GYOPERFORMANCE_COUNTER
+    #include "performance_counter.h"
+#endif
+
 struct single_time_block {
     single_time_block(const char* func_name) {
         this->_label = func_name;

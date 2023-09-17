@@ -5,6 +5,10 @@
     #include <string.h>
 #endif
 
+#ifndef GYOFIRST
+    #include "first.h"
+#endif
+
 //UNICODE UTILS
 u8 unicode_utf8_to_size(u8 val) {
     if (val < 128) return 1;

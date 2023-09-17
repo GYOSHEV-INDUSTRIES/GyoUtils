@@ -24,6 +24,13 @@ It has a limit of 4096 timed blocks.
 
 #if PROFILING_V1
 
+#ifndef GYOFIRST
+    #include "first.h"
+#endif
+#ifndef GYOPERFORMANCE_COUNTER
+    #include "performance_counter.h"
+#endif
+
 //API(cogno): we can very easily save the index of the parent to have better ui, but it costs more, is it worth it?
 struct TimeAnchor {
     u64 elapsed_exclusive;
@@ -33,33 +40,33 @@ struct TimeAnchor {
 };
 
 #define ANCHORS_AMT 4096
-TimeAnchor anchors[ANCHORS_AMT] = {};
-int current_parent_index = 0;
-u64 profile_start = 0;
-u64 profile_end = 0;
+TimeAnchor _anchors[ANCHORS_AMT] = {};
+int _current_parent_index = 0;
+u64 _profile_start = 0;
+u64 _profile_end = 0;
 
 
 struct time_block {
     time_block(int counter, const char* func_name) {
-        this->_parent = current_parent_index;
+        this->_parent = _current_parent_index;
         this->_current = counter;
         this->_label = func_name;
-        this->_old_elapsed_at_root = anchors[counter].elapsed_inclusive;
+        this->_old_elapsed_at_root = _anchors[counter].elapsed_inclusive;
         
-        current_parent_index = counter;
+        _current_parent_index = counter;
         this->_start = read_cpu_timer();
     }
     
     ~time_block() {
         u64 total = read_cpu_timer() - this->_start;
-        current_parent_index = this->_parent;
+        _current_parent_index = this->_parent;
         
-        anchors[this->_parent ].elapsed_exclusive -= total;
-        anchors[this->_current].elapsed_exclusive += total;
-        anchors[this->_current].elapsed_inclusive = this->_old_elapsed_at_root + total;
-        anchors[this->_current].hit_count++;
+        _anchors[this->_parent ].elapsed_exclusive -= total;
+        _anchors[this->_current].elapsed_exclusive += total;
+        _anchors[this->_current].elapsed_inclusive = this->_old_elapsed_at_root + total;
+        _anchors[this->_current].hit_count++;
         
-        anchors[this->_current].label = this->_label; // yes I know, it gets replaced multiple times, I hate C++
+        _anchors[this->_current].label = this->_label; // yes I know, it gets replaced multiple times, I hate C++
     }
     
     const char* _label;
@@ -74,7 +81,7 @@ struct time_block {
 #define END_OF_COMPILATION_UNIT static_assert(__COUNTER__ < ANCHORS_AMT, "Number of profile points exceeds size of profiler::Anchors array")
 
 void begin_profile() {
-    profile_start = read_cpu_timer();
+    _profile_start = read_cpu_timer();
 }
 
 void pad_right(int to_add) {
@@ -93,16 +100,17 @@ void pad_right(int to_add) {
 #endif
 
 void end_and_print_profile() {
-    profile_end = read_cpu_timer();
-    u64 total_elapsed = profile_end - profile_start;
+    // Todo(Quattro) use print instead of printf
+    _profile_end = read_cpu_timer();
+    u64 total_elapsed = _profile_end - _profile_start;
     
     //calculate lengths of texts for vertical formatting
     int max_label_len = 0;
     int max_time_length = 0;
     int max_incl_time_length = 0;
     bool one_has_childrens = false;
-    for(int i = 0; i < 4086; i++) {
-        TimeAnchor t = anchors[i];
+    for(int i = 0; i < ANCHORS_AMT; i++) {
+        TimeAnchor t = _anchors[i];
         if(t.label == nullptr) continue;
         
         int label_len = 0;
@@ -119,8 +127,8 @@ void end_and_print_profile() {
     }
     
     // PERF(cogno): can be optimized for printing speed, no need for now since it's a report tool which prints once at the end of the whole program
-    for(int i = 0; i < 4086; i++) {
-        TimeAnchor t = anchors[i];
+    for(int i = 0; i < ANCHORS_AMT; i++) {
+        TimeAnchor t = _anchors[i];
         if (t.label == nullptr) continue;
         
         float percentage_exclusive     = 100.0f * t.elapsed_exclusive / total_elapsed;
@@ -166,7 +174,7 @@ void end_and_print_profile() {
         //hit count
         if(t.hit_count == 1) printf("hit once");
         else {
-            printf("hit %d time", t.hit_count);
+            printf("hit %lld time", t.hit_count);
             if(t.hit_count > 1) putchar('s');
         }
         putchar('\n');

@@ -5,6 +5,10 @@
     #include <smmintrin.h>
 #endif
 
+#ifndef GYOFIRST
+    #include "first.h"
+#endif
+
 inline int count_digits(u64 x){
     int n = 0;
     int p = x;

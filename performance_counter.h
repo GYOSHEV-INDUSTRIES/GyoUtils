@@ -1,4 +1,5 @@
 #pragma once
+#define GYOPERFORMANCE_COUNTER
 
 //TODO(cogno): TEST THIS
 

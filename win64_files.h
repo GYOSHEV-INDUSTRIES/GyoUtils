@@ -4,6 +4,10 @@
     #include <windows.h>
 #endif
 
+#ifndef GYOFIRST
+    #include "first.h"
+#endif
+
 bool get_only_files_in_dir(const char* folder_path, Array<str>* filenames) {
     StrBuilder builder = make_str_builder();
     defer(free(builder.ptr));

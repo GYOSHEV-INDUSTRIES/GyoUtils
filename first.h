@@ -1,4 +1,5 @@
 #pragma once
+#define GYOFIRST
 
 #ifndef DISABLE_INCLUDES
     #include <stdio.h>

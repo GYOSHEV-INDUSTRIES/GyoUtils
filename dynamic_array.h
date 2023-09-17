@@ -1,5 +1,9 @@
 #pragma once
 
+#ifndef GYOFIRST
+    #include "first.h"
+#endif
+
 template <typename T>
 struct Array {
     s32 size;
