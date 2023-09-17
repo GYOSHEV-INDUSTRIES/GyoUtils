@@ -1,3 +1,9 @@
+Version: 0.1.1 
+---------------------------------
+
+module simple_benchmark:
+    Added macros BENCHMARK_COMPARE and BENCHMARK_COMPARE_VOID to quickly benchmark 2 functions with the same inputs, to know if the second one is faster or slower. You can find comments on how they work inside the module.
+
 
 Version: 0.1.0 2023/09/16
 ---------------------------------

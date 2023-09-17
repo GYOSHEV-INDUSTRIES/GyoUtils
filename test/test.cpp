@@ -40,12 +40,36 @@ bool test(int a) {
     return true;
 }
 
+// min 61.35 us
+void fast_print_test() {
+    fast_print("Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nam semper tempor justo, eget efficitur lorem ultricies non. Duis tempor feugiat tortor et malesuada. Aenean malesuada, massa ut pretium vestibulum, quam dui suscipit sapien, a malesuada nisl sem at felis. Aliquam erat volutpat. Mauris ac tellus scelerisque, euismod turpis id, porttitor metus. Fusce aliquet, arcu ac cursus finibus, eros justo lobortis massa, at semper felis arcu vitae lorem. Nunc eget mauris velit. Fusce dignissim faucibus ante, nec tristique nisi euismod nec. Aenean dignissim, mauris sed venenatis porta, libero augue ornare urna, quis venenatis dui mi sed ante.%d\n", 15);
+}
+
+// min 61.88 us
+void c_printf() { 
+    printf("Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nam semper tempor justo, eget efficitur lorem ultricies non. Duis tempor feugiat tortor et malesuada. Aenean malesuada, massa ut pretium vestibulum, quam dui suscipit sapien, a malesuada nisl sem at felis. Aliquam erat volutpat. Mauris ac tellus scelerisque, euismod turpis id, porttitor metus. Fusce aliquet, arcu ac cursus finibus, eros justo lobortis massa, at semper felis arcu vitae lorem. Nunc eget mauris velit. Fusce dignissim faucibus ante, nec tristique nisi euismod nec. Aenean dignissim, mauris sed venenatis porta, libero augue ornare urna, quis venenatis dui mi sed ante.%d\n", 15);
+}
+
+// 10.01 ms
+void gyoutils_old() {
+    print("Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nam semper tempor justo, eget efficitur lorem ultricies non. Duis tempor feugiat tortor et malesuada. Aenean malesuada, massa ut pretium vestibulum, quam dui suscipit sapien, a malesuada nisl sem at felis. Aliquam erat volutpat. Mauris ac tellus scelerisque, euismod turpis id, porttitor metus. Fusce aliquet, arcu ac cursus finibus, eros justo lobortis massa, at semper felis arcu vitae lorem. Nunc eget mauris velit. Fusce dignissim faucibus ante, nec tristique nisi euismod nec. Aenean dignissim, mauris sed venenatis porta, libero augue ornare urna, quis venenatis dui mi sed ante.%", 15);
+}
+
+// 86.97 us
+void fast_print_v1() {
+    print_new("Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nam semper tempor justo, eget efficitur lorem ultricies non. Duis tempor feugiat tortor et malesuada. Aenean malesuada, massa ut pretium vestibulum, quam dui suscipit sapien, a malesuada nisl sem at felis. Aliquam erat volutpat. Mauris ac tellus scelerisque, euismod turpis id, porttitor metus. Fusce aliquet, arcu ac cursus finibus, eros justo lobortis massa, at semper felis arcu vitae lorem. Nunc eget mauris velit. Fusce dignissim faucibus ante, nec tristique nisi euismod nec. Aenean dignissim, mauris sed venenatis porta, libero augue ornare urna, quis venenatis dui mi sed ante.%", 15);
+}
+
+// 86.04 us
+void fast_print_v2() {
+    print_new2("Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nam semper tempor justo, eget efficitur lorem ultricies non. Duis tempor feugiat tortor et malesuada. Aenean malesuada, massa ut pretium vestibulum, quam dui suscipit sapien, a malesuada nisl sem at felis. Aliquam erat volutpat. Mauris ac tellus scelerisque, euismod turpis id, porttitor metus. Fusce aliquet, arcu ac cursus finibus, eros justo lobortis massa, at semper felis arcu vitae lorem. Nunc eget mauris velit. Fusce dignissim faucibus ante, nec tristique nisi euismod nec. Aenean dignissim, mauris sed venenatis porta, libero augue ornare urna, quis venenatis dui mi sed ante.%", 15);
+}
+
 int main() {
-
-    print("%\\%, %", 10, 15);
-    print("%\\%, %", 10, 15);
-    print("%\\%, %", 10, 15);
-
+   
+    // BENCHMARK_VOID_WITH_COUNT(1000, fast_print_v2);
+    BENCHMARK_COMPARE_VOID(1000, c_printf, fast_print_test);
+    
     #if 0    
     Array<str> arr = array_new<str>(20);
     get_only_files_in_dir(".\\src", &arr);
