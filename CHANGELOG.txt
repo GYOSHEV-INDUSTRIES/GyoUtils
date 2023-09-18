@@ -1,17 +1,15 @@
-Version: 0.1.2 
----------------------------------
-
-all files:
-    Defined some macros to automatically import `first.h` if you include just a single module like `math.h`
-    Same thing with performance counter and `profiling_v1.h`, `simple_benchmark.h` and `simple_profiling.h`
-    Some general cleaning in `profiling_v1.h` (private variables and used ANCHORS_AMT define)
-
 Version: 0.1.1 
 ---------------------------------
+
+Defined some macros to automatically import `first.h` if you include just a single module like `math.h`.
+Same thing with performance counter and `profiling_v1.h`, `simple_benchmark.h` and `simple_profiling.h`.
+Some general cleaning in `profiling_v1.h` (private variables and used ANCHORS_AMT define).
 
 module simple_benchmark:
     Added macros BENCHMARK_COMPARE and BENCHMARK_COMPARE_VOID to quickly benchmark 2 functions with the same inputs, to know if the second one is faster or slower. You can find comments on how they work inside the module.
 
+module str:
+    Added overloads str_builder_append() for u8, s8, u16, s16, u32, s32, u64, s64, f32, f64, char. These will convert the numbers into string representation and add it to the builder.
 
 Version: 0.1.0 2023/09/16
 ---------------------------------

@@ -392,17 +392,100 @@ void str_builder_append(StrBuilder* b, str to_append) {
     b->size = new_size;
 }
 
-// NOTE(cogno): since we're making a **string** builder, everything gets converted to a string representation (for example a bool becomes the string "true" or "false"). If you need to append without conversion you should use str_builder_append_raw()
-// API(cogno): I don't know yet if this is a good idea, maybe append should just add and not convert to str?
+// NOTE(cogno): since we're making a **string** builder, everything gets converted to a string representation (for example a bool becomes the string "true" or "false", the number 12 becomes the string "12" etc.). If you need to append without conversion you should use str_builder_append_raw()
 
 void str_builder_append(StrBuilder* b, const char* to_append) {
     str converted = to_append;
     str_builder_append(b, converted);
 }
 
-void str_builder_append(StrBuilder* b, bool boolean) { str_builder_append(b, boolean? "true" : "false" ); }
+void str_builder_append(StrBuilder* b, bool boolean) {
+    // minor optimization where we immediately create the string with the proper size since we know what they are
+    str to_append;
+    if (boolean) {
+        to_append.ptr = (u8*)"true";
+        to_append.size = 4;
+    } else {
+        to_append.ptr = (u8*)"false";
+        to_append.size = 5;
+    }
+    str_builder_append(b, to_append);
+}
 
-// TODO(cogno): string builder append u8, u16, s16, u32, s32, u64, s64, f32, f64, char
+void str_builder_append(StrBuilder* b, char c) {
+    str_builder_reserve(b, 1);
+    b->ptr[b->size++] = c;
+}
+
+void str_builder_append(StrBuilder* b, u8 to_append) {
+    char buff[4];
+    sprintf(buff, "%u", to_append);
+    str converted = buff;
+    str_builder_append(b, converted);
+}
+
+void str_builder_append(StrBuilder* b, u16 to_append) {
+    char buff[6];
+    sprintf(buff, "%u", to_append);
+    str converted = buff;
+    str_builder_append(b, converted);
+}
+
+void str_builder_append(StrBuilder* b, u32 to_append) {
+    char buff[11];
+    sprintf(buff, "%lu", to_append);
+    str converted = buff;
+    str_builder_append(b, converted);
+}
+
+void str_builder_append(StrBuilder* b, u64 to_append) {
+    char buff[21];
+    sprintf(buff, "%llu", to_append);
+    str converted = buff;
+    str_builder_append(b, converted);
+}
+
+void str_builder_append(StrBuilder* b, s8 to_append) {
+    char buff[5];
+    sprintf(buff, "%d", to_append);
+    str converted = buff;
+    str_builder_append(b, converted);
+}
+
+void str_builder_append(StrBuilder* b, s16 to_append) {
+    char buff[8];
+    sprintf(buff, "%d", to_append);
+    str converted = buff;
+    str_builder_append(b, converted);
+}
+
+void str_builder_append(StrBuilder* b, s32 to_append) {
+    char buff[15];
+    sprintf(buff, "%ld", to_append);
+    str converted = buff;
+    str_builder_append(b, converted);
+}
+
+void str_builder_append(StrBuilder* b, s64 to_append) {
+    char buff[25];
+    sprintf(buff, "%lld", to_append);
+    str converted = buff;
+    str_builder_append(b, converted);
+}
+
+void str_builder_append(StrBuilder* b, f32 to_append) {
+    char buff[50];
+    sprintf(buff, "%.5f", to_append);
+    str converted = buff;
+    str_builder_append(b, converted);
+}
+
+void str_builder_append(StrBuilder* b, f64 to_append) {
+    char buff[50];
+    sprintf(buff, "%.5f", to_append);
+    str converted = buff;
+    str_builder_append(b, converted);
+}
 
 
 // NOTE(cogno): all append_raw are little-endian

@@ -56,19 +56,28 @@ void gyoutils_old() {
 }
 
 // 86.97 us
-void fast_print_v1() {
+void print_with_puts() {
     print_new("Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nam semper tempor justo, eget efficitur lorem ultricies non. Duis tempor feugiat tortor et malesuada. Aenean malesuada, massa ut pretium vestibulum, quam dui suscipit sapien, a malesuada nisl sem at felis. Aliquam erat volutpat. Mauris ac tellus scelerisque, euismod turpis id, porttitor metus. Fusce aliquet, arcu ac cursus finibus, eros justo lobortis massa, at semper felis arcu vitae lorem. Nunc eget mauris velit. Fusce dignissim faucibus ante, nec tristique nisi euismod nec. Aenean dignissim, mauris sed venenatis porta, libero augue ornare urna, quis venenatis dui mi sed ante.%", 15);
 }
 
 // 86.04 us
-void fast_print_v2() {
+void printsl_with_puts() {
     print_new2("Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nam semper tempor justo, eget efficitur lorem ultricies non. Duis tempor feugiat tortor et malesuada. Aenean malesuada, massa ut pretium vestibulum, quam dui suscipit sapien, a malesuada nisl sem at felis. Aliquam erat volutpat. Mauris ac tellus scelerisque, euismod turpis id, porttitor metus. Fusce aliquet, arcu ac cursus finibus, eros justo lobortis massa, at semper felis arcu vitae lorem. Nunc eget mauris velit. Fusce dignissim faucibus ante, nec tristique nisi euismod nec. Aenean dignissim, mauris sed venenatis porta, libero augue ornare urna, quis venenatis dui mi sed ante.%", 15);
 }
 
 int main() {
    
     // BENCHMARK_VOID_WITH_COUNT(1000, fast_print_v2);
-    BENCHMARK_COMPARE_VOID(1000, c_printf, fast_print_test);
+    // BENCHMARK_COMPARE_VOID(1000, print_with_puts, printsl_with_puts);
+    
+    StrBuilder b = make_str_builder(30);
+    str_builder_append(&b, "hello '");
+    str_builder_append(&b, (f32)123123123123123123123123123123.999);
+    str_builder_append(&b, '|');
+    str_builder_append(&b, (f64)123123123123123123123123123123.999);
+    str_builder_append(&b, "' world");
+    print(b);
+    
     
     #if 0    
     Array<str> arr = array_new<str>(20);

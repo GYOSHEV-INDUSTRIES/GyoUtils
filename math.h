@@ -11,12 +11,16 @@
 
 inline int count_digits(u64 x){
     int n = 0;
-    int p = x;
+    int p = x; // BUG(cogno): count digits converts u64 to s32, you loose a lot of digits for big numbers!
     do{
         n++;
     }while(p /= 10);
     return n;
 }
+
+// TODO(cogno): count_digits for s64
+// TODO(cogno): count_digits for f64
+
 inline float npow(float x, u32 n){
     float res = x;
     for(int i = 1; i < n; i++){
