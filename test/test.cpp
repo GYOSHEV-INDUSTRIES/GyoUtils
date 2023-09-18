@@ -40,44 +40,127 @@ bool test(int a) {
     return true;
 }
 
-// min 61.35 us
+
+
 void fast_print_test() {
     fast_print("Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nam semper tempor justo, eget efficitur lorem ultricies non. Duis tempor feugiat tortor et malesuada. Aenean malesuada, massa ut pretium vestibulum, quam dui suscipit sapien, a malesuada nisl sem at felis. Aliquam erat volutpat. Mauris ac tellus scelerisque, euismod turpis id, porttitor metus. Fusce aliquet, arcu ac cursus finibus, eros justo lobortis massa, at semper felis arcu vitae lorem. Nunc eget mauris velit. Fusce dignissim faucibus ante, nec tristique nisi euismod nec. Aenean dignissim, mauris sed venenatis porta, libero augue ornare urna, quis venenatis dui mi sed ante.%d\n", 15);
 }
 
-// min 61.88 us
+// 58.51us
 void c_printf() { 
     printf("Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nam semper tempor justo, eget efficitur lorem ultricies non. Duis tempor feugiat tortor et malesuada. Aenean malesuada, massa ut pretium vestibulum, quam dui suscipit sapien, a malesuada nisl sem at felis. Aliquam erat volutpat. Mauris ac tellus scelerisque, euismod turpis id, porttitor metus. Fusce aliquet, arcu ac cursus finibus, eros justo lobortis massa, at semper felis arcu vitae lorem. Nunc eget mauris velit. Fusce dignissim faucibus ante, nec tristique nisi euismod nec. Aenean dignissim, mauris sed venenatis porta, libero augue ornare urna, quis venenatis dui mi sed ante.%d\n", 15);
 }
 
-// 10.01 ms
 void gyoutils_old() {
     print("Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nam semper tempor justo, eget efficitur lorem ultricies non. Duis tempor feugiat tortor et malesuada. Aenean malesuada, massa ut pretium vestibulum, quam dui suscipit sapien, a malesuada nisl sem at felis. Aliquam erat volutpat. Mauris ac tellus scelerisque, euismod turpis id, porttitor metus. Fusce aliquet, arcu ac cursus finibus, eros justo lobortis massa, at semper felis arcu vitae lorem. Nunc eget mauris velit. Fusce dignissim faucibus ante, nec tristique nisi euismod nec. Aenean dignissim, mauris sed venenatis porta, libero augue ornare urna, quis venenatis dui mi sed ante.%", 15);
 }
 
-// 86.97 us
-void print_with_puts() {
-    print_new("Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nam semper tempor justo, eget efficitur lorem ultricies non. Duis tempor feugiat tortor et malesuada. Aenean malesuada, massa ut pretium vestibulum, quam dui suscipit sapien, a malesuada nisl sem at felis. Aliquam erat volutpat. Mauris ac tellus scelerisque, euismod turpis id, porttitor metus. Fusce aliquet, arcu ac cursus finibus, eros justo lobortis massa, at semper felis arcu vitae lorem. Nunc eget mauris velit. Fusce dignissim faucibus ante, nec tristique nisi euismod nec. Aenean dignissim, mauris sed venenatis porta, libero augue ornare urna, quis venenatis dui mi sed ante.%", 15);
+// 56.95us
+void print_new_strat() {
+    printsl_buffered("Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nam semper tempor justo, eget efficitur lorem ultricies non. Duis tempor feugiat tortor et malesuada. Aenean malesuada, massa ut pretium vestibulum, quam dui suscipit sapien, a malesuada nisl sem at felis. Aliquam erat volutpat. Mauris ac tellus scelerisque, euismod turpis id, porttitor metus. Fusce aliquet, arcu ac cursus finibus, eros justo lobortis massa, at semper felis arcu vitae lorem. Nunc eget mauris velit. Fusce dignissim faucibus ante, nec tristique nisi euismod nec. Aenean dignissim, mauris sed venenatis porta, libero augue ornare urna, quis venenatis dui mi sed ante.%", 15);
 }
 
-// 86.04 us
-void printsl_with_puts() {
-    print_new2("Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nam semper tempor justo, eget efficitur lorem ultricies non. Duis tempor feugiat tortor et malesuada. Aenean malesuada, massa ut pretium vestibulum, quam dui suscipit sapien, a malesuada nisl sem at felis. Aliquam erat volutpat. Mauris ac tellus scelerisque, euismod turpis id, porttitor metus. Fusce aliquet, arcu ac cursus finibus, eros justo lobortis massa, at semper felis arcu vitae lorem. Nunc eget mauris velit. Fusce dignissim faucibus ante, nec tristique nisi euismod nec. Aenean dignissim, mauris sed venenatis porta, libero augue ornare urna, quis venenatis dui mi sed ante.%", 15);
+// 58.37us
+void print_with_builder() {
+    // print_builder("Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nam semper tempor justo, eget efficitur lorem ultricies non. Duis tempor feugiat tortor et malesuada. Aenean malesuada, massa ut pretium vestibulum, quam dui suscipit sapien, a malesuada nisl sem at felis. Aliquam erat volutpat. Mauris ac tellus scelerisque, euismod turpis id, porttitor metus. Fusce aliquet, arcu ac cursus finibus, eros justo lobortis massa, at semper felis arcu vitae lorem. Nunc eget mauris velit. Fusce dignissim faucibus ante, nec tristique nisi euismod nec. Aenean dignissim, mauris sed venenatis porta, libero augue ornare urna, quis venenatis dui mi sed ante.%", 15);
+}
+
+// 22.88 s
+void printf_unbuffered() {
+    for(int i=0;i<=1000000;i++) {
+        printf("%d",i);
+    }
+}
+
+// 19.57 s
+void gyoprint() {
+    for(int i=0;i<=1000000;i++) {
+        printsl(i);
+    }
+}
+
+char buffer[256];
+void printf_buffered() {
+    setvbuf(stdout, buffer, _IOFBF, sizeof(buffer));
+    for(int i=0;i<=1000000;i++) {
+        printf("%d",i);
+    }
+}
+
+void normal_printf() {
+    printf("example\n");
+}
+
+void full_buffered_printf() {
+    setvbuf(stdout, buffer, _IOFBF, sizeof(buffer));
+    printf("example\n");
+    fflush(stdout);
+}
+
+
+
+// 56.77
+void print_new_v2() {
+    print2("Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nam semper tempor justo, eget efficitur lorem ultricies non. Duis tempor feugiat tortor et malesuada. Aenean malesuada, massa ut pretium vestibulum, quam dui suscipit sapien, a malesuada nisl sem at felis. Aliquam erat volutpat. Mauris ac tellus scelerisque, euismod turpis id, porttitor metus. Fusce aliquet, arcu ac cursus finibus, eros justo lobortis massa, at semper felis arcu vitae lorem. Nunc eget mauris velit. Fusce dignissim faucibus ante, nec tristique nisi euismod nec. Aenean dignissim, mauris sed venenatis porta, libero augue ornare urna, quis venenatis dui mi sed ante.", 15);
 }
 
 int main() {
    
     // BENCHMARK_VOID_WITH_COUNT(1000, fast_print_v2);
-    // BENCHMARK_COMPARE_VOID(1000, print_with_puts, printsl_with_puts);
+    // BENCHMARK_COMPARE_VOID(1000, print_with_builder, print_new_strat);
     
-    StrBuilder b = make_str_builder(30);
-    str_builder_append(&b, "hello '");
-    str_builder_append(&b, (f32)123123123123123123123123123123.999);
-    str_builder_append(&b, '|');
-    str_builder_append(&b, (f64)123123123123123123123123123123.999);
-    str_builder_append(&b, "' world");
-    print(b);
+    // print_v2("the number ", 12, " and then the string ", "hello world");
     
+    init_print2();
+    
+    BENCHMARK_COMPARE_VOID(1000, c_printf, print_new_strat);
+    
+    // print_new_v2();
+    // print_new_v2();
+    // print_new_v2();
+    // c_printf();
+    
+    // {
+    //     PROFILE_BLOCK("printf");
+    //     printf("this is a message\n");
+    // }
+    // {
+    //     PROFILE_BLOCK("gyoprint");
+    //     print_v2("this is a message");
+    // }
+    
+    // {
+    //     PROFILE_BLOCK("redirect 2");
+    //     setvbuf(stdout, NULL, _IOLBF, BUFSIZ);
+    // }
+    // {
+    //     PROFILE_BLOCK("redirect 3");
+    //     setvbuf(stdout, __print_buff, _IOLBF, __BUFF_SIZE);
+    // }
+    // {
+    //     PROFILE_BLOCK("redirect 4");
+    //     setvbuf(stdout, NULL, _IOLBF, BUFSIZ);
+    // }
+
+    
+    // BENCHMARK_VOID_WITH_COUNT(100000, print_new_v2);
+    
+    // StrBuilder b = make_str_builder(30);
+    // str_builder_append(&b, "hello '");
+    // str_builder_append(&b, (f32)123123123123123123123123123123.999);
+    // str_builder_append(&b, '|');
+    // str_builder_append(&b, (f64)123123123123123123123123123123.999);
+    // str_builder_append(&b, "' world");
+    // print(b);
+    
+    // print_buffered_v1("test %, test %, test", 1, 2);
+    
+    // {
+    //     PROFILE_BLOCK("normal");
+    //     normal_printf();
+    // }
+    
+    // BENCHMARK_COMPARE_VOID(1, printf_unbuffered, printf_buffered);
     
     #if 0    
     Array<str> arr = array_new<str>(20);

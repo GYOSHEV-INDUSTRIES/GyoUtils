@@ -131,7 +131,7 @@ do { \
     u64 avg_cycles_f2 = total_cycles_f2 / count; \
     auto f1_name = STRING_JOIN( STRING_JOIN( STRING_JOIN(#func1, "("), #__VA_ARGS__  ) , ")" ); \
     auto f2_name = STRING_JOIN( STRING_JOIN( STRING_JOIN(#func2, "("), #__VA_ARGS__  ) , ")" ); \
-    printsl("function '%' x% ", f1_name, count); \
+    printsl("\nfunction '%' x% ", f1_name, count); \
     printsl("|> cycles (min, avg, max): %, %, %", min_cycles_f1, avg_cycles_f1, max_cycles_f1 ); \
     printsl(" | time (min, avg, max): "); \
     print_benchmark_times(min_cycles_f1, avg_cycles_f1, max_cycles_f1); \
