@@ -1,8 +1,6 @@
 #pragma once
 #define GYOPERFORMANCE_COUNTER
 
-//TODO(cogno): TEST THIS
-
 #if _WIN32
 
 #ifndef DISABLE_INCLUDES

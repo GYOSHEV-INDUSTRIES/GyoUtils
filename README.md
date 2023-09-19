@@ -21,6 +21,7 @@ Gyoutils is a collection of simple tools that can help you during development.
 
 Here's a high level view of most of the things you can find in each file.
 For a more comprehensive list you should look into each file.
+For updates on recent changes you should look at CHANGELOG.txt
 
 - a new simpler alternative to printf
 - deactivatable assert macros with custom print messages
