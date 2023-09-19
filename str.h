@@ -90,8 +90,8 @@ str str_new_alloc(const char* c_str) {
     return new_str;
 }
 
-// Todo(Quattro) maybe we could optimize this using fast print
-inline void printsl(str v) { for(int i = 0; i < v.size; i++) putchar(v.ptr[i]); }
+// PERF(cogno): optimize with memcpy (we have the size)
+inline void printsl_custom(str v) { for(int i = 0; i < v.size; i++) printsl_custom(v.ptr[i]); }
 
 char* str_to_c_string(str to_convert) {
     ASSERT(to_convert.size != MAX_U32, "str is full, cannot convert to c str");
@@ -317,8 +317,8 @@ struct StrBuilder {
     u8& operator[](s32 i) { ASSERT_BOUNDS(i, 0, size); return ptr[i]; }
 };
 
-// Todo(Quattro) maybe we could optimize this using fast print
-inline void printsl(StrBuilder b) { for(int i = 0; i < b.size; i++) putchar(b.ptr[i]); }
+// PERF(cogno): optimize with memcpy (we have the size)
+inline void printsl_custom(StrBuilder b) { for(int i = 0; i < b.size; i++) printsl_custom(b.ptr[i]); }
 
 StrBuilder make_str_builder(u8* ptr, s32 size) {
     StrBuilder s = {};

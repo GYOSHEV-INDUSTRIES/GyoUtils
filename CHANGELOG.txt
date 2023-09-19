@@ -5,10 +5,15 @@ Defined some macros to automatically import `first.h` if you include just a sing
 Same thing with performance counter and `profiling_v1.h`, `simple_benchmark.h` and `simple_profiling.h`.
 Some general cleaning in `profiling_v1.h` (private variables and used ANCHORS_AMT define).
 
-module simple_benchmark:
+first.h:
+    Reimplemented print and printsl to improve performance (as of now we're about at printf speed, sometimes slightly faster).
+    Renamed custom print implementations to print_custom, you should rename them also in your code.
+    Added print2, a new type of print which should be faster than printf. We don't know if we'll keep it because of it's stranger usage.
+
+simple_benchmark.h:
     Added macros BENCHMARK_COMPARE and BENCHMARK_COMPARE_VOID to quickly benchmark 2 functions with the same inputs, to know if the second one is faster or slower. You can find comments on how they work inside the module.
 
-module str:
+str.h:
     Added overloads str_builder_append() for u8, s8, u16, s16, u32, s32, u64, s64, f32, f64, char. These will convert the numbers into string representation and add it to the builder.
 
 Version: 0.1.0 2023/09/16

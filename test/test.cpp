@@ -41,11 +41,6 @@ bool test(int a) {
 }
 
 
-
-void fast_print_test() {
-    fast_print("Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nam semper tempor justo, eget efficitur lorem ultricies non. Duis tempor feugiat tortor et malesuada. Aenean malesuada, massa ut pretium vestibulum, quam dui suscipit sapien, a malesuada nisl sem at felis. Aliquam erat volutpat. Mauris ac tellus scelerisque, euismod turpis id, porttitor metus. Fusce aliquet, arcu ac cursus finibus, eros justo lobortis massa, at semper felis arcu vitae lorem. Nunc eget mauris velit. Fusce dignissim faucibus ante, nec tristique nisi euismod nec. Aenean dignissim, mauris sed venenatis porta, libero augue ornare urna, quis venenatis dui mi sed ante.%d\n", 15);
-}
-
 // 58.51us
 void c_printf() { 
     printf("Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nam semper tempor justo, eget efficitur lorem ultricies non. Duis tempor feugiat tortor et malesuada. Aenean malesuada, massa ut pretium vestibulum, quam dui suscipit sapien, a malesuada nisl sem at felis. Aliquam erat volutpat. Mauris ac tellus scelerisque, euismod turpis id, porttitor metus. Fusce aliquet, arcu ac cursus finibus, eros justo lobortis massa, at semper felis arcu vitae lorem. Nunc eget mauris velit. Fusce dignissim faucibus ante, nec tristique nisi euismod nec. Aenean dignissim, mauris sed venenatis porta, libero augue ornare urna, quis venenatis dui mi sed ante.%d\n", 15);
@@ -57,7 +52,7 @@ void gyoutils_old() {
 
 // 56.95us
 void print_new_strat() {
-    printsl_buffered("Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nam semper tempor justo, eget efficitur lorem ultricies non. Duis tempor feugiat tortor et malesuada. Aenean malesuada, massa ut pretium vestibulum, quam dui suscipit sapien, a malesuada nisl sem at felis. Aliquam erat volutpat. Mauris ac tellus scelerisque, euismod turpis id, porttitor metus. Fusce aliquet, arcu ac cursus finibus, eros justo lobortis massa, at semper felis arcu vitae lorem. Nunc eget mauris velit. Fusce dignissim faucibus ante, nec tristique nisi euismod nec. Aenean dignissim, mauris sed venenatis porta, libero augue ornare urna, quis venenatis dui mi sed ante.%", 15);
+    print("Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nam semper tempor justo, eget efficitur lorem ultricies non. Duis tempor feugiat tortor et malesuada. Aenean malesuada, massa ut pretium vestibulum, quam dui suscipit sapien, a malesuada nisl sem at felis. Aliquam erat volutpat. Mauris ac tellus scelerisque, euismod turpis id, porttitor metus. Fusce aliquet, arcu ac cursus finibus, eros justo lobortis massa, at semper felis arcu vitae lorem. Nunc eget mauris velit. Fusce dignissim faucibus ante, nec tristique nisi euismod nec. Aenean dignissim, mauris sed venenatis porta, libero augue ornare urna, quis venenatis dui mi sed ante.%", 15);
 }
 
 // 58.37us
@@ -107,13 +102,33 @@ void print_new_v2() {
 int main() {
    
     // BENCHMARK_VOID_WITH_COUNT(1000, fast_print_v2);
-    // BENCHMARK_COMPARE_VOID(1000, print_with_builder, print_new_strat);
+    BENCHMARK_COMPARE_VOID(1000, c_printf, print_new_strat);
     
     // print_v2("the number ", 12, " and then the string ", "hello world");
     
-    init_print2();
+    // init_print();
     
-    BENCHMARK_COMPARE_VOID(1000, c_printf, print_new_strat);
+    // struct temp{
+    //     int a = 15;
+    // };
+    // temp t = {};
+    // print("%, (expected unknown type)", t);
+    // print("%, (expected ptr)", &t);
+    // print("% (expected vec2)", vec2{10, 20});
+    
+    // {
+    //     PROFILE_BLOCK("print");
+    //     print("%, (expected ptr)", &t);
+    // }
+    
+    
+    // print("%, (expected int)", 15);
+    // print("%, (expected char)", 'c');
+    // print("%, (expected string)", "a sentence");
+    
+    // BENCHMARK_VOID_WITH_COUNT(10000, print_new_v2);
+    
+    // BENCHMARK_COMPARE_VOID(1000, print_new_strat, print_new_v2);
     
     // print_new_v2();
     // print_new_v2();

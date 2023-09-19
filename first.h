@@ -55,89 +55,9 @@ typedef double   f64;
 // print("values a=%, b=%", a, b);
 //
 
-const int _BUFF_SIZE = 0xFFF;
-char _print_buff[_BUFF_SIZE] = "";
 
-#define fast_print(fmt, ...) sprintf_s(_print_buff, fmt, __VA_ARGS__); fputs(_print_buff, stdout)
-
-
-// default behaviour, unknown types prints "(unknown type)", while pointers are printed as such
-template<typename T> void printsl(T v)  { fast_print("(unknown type)"); }
-template<typename T> void printsl(T* v) { fast_print("0x%p", v); } // NOTE(cogno): leave this before const char* s so strings are printed as such (and not as pointers)
-
-// print standard specializations
-inline void printsl(const char* s) { fast_print("%s", s); }
-inline void printsl(char* s)       { fast_print("%s", s); }
-inline void printsl(char c)        { putchar(c); }
-inline void printsl(s8  d)         { fast_print("%d", d); }
-inline void printsl(s16 d)         { fast_print("%d", d); }
-inline void printsl(s32 d)         { fast_print("%ld", d); }
-inline void printsl(s64 d)         { fast_print("%lld", d); }
-inline void printsl(u8  d)         { fast_print("%u", d); }
-inline void printsl(u16 d)         { fast_print("%u", d); }
-inline void printsl(u32 d)         { fast_print("%lu", d); }
-inline void printsl(u64 d)         { fast_print("%llu", d); }
-inline void printsl(float f)       { fast_print("%.5f", f); }
-inline void printsl(double f)      { fast_print("%.5f", f); }
-inline void printsl(bool b)        { fast_print("%s", b ? "true" : "false"); }
-inline void printsl() { }
-
-// print is just printsl but with automatic \n after the string
-template<typename T> inline void print(T v) { printsl(v); fast_print("%c", '\n'); }
-inline void print() { }
-
-// printsl formatting
-template <typename T, typename... Types>
-void printsl(const char* s, T t1, Types... others) {
-    int current_index = 0;
-    while(true) {
-        char c = s[current_index++];
-        if(c == 0) return;
-        else if(c == '\\') {
-            char next = s[current_index];
-            // escape characters
-            if(next == '%') { putchar('%'); current_index++; }
-        } else if(c == '%') {
-            break; // put formatted input
-        } else {
-            // just a character to print
-            putchar(c);
-        }
-    }
-    printsl(t1);
-    printsl(s + current_index, others...);
-}
-
-// print formatting
-template <typename T, typename... Types>
-void print(const char* s, T t1, Types... others) {
-    printsl(s, t1, others...);
-    putchar('\n');
-}
-
-
-//
-// various print tests
-//
-
-
-
-int __buffer_index = 0;
-const int __BUFF_SIZE = 0xFFF;
-char __print_buff[__BUFF_SIZE] = "";
-inline void flush() {
-    fwrite(__print_buff, 1, __buffer_index, stdout);
-    __buffer_index = 0;
-}
-
-// must be called at the start of the program, so we can setup print buffers for quick management
-void init_print2() {
-    setvbuf(stdout, __print_buff, _IOLBF, __BUFF_SIZE);
-}
-
-#define buffer_append(fmt, ...) __buffer_index += sprintf_s(__print_buff + __buffer_index, __BUFF_SIZE - __buffer_index, fmt, __VA_ARGS__)
-
-int my_itoa(int value, char *sp) {
+// TODO(cogno): also convert u32, s16, u16, s8, u8, s64, u64, f32, f64
+int s32_to_char_ptr(int value, char *sp) {
     char tmp[16];// be careful with the length of the buffer
     char *tp = tmp;
 
@@ -166,13 +86,34 @@ int my_itoa(int value, char *sp) {
 }
 
 
+
+//
+// new print (like old but buffered for extra speed)
+//
+
+
+
+int __buffer_index = 0;
+const int __BUFF_SIZE = 0xFF;
+char __print_buff[__BUFF_SIZE] = "";
+inline void flush_to_stdout() {
+    fwrite(__print_buff, 1, __buffer_index, stdout);
+    __buffer_index = 0;
+}
+
+// TODO(cogno): temp, will be replaced with our custom implementations
+#define buffer_append(fmt, ...) __buffer_index += sprintf_s(__print_buff + __buffer_index, __BUFF_SIZE - __buffer_index, fmt, __VA_ARGS__)
+
+
+
 // print standard specializations
+// API(cogno): maybe a name like custom_format is better? I don't know
 inline void printsl_custom(const char* s) { int index = 0; while(s[index]) __print_buff[__buffer_index++] = s[index++]; }
 inline void printsl_custom(char* s)       { int index = 0; while(s[index]) __print_buff[__buffer_index++] = s[index++]; }
 inline void printsl_custom(char c)        { __print_buff[__buffer_index++] = c; }
 inline void printsl_custom(s8  d)         { buffer_append("%d", d); }
 inline void printsl_custom(s16 d)         { buffer_append("%d", d); }
-inline void printsl_custom(s32 d)         { __buffer_index += my_itoa(d, __print_buff + __buffer_index); }
+inline void printsl_custom(s32 d)         { __buffer_index += s32_to_char_ptr(d, __print_buff + __buffer_index); }
 inline void printsl_custom(s64 d)         { buffer_append("%lld", d); }
 inline void printsl_custom(u8  d)         { buffer_append("%u", d); }
 inline void printsl_custom(u16 d)         { buffer_append("%u", d); }
@@ -183,11 +124,13 @@ inline void printsl_custom(double f)      { buffer_append("%.5f", f); }
 inline void printsl_custom(bool b)        { buffer_append("%s", b ? "true" : "false"); }
 inline void printsl_custom() { }
 
+// default behaviour, unknown types prints "(unknown type)", while pointers are printed as such
+template<typename T> void printsl_custom(T v)  { printsl_custom("(unknown type)"); }
+template<typename T> void printsl_custom(T* v) { buffer_append("0x%p", v); } // NOTE(cogno): leave this before const char* s so strings are printed as such (and not as pointers)
 
 
-
+// first we recursively accumulate into a buffer, then we flush it
 inline void accumulate_into_buffer(const char* s) { buffer_append("%s", s); }
-
 template <typename T, typename... Types>
 void accumulate_into_buffer(const char* s, T t1, Types... others) {
     int current_index = 0;
@@ -209,41 +152,48 @@ void accumulate_into_buffer(const char* s, T t1, Types... others) {
     accumulate_into_buffer(s + current_index, others...);
 }
 
-
+//
+// print single inputs
+//
 template <typename T>
-void printsl_buffered(T t) {
+void printsl(T t) {
     printsl_custom(t);
-    flush();
+    flush_to_stdout();
 }
 
 template <typename T>
-void print_buffered(T t) {
+void print(T t) {
     printsl_custom(t);
     printsl_custom('\n');
-    flush();
+    flush_to_stdout();
 }
 
-
-// printsl formatting
+//
+// print multiple inputs
+//
 template <typename T, typename... Types>
-void printsl_buffered(const char* s, T t1, Types... others) {
+void printsl(const char* s, T t1, Types... others) {
     accumulate_into_buffer(s, t1, others...);
-    flush();
+    flush_to_stdout();
 }
 
 // print formatting
 template <typename T, typename... Types>
-void print_buffered(const char* s, T t1, Types... others) {
+void print(const char* s, T t1, Types... others) {
     accumulate_into_buffer(s, t1, others...);
     printsl_custom('\n');
-    flush();
+    flush_to_stdout();
 }
 
 
 
 
-
-
+//
+// a new type of print, even faster but with a different syntax
+// print("this is a var: %, this is another var: %", var1, var2);
+// now becomes
+// print2("this is a var: ", var, ", this is another var: ", var2);
+//
 void accumulate_v2() { }
 template <typename T, typename... Types>
 void accumulate_v2(T t1, Types... others) {
@@ -256,7 +206,7 @@ template <typename... Types>
 void print2(Types... others) {
     accumulate_v2(others...);
     printsl_custom('\n');
-    flush();
+    flush_to_stdout();
 }
 
 
