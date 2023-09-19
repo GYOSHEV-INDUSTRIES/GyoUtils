@@ -73,7 +73,7 @@ struct str{
     
     str(u8* p) { // when you have the ptr but not the size we calculate it
         ptr = p;
-        for(size = 0; p[size]; size++); //TODO(cogno): isn't this too much by 1??
+        for(size = 0; p[size]; size++);
     }
     
     str() = default; //NOTE(cogno): c++ is shit so we need to define this to do "str{};"
