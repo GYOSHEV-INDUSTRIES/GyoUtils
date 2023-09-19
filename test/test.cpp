@@ -116,6 +116,48 @@ int main() {
     // print("%, (expected ptr)", &t);
     // print("% (expected vec2)", vec2{10, 20});
     
+    print("u32:");
+    print((u32)20231);
+    print((u32)0);
+    print((u32)MAX_U32);
+    
+    print("s32:");
+    print((s32)MAX_S32);
+    print((s32)2021);
+    print((s32)0);
+    print((s32)-1);
+    print((s32)-2103);
+    print((s32)MIN_S32);
+    
+    print("u16:");
+    print((u16)20231);
+    print((u16)0);
+    print((u16)MAX_U16);
+    
+    print("s16:");
+    print((s16)MAX_S16);
+    print((s16)2021);
+    print((s16)0);
+    print((s16)-1);
+    print((s16)-2103);
+    print((s16)MIN_S16);
+    
+    print("u8:");
+    print((u8)123);
+    print((u8)0);
+    print((u8)MAX_U8);
+    
+    print("s8:");
+    print((s8)MAX_S8);
+    print((s8)21);
+    print((s8)0);
+    print((s8)-1);
+    print((s8)-103);
+    print((s8)MIN_S8);
+    
+    print(true);
+    print(false);
+    
     // {
     //     PROFILE_BLOCK("print");
     //     print("%, (expected ptr)", &t);

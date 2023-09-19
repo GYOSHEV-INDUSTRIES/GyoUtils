@@ -55,37 +55,38 @@ typedef double   f64;
 // print("values a=%, b=%", a, b);
 //
 
-
-// TODO(cogno): also convert u32, s16, u16, s8, u8, s64, u64, f32, f64
-int s32_to_char_ptr(int value, char *sp) {
-    char tmp[16];// be careful with the length of the buffer
-    char *tp = tmp;
-
-    int sign = value < 0;
-    u32 v;
-    if (sign) v = -value;
-    else      v = (u32)value;
-
+int u32_to_char_ptr(u32 value, char* dest) {
+    char temp[16];
+    char* temp_ptr = temp;
+    u32 v = value;
+    
+    // put each digit into temp (smallest to highest units)
     int i;
-    while (v || tp == tmp) {
+    while(v || temp_ptr == temp) {
         i = v % 10;
         v /= 10;
-        *tp++ = i+'0';
+        *temp_ptr++ = i + '0';
     }
-
-    int len = tp - tmp;
-
-    if (sign) {
-        *sp++ = '-';
-        len++;
-    }
-
-    while (tp > tmp) *sp++ = *--tp;
-
-    return len;
+    
+    int digits_count = temp_ptr - temp;
+    
+    // copy digits into final buffer in the correct order
+    while(temp_ptr > temp) *dest++ = *--temp_ptr;
+    return digits_count;
 }
 
+// TODO(cogno): also convert, s64, u64, f32, f64
+int s32_to_char_ptr(int value, char* dest) {
+    if(value > 0) return u32_to_char_ptr((u32)value, dest);
+    
+    *dest++ = '-';
+    return 1 + u32_to_char_ptr(-value, dest);
+}
 
+int u16_to_char_ptr(u16 value, char* dest) { return u32_to_char_ptr((u32)value, dest); }
+int u8_to_char_ptr(u8 value, char* dest) { return u32_to_char_ptr((u32)value, dest); }
+int s16_to_char_ptr(s16 value, char* dest) { return s32_to_char_ptr((s32)value, dest); }
+int s8_to_char_ptr(s8 value, char* dest) { return s32_to_char_ptr((s32)value, dest); }
 
 //
 // new print (like old but buffered for extra speed)
@@ -111,17 +112,17 @@ inline void flush_to_stdout() {
 inline void printsl_custom(const char* s) { int index = 0; while(s[index]) __print_buff[__buffer_index++] = s[index++]; }
 inline void printsl_custom(char* s)       { int index = 0; while(s[index]) __print_buff[__buffer_index++] = s[index++]; }
 inline void printsl_custom(char c)        { __print_buff[__buffer_index++] = c; }
-inline void printsl_custom(s8  d)         { buffer_append("%d", d); }
-inline void printsl_custom(s16 d)         { buffer_append("%d", d); }
+inline void printsl_custom(s8  d)         { __buffer_index += s8_to_char_ptr( d, __print_buff + __buffer_index); } // buffer_append("%d", d); }
+inline void printsl_custom(s16 d)         { __buffer_index += s16_to_char_ptr(d, __print_buff + __buffer_index); } // buffer_append("%d", d); }
 inline void printsl_custom(s32 d)         { __buffer_index += s32_to_char_ptr(d, __print_buff + __buffer_index); }
 inline void printsl_custom(s64 d)         { buffer_append("%lld", d); }
-inline void printsl_custom(u8  d)         { buffer_append("%u", d); }
-inline void printsl_custom(u16 d)         { buffer_append("%u", d); }
-inline void printsl_custom(u32 d)         { buffer_append("%lu", d); }
+inline void printsl_custom(u8  d)         { __buffer_index += u8_to_char_ptr( d, __print_buff + __buffer_index); } // buffer_append("%u", d); }
+inline void printsl_custom(u16 d)         { __buffer_index += u16_to_char_ptr(d, __print_buff + __buffer_index); } // buffer_append("%u", d); }
+inline void printsl_custom(u32 d)         { __buffer_index += u32_to_char_ptr(d, __print_buff + __buffer_index); } // buffer_append("%lu", d); }
 inline void printsl_custom(u64 d)         { buffer_append("%llu", d); }
 inline void printsl_custom(float f)       { buffer_append("%.5f", f); }
 inline void printsl_custom(double f)      { buffer_append("%.5f", f); }
-inline void printsl_custom(bool b)        { buffer_append("%s", b ? "true" : "false"); }
+inline void printsl_custom(bool b)        { if (b) printsl_custom("true"); else printsl_custom("false"); }
 inline void printsl_custom() { }
 
 // default behaviour, unknown types prints "(unknown type)", while pointers are printed as such
