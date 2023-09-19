@@ -116,6 +116,7 @@ int main() {
     // print("%, (expected ptr)", &t);
     // print("% (expected vec2)", vec2{10, 20});
     
+    /*
     print("u32:");
     print((u32)0);
     print((u32)20231);
@@ -170,6 +171,27 @@ int main() {
     
     print(true);
     print(false);
+    */
+    
+    Array<s32> arr = array_new<s32>(5);
+    array_append(&arr, 10);
+    array_append(&arr, 15);
+    array_append(&arr, 20);
+    
+    print("reserved %", arr.reserved_size);
+    array_reserve(&arr, 10);
+    array_append(&arr, 25);
+    array_append(&arr, 30);
+    array_append(&arr, 35);
+    array_append(&arr, 40);
+    array_append(&arr, 45);
+    array_append(&arr, 50);
+    
+    For(arr) {
+        print("arr[%]=%", it_index, it);
+    }
+    
+    print("reserved %", arr.reserved_size);
     
     // {
     //     PROFILE_BLOCK("print");

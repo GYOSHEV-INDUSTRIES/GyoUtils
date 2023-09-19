@@ -16,6 +16,9 @@ simple_benchmark.h:
 str.h:
     Added overloads str_builder_append() for u8, s8, u16, s16, u32, s32, u64, s64, f32, f64, char. These will convert the numbers into string representation and add it to the builder.
 
+dynamic_array.h:
+    Added array_reserve() function.
+
 Version: 0.1.0 2023/09/16
 ---------------------------------
 

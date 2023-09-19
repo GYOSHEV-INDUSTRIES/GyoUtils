@@ -27,7 +27,14 @@ void array_resize(Array<T>* array, s32 new_size) {
     array->reserved_size = new_size;
 }
 
-// TODO(cogno): array reserve
+template<typename T>
+void array_reserve(Array<T>* array, s32 to_add) {
+    if(array->size + to_add <= array->reserved_size) return;
+    
+    s32 new_size = (array->reserved_size * 2) > (array->reserved_size + to_add) ? array->reserved_size * 2 : array->reserved_size + to_add;
+    array_resize(array, new_size);
+    ASSERT(array->size + to_add <= array->reserved_size, "not enough memory allocated! wanted % but was %", array->size + to_add, array->reserved_size);
+}
 
 template<typename T>
 void array_add(Array<T>* array, T data, s32 index) {
