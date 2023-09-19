@@ -19,6 +19,9 @@ str.h:
 dynamic_array.h:
     Added array_reserve() function.
 
+math.h:
+    struct col for colors can now be printed.
+
 Version: 0.1.0 2023/09/16
 ---------------------------------
 
