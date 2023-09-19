@@ -117,8 +117,8 @@ int main() {
     // print("% (expected vec2)", vec2{10, 20});
     
     print("u32:");
-    print((u32)20231);
     print((u32)0);
+    print((u32)20231);
     print((u32)MAX_U32);
     
     print("s32:");
@@ -154,6 +154,19 @@ int main() {
     print((s8)-1);
     print((s8)-103);
     print((s8)MIN_S8);
+    
+    print("u64:");
+    print((u64)0);
+    print((u64)20231);
+    print((u64)MAX_U64);
+    
+    print("s64:");
+    print((s64)MAX_S64);
+    print((s64)21);
+    print((s64)0);
+    print((s64)-1);
+    print((s64)-103);
+    print((s64)MIN_S64);
     
     print(true);
     print(false);

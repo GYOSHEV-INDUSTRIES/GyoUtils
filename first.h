@@ -55,10 +55,11 @@ typedef double   f64;
 // print("values a=%, b=%", a, b);
 //
 
-int u32_to_char_ptr(u32 value, char* dest) {
-    char temp[16];
+// TODO(cogno): also convert, f32, f64
+int u64_to_char_ptr(u64 value, char* dest) {
+    char temp[22];
     char* temp_ptr = temp;
-    u32 v = value;
+    u64 v = value;
     
     // put each digit into temp (smallest to highest units)
     int i;
@@ -75,18 +76,20 @@ int u32_to_char_ptr(u32 value, char* dest) {
     return digits_count;
 }
 
-// TODO(cogno): also convert, s64, u64, f32, f64
-int s32_to_char_ptr(int value, char* dest) {
-    if(value > 0) return u32_to_char_ptr((u32)value, dest);
+
+int s64_to_char_ptr(s64 value, char* dest) {
+    if(value > 0) return u64_to_char_ptr((u64)value, dest);
     
     *dest++ = '-';
-    return 1 + u32_to_char_ptr(-value, dest);
+    return 1 + u64_to_char_ptr(-value, dest);
 }
 
-int u16_to_char_ptr(u16 value, char* dest) { return u32_to_char_ptr((u32)value, dest); }
-int u8_to_char_ptr(u8 value, char* dest) { return u32_to_char_ptr((u32)value, dest); }
-int s16_to_char_ptr(s16 value, char* dest) { return s32_to_char_ptr((s32)value, dest); }
-int s8_to_char_ptr(s8 value, char* dest) { return s32_to_char_ptr((s32)value, dest); }
+int s32_to_char_ptr(s32 value, char* dest) { return s64_to_char_ptr((s64)value, dest); }
+int u32_to_char_ptr(u32 value, char* dest) { return u64_to_char_ptr((u64)value, dest); }
+int u16_to_char_ptr(u16 value, char* dest) { return u64_to_char_ptr((u64)value, dest); }
+int u8_to_char_ptr( u8  value, char* dest) { return u64_to_char_ptr((u64)value, dest); }
+int s16_to_char_ptr(s16 value, char* dest) { return s64_to_char_ptr((s64)value, dest); }
+int s8_to_char_ptr( s8  value, char* dest) { return s64_to_char_ptr((s64)value, dest); }
 
 //
 // new print (like old but buffered for extra speed)
@@ -115,11 +118,11 @@ inline void printsl_custom(char c)        { __print_buff[__buffer_index++] = c; 
 inline void printsl_custom(s8  d)         { __buffer_index += s8_to_char_ptr( d, __print_buff + __buffer_index); } // buffer_append("%d", d); }
 inline void printsl_custom(s16 d)         { __buffer_index += s16_to_char_ptr(d, __print_buff + __buffer_index); } // buffer_append("%d", d); }
 inline void printsl_custom(s32 d)         { __buffer_index += s32_to_char_ptr(d, __print_buff + __buffer_index); }
-inline void printsl_custom(s64 d)         { buffer_append("%lld", d); }
+inline void printsl_custom(s64 d)         { __buffer_index += s64_to_char_ptr(d, __print_buff + __buffer_index); } // buffer_append("%lld", d); }
 inline void printsl_custom(u8  d)         { __buffer_index += u8_to_char_ptr( d, __print_buff + __buffer_index); } // buffer_append("%u", d); }
 inline void printsl_custom(u16 d)         { __buffer_index += u16_to_char_ptr(d, __print_buff + __buffer_index); } // buffer_append("%u", d); }
 inline void printsl_custom(u32 d)         { __buffer_index += u32_to_char_ptr(d, __print_buff + __buffer_index); } // buffer_append("%lu", d); }
-inline void printsl_custom(u64 d)         { buffer_append("%llu", d); }
+inline void printsl_custom(u64 d)         { __buffer_index += u64_to_char_ptr(d, __print_buff + __buffer_index); } // buffer_append("%llu", d); }
 inline void printsl_custom(float f)       { buffer_append("%.5f", f); }
 inline void printsl_custom(double f)      { buffer_append("%.5f", f); }
 inline void printsl_custom(bool b)        { if (b) printsl_custom("true"); else printsl_custom("false"); }
