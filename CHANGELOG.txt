@@ -20,6 +20,7 @@ dynamic_array.h:
     Added array_reserve() function.
 
 math.h:
+    Added remap function, with overloads for float, vec2, vec3 and vec4.
     struct col for colors can now be printed.
 
 Version: 0.1.0 2023/09/16

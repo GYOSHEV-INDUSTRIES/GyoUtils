@@ -33,6 +33,9 @@ inline float ceil(float x)           { return x < 0 ? int(x) : int(x + 1); }
 inline float round(float x)          { return x >= 0 ? floor(x + 0.5) : ceil(x - 0.5); }
 inline float roundn(float x, u32 n)  { return round(x * npow(10, n)) / npow(10, n); }
 inline float trunc(float x)          { return float(int(x)); }
+inline float remap(float in, float old_from, float old_to, float new_from, float new_to) {
+    return (in - old_from) / (old_to - old_from) * (new_to - new_from) + new_from;
+}
 
 #define min(a, b) (((a) < (b)) ? (a) : (b))
 #define max(a, b) (((a) < (b)) ? (b) : (a))
@@ -190,6 +193,31 @@ inline vec4 vec4_ceil(vec4 v)  {return {ceil(v.x), ceil(v.y), ceil(v.z), ceil(v.
 inline vec2 vec2_trunc(vec2 v) {return {trunc(v.x), trunc(v.y)};}
 inline vec3 vec3_trunc(vec3 v) {return {trunc(v.x), trunc(v.y), trunc(v.z)};}
 inline vec4 vec4_trunc(vec4 v) {return {trunc(v.x), trunc(v.y), trunc(v.z), trunc(v.w)};}
+
+inline vec2 remap(vec2 in, vec2 old_from, vec2 old_to, vec2 new_from, vec2 new_to) {
+    return vec2{
+        remap(in.x, old_from.x, old_to.x, new_from.x, new_to.x),
+        remap(in.y, old_from.y, old_to.y, new_from.y, new_to.y)
+    };
+}
+
+inline vec3 remap(vec3 in, vec3 old_from, vec3 old_to, vec3 new_from, vec3 new_to) {
+    return vec3{
+        remap(in.x, old_from.x, old_to.x, new_from.x, new_to.x),
+        remap(in.y, old_from.y, old_to.y, new_from.y, new_to.y),
+        remap(in.z, old_from.z, old_to.z, new_from.z, new_to.z)
+    };
+}
+
+inline vec4 remap(vec4 in, vec4 old_from, vec4 old_to, vec4 new_from, vec4 new_to) {
+    return vec4{
+        remap(in.x, old_from.x, old_to.x, new_from.x, new_to.x),
+        remap(in.y, old_from.y, old_to.y, new_from.y, new_to.y),
+        remap(in.z, old_from.z, old_to.z, new_from.z, new_to.z),
+        remap(in.w, old_from.w, old_to.w, new_from.w, new_to.w)
+    };
+}
+
 
 inline float vec2_length(vec2 v) { return sqrt(v.x * v.x + v.y * v.y); }
 inline float vec3_length(vec3 v) { return sqrt(v.x * v.x + v.y * v.y + v.z * v.z); }
