@@ -1,4 +1,15 @@
 #pragma once
+#define GYOFIRST
+
+/*
+In this file:
+- better type names for common types (s8, u8, s16, u16, s32, u32, s64, u64, f32, f64)
+- max and min values for unsigned and signed types
+- custom print replacement to printf, can be used to also print more complex custom types
+- printsl, like print but without \n at the end
+- ASSERT macro with custom message printing
+- defer macro, like golang's defer
+*/
 
 #ifndef DISABLE_INCLUDES
     #include <stdio.h>
@@ -54,37 +65,88 @@ typedef double   f64;
 // print("values a=%, b=%", a, b);
 //
 
-char _print_buff[0xFF] = "";
-#define fast_print(fmt, ...) sprintf_s(_print_buff, fmt, __VA_ARGS__);  fputs(_print_buff, stdout)
+// TODO(cogno): also convert, f32, f64
+int u64_to_char_ptr(u64 value, char* dest) {
+    char temp[22];
+    char* temp_ptr = temp;
+    u64 v = value;
+    
+    // put each digit into temp (smallest to highest units)
+    int i;
+    while(v || temp_ptr == temp) {
+        i = v % 10;
+        v /= 10;
+        *temp_ptr++ = i + '0';
+    }
+    
+    int digits_count = temp_ptr - temp;
+    
+    // copy digits into final buffer in the correct order
+    while(temp_ptr > temp) *dest++ = *--temp_ptr;
+    return digits_count;
+}
 
-// default behaviour, unknown types prints "(unknown type)", while pointers are printed as such
-template<typename T> void printsl(T v)  { fast_print("(unknown type)"); }
-template<typename T> void printsl(T* v) { fast_print("0x%p", v); } // NOTE(cogno): leave this before const char* s so strings are printed as such (and not as pointers)
+
+int s64_to_char_ptr(s64 value, char* dest) {
+    if(value >= 0) return u64_to_char_ptr((u64)value, dest);
+    
+    *dest++ = '-';
+    return 1 + u64_to_char_ptr(-value, dest);
+}
+
+int s32_to_char_ptr(s32 value, char* dest) { return s64_to_char_ptr((s64)value, dest); }
+int u32_to_char_ptr(u32 value, char* dest) { return u64_to_char_ptr((u64)value, dest); }
+int u16_to_char_ptr(u16 value, char* dest) { return u64_to_char_ptr((u64)value, dest); }
+int u8_to_char_ptr( u8  value, char* dest) { return u64_to_char_ptr((u64)value, dest); }
+int s16_to_char_ptr(s16 value, char* dest) { return s64_to_char_ptr((s64)value, dest); }
+int s8_to_char_ptr( s8  value, char* dest) { return s64_to_char_ptr((s64)value, dest); }
+
+//
+// new print (like old but buffered for extra speed)
+//
+
+
+
+int __buffer_index = 0;
+const int __BUFF_SIZE = 0xFF;
+char __print_buff[__BUFF_SIZE] = "";
+inline void flush_to_stdout() {
+    fwrite(__print_buff, 1, __buffer_index, stdout);
+    __buffer_index = 0;
+}
+
+// TODO(cogno): temp, will be replaced with our custom implementations
+#define buffer_append(fmt, ...) __buffer_index += sprintf_s(__print_buff + __buffer_index, __BUFF_SIZE - __buffer_index, fmt, __VA_ARGS__)
+
+
 
 // print standard specializations
-inline void printsl(const char* s) { fast_print("%s", s); }
-inline void printsl(char* s)       { fast_print("%s", s); }
-inline void printsl(char c)        { putchar(c); }
-inline void printsl(s8  d)         { fast_print("%d", d); }
-inline void printsl(s16 d)         { fast_print("%d", d); }
-inline void printsl(s32 d)         { fast_print("%ld", d); }
-inline void printsl(s64 d)         { fast_print("%lld", d); }
-inline void printsl(u8  d)         { fast_print("%u", d); }
-inline void printsl(u16 d)         { fast_print("%u", d); }
-inline void printsl(u32 d)         { fast_print("%lu", d); }
-inline void printsl(u64 d)         { fast_print("%llu", d); }
-inline void printsl(float f)       { fast_print("%.5f", f); }
-inline void printsl(double f)      { fast_print("%.5f", f); }
-inline void printsl(bool b)        { fast_print("%s", b ? "true" : "false"); }
-inline void printsl() { }
+// API(cogno): maybe a name like custom_format is better? I don't know
+inline void printsl_custom(const char* s) { int index = 0; while(s[index]) __print_buff[__buffer_index++] = s[index++]; }
+inline void printsl_custom(char* s)       { int index = 0; while(s[index]) __print_buff[__buffer_index++] = s[index++]; }
+inline void printsl_custom(char c)        { __print_buff[__buffer_index++] = c; }
+inline void printsl_custom(s8  d)         { __buffer_index += s8_to_char_ptr( d, __print_buff + __buffer_index); }
+inline void printsl_custom(s16 d)         { __buffer_index += s16_to_char_ptr(d, __print_buff + __buffer_index); }
+inline void printsl_custom(s32 d)         { __buffer_index += s32_to_char_ptr(d, __print_buff + __buffer_index); }
+inline void printsl_custom(s64 d)         { __buffer_index += s64_to_char_ptr(d, __print_buff + __buffer_index); }
+inline void printsl_custom(u8  d)         { __buffer_index += u8_to_char_ptr( d, __print_buff + __buffer_index); }
+inline void printsl_custom(u16 d)         { __buffer_index += u16_to_char_ptr(d, __print_buff + __buffer_index); }
+inline void printsl_custom(u32 d)         { __buffer_index += u32_to_char_ptr(d, __print_buff + __buffer_index); }
+inline void printsl_custom(u64 d)         { __buffer_index += u64_to_char_ptr(d, __print_buff + __buffer_index); }
+inline void printsl_custom(float f)       { buffer_append("%.5f", f); }
+inline void printsl_custom(double f)      { buffer_append("%.5f", f); }
+inline void printsl_custom(bool b)        { if (b) printsl_custom("true"); else printsl_custom("false"); }
+inline void printsl_custom() { }
 
-// print is just printsl but with automatic \n after the string
-template<typename T> inline void print(T v) { printsl(v); putchar('\n'); }
-inline void print() { }
+// default behaviour, unknown types prints "(unknown type)", while pointers are printed as such
+template<typename T> void printsl_custom(T v)  { printsl_custom("(unknown type)"); }
+template<typename T> void printsl_custom(T* v) { buffer_append("0x%p", v); } // NOTE(cogno): leave this before const char* s so strings are printed as such (and not as pointers)
 
-// printsl formatting
+
+// first we recursively accumulate into a buffer, then we flush it
+inline void accumulate_into_buffer(const char* s) { buffer_append("%s", s); }
 template <typename T, typename... Types>
-void printsl(const char* s, T t1, Types... others) {
+void accumulate_into_buffer(const char* s, T t1, Types... others) {
     int current_index = 0;
     while(true) {
         char c = s[current_index++];
@@ -92,24 +154,75 @@ void printsl(const char* s, T t1, Types... others) {
         else if(c == '\\') {
             char next = s[current_index];
             // escape characters
-            if(next == '%') { putchar('%'); current_index++; }
+            if(next == '%') { printsl_custom('%'); current_index++; }
         } else if(c == '%') {
             break; // put formatted input
         } else {
             // just a character to print
-            putchar(c);
+            printsl_custom(c);
         }
     }
-    printsl(t1);
-    printsl(s + current_index, others...);
+    printsl_custom(t1);
+    accumulate_into_buffer(s + current_index, others...);
+}
+
+//
+// print single inputs
+//
+template <typename T>
+void printsl(T t) {
+    printsl_custom(t);
+    flush_to_stdout();
+}
+
+template <typename T>
+void print(T t) {
+    printsl_custom(t);
+    printsl_custom('\n');
+    flush_to_stdout();
+}
+
+//
+// print multiple inputs
+//
+template <typename T, typename... Types>
+void printsl(const char* s, T t1, Types... others) {
+    accumulate_into_buffer(s, t1, others...);
+    flush_to_stdout();
 }
 
 // print formatting
 template <typename T, typename... Types>
 void print(const char* s, T t1, Types... others) {
-    printsl(s, t1, others...);
-    putchar('\n');
+    accumulate_into_buffer(s, t1, others...);
+    printsl_custom('\n');
+    flush_to_stdout();
 }
+
+
+
+
+//
+// a new type of print, even faster but with a different syntax
+// print("this is a var: %, this is another var: %", var1, var2);
+// now becomes
+// print2("this is a var: ", var, ", this is another var: ", var2);
+//
+void accumulate_v2() { }
+template <typename T, typename... Types>
+void accumulate_v2(T t1, Types... others) {
+    printsl_custom(t1);
+    accumulate_v2(others...);
+}
+
+// print formatting
+template <typename... Types>
+void print2(Types... others) {
+    accumulate_v2(others...);
+    printsl_custom('\n');
+    flush_to_stdout();
+}
+
 
 #ifdef NO_ASSERT
 #define ASSERT(expr, message, ...)

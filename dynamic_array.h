@@ -1,5 +1,16 @@
 #pragma once
 
+/*
+In this file:
+- Array, a simple replacement to std::vector
+- For macro to provide a more convenient way to iterate over Array
+- Range macro to also simplify basic for cycle syntax
+*/
+
+#ifndef GYOFIRST
+    #include "first.h"
+#endif
+
 template <typename T>
 struct Array {
     s32 size;
@@ -23,7 +34,14 @@ void array_resize(Array<T>* array, s32 new_size) {
     array->reserved_size = new_size;
 }
 
-// TODO(cogno): array reserve
+template<typename T>
+void array_reserve(Array<T>* array, s32 to_add) {
+    if(array->size + to_add <= array->reserved_size) return;
+    
+    s32 new_size = (array->reserved_size * 2) > (array->reserved_size + to_add) ? array->reserved_size * 2 : array->reserved_size + to_add;
+    array_resize(array, new_size);
+    ASSERT(array->size + to_add <= array->reserved_size, "not enough memory allocated! wanted % but was %", array->size + to_add, array->reserved_size);
+}
 
 template<typename T>
 void array_add(Array<T>* array, T data, s32 index) {

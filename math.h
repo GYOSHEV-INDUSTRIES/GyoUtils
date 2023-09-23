@@ -1,18 +1,35 @@
 #pragma once
 #define GYOMATH
 
+/*
+In this file:
+- Many math functions! saying all of them would be too much. Here's the more unique/important ones:
+- sin and cos use turns instead of radians/degrees (1 turn = 360 degrees)
+- vec2, vec3, vec4 and mat4, vec4 and mat4 use sse SIMD to speed them up substantially
+- Rotor, a replacement to Quaternion from a branch of math called Geometric Algebra.
+  Can be used in the same way as Quaternions, but often provide faster code, and they're easier to understand!
+*/
+
 #ifndef DISABLE_INCLUDES
     #include <smmintrin.h>
 #endif
 
+#ifndef GYOFIRST
+    #include "first.h"
+#endif
+
 inline int count_digits(u64 x){
     int n = 0;
-    int p = x;
+    int p = x; // BUG(cogno): count digits converts u64 to s32, you loose a lot of digits for big numbers!
     do{
         n++;
     }while(p /= 10);
     return n;
 }
+
+// TODO(cogno): count_digits for s64
+// TODO(cogno): count_digits for f64
+
 inline float npow(float x, u32 n){
     float res = x;
     for(int i = 1; i < n; i++){
@@ -25,6 +42,9 @@ inline float ceil(float x)           { return x < 0 ? int(x) : int(x + 1); }
 inline float round(float x)          { return x >= 0 ? floor(x + 0.5) : ceil(x - 0.5); }
 inline float roundn(float x, u32 n)  { return round(x * npow(10, n)) / npow(10, n); }
 inline float trunc(float x)          { return float(int(x)); }
+inline float remap(float in, float old_from, float old_to, float new_from, float new_to) {
+    return (in - old_from) / (old_to - old_from) * (new_to - new_from) + new_from;
+}
 
 #define min(a, b) (((a) < (b)) ? (a) : (b))
 #define max(a, b) (((a) < (b)) ? (b) : (a))
@@ -116,11 +136,11 @@ struct mat4{
 };
 
 
-inline void printsl(vec2 v) {fast_print("(%.5f, %.5f)", v.x, v.y);}
-inline void printsl(vec3 v) {fast_print("(%.5f, %.5f, %.5f)", v.x, v.y, v.z);}
-inline void printsl(vec4 v) {fast_print("(%.5f, %.5f, %.5f, %.5f)", v.x, v.y, v.z, v.w);}
-inline void printsl(mat4 m) {fast_print("|%.5f %.5f %.5f %.5f|\n|%.5f %.5f %.5f %.5f|\n|%.5f %.5f %.5f %.5f|\n|%.5f %.5f %.5f %.5f|\n", m.m11, m.m12, m.m13, m.m14, m.m21, m.m22, m.m23, m.m24, m.m31, m.m32, m.m33, m.m34, m.m41, m.m42, m.m43, m.m44);}
-// TODO(cogno): printsl col
+inline void printsl_custom(vec2 v) {buffer_append("(%.5f, %.5f)", v.x, v.y);}
+inline void printsl_custom(vec3 v) {buffer_append("(%.5f, %.5f, %.5f)", v.x, v.y, v.z);}
+inline void printsl_custom(vec4 v) {buffer_append("(%.5f, %.5f, %.5f, %.5f)", v.x, v.y, v.z, v.w);}
+inline void printsl_custom(col v)  {buffer_append("(%.2f, %.2f, %.2f, %.2f)", v.r, v.g, v.b, v.a);}
+inline void printsl_custom(mat4 m) {buffer_append("|%.5f %.5f %.5f %.5f|\n|%.5f %.5f %.5f %.5f|\n|%.5f %.5f %.5f %.5f|\n|%.5f %.5f %.5f %.5f|\n", m.m11, m.m12, m.m13, m.m14, m.m21, m.m22, m.m23, m.m24, m.m31, m.m32, m.m33, m.m34, m.m41, m.m42, m.m43, m.m44);}
 
 
 inline vec2 operator +(vec2 a, vec2 b)  {return {a.x + b.x, a.y + b.y};}
@@ -182,6 +202,31 @@ inline vec4 vec4_ceil(vec4 v)  {return {ceil(v.x), ceil(v.y), ceil(v.z), ceil(v.
 inline vec2 vec2_trunc(vec2 v) {return {trunc(v.x), trunc(v.y)};}
 inline vec3 vec3_trunc(vec3 v) {return {trunc(v.x), trunc(v.y), trunc(v.z)};}
 inline vec4 vec4_trunc(vec4 v) {return {trunc(v.x), trunc(v.y), trunc(v.z), trunc(v.w)};}
+
+inline vec2 remap(vec2 in, vec2 old_from, vec2 old_to, vec2 new_from, vec2 new_to) {
+    return vec2{
+        remap(in.x, old_from.x, old_to.x, new_from.x, new_to.x),
+        remap(in.y, old_from.y, old_to.y, new_from.y, new_to.y)
+    };
+}
+
+inline vec3 remap(vec3 in, vec3 old_from, vec3 old_to, vec3 new_from, vec3 new_to) {
+    return vec3{
+        remap(in.x, old_from.x, old_to.x, new_from.x, new_to.x),
+        remap(in.y, old_from.y, old_to.y, new_from.y, new_to.y),
+        remap(in.z, old_from.z, old_to.z, new_from.z, new_to.z)
+    };
+}
+
+inline vec4 remap(vec4 in, vec4 old_from, vec4 old_to, vec4 new_from, vec4 new_to) {
+    return vec4{
+        remap(in.x, old_from.x, old_to.x, new_from.x, new_to.x),
+        remap(in.y, old_from.y, old_to.y, new_from.y, new_to.y),
+        remap(in.z, old_from.z, old_to.z, new_from.z, new_to.z),
+        remap(in.w, old_from.w, old_to.w, new_from.w, new_to.w)
+    };
+}
+
 
 inline float vec2_length(vec2 v) { return sqrt(v.x * v.x + v.y * v.y); }
 inline float vec3_length(vec3 v) { return sqrt(v.x * v.x + v.y * v.y + v.z * v.z); }

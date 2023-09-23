@@ -1,7 +1,17 @@
 #pragma once
 
+/*
+In this file:
+functions to simplify working with windows' file system.
+as of now only get_only_files_in_dir() is present, we'll slowly add more functions as needed/requested.
+*/
+
 #ifndef DISABLE_INCLUDES
     #include <windows.h>
+#endif
+
+#ifndef GYOFIRST
+    #include "first.h"
 #endif
 
 bool get_only_files_in_dir(const char* folder_path, Array<str>* filenames) {

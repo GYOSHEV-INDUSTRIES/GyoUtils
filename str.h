@@ -1,8 +1,19 @@
 #pragma once
 
+/*
+In this file:
+- unicode utility functions
+- str, a simple replacement to std::string, simply told, a ptr to char array + size, making them more useful in many situations.
+- str_builder, a simple way to dynamically construct str (since str is an array of bytes you can use str_builder to also build binary files and many other things!)
+*/
+
 #ifndef DISABLE_INCLUDES
     // Todo(Quattro) create our memcpy implementation
     #include <string.h>
+#endif
+
+#ifndef GYOFIRST
+    #include "first.h"
 #endif
 
 //UNICODE UTILS
@@ -69,7 +80,7 @@ struct str{
     
     str(u8* p) { // when you have the ptr but not the size we calculate it
         ptr = p;
-        for(size = 0; p[size]; size++); //TODO(cogno): isn't this too much by 1??
+        for(size = 0; p[size]; size++);
     }
     
     str() = default; //NOTE(cogno): c++ is shit so we need to define this to do "str{};"
@@ -86,8 +97,8 @@ str str_new_alloc(const char* c_str) {
     return new_str;
 }
 
-// Todo(Quattro) maybe we could optimize this using fast print
-inline void printsl(str v) { for(int i = 0; i < v.size; i++) putchar(v.ptr[i]); }
+// PERF(cogno): optimize with memcpy (we have the size)
+inline void printsl_custom(str v) { for(int i = 0; i < v.size; i++) printsl_custom(v.ptr[i]); }
 
 char* str_to_c_string(str to_convert) {
     ASSERT(to_convert.size != MAX_U32, "str is full, cannot convert to c str");
@@ -313,8 +324,8 @@ struct StrBuilder {
     u8& operator[](s32 i) { ASSERT_BOUNDS(i, 0, size); return ptr[i]; }
 };
 
-// Todo(Quattro) maybe we could optimize this using fast print
-inline void printsl(StrBuilder b) { for(int i = 0; i < b.size; i++) putchar(b.ptr[i]); }
+// PERF(cogno): optimize with memcpy (we have the size)
+inline void printsl_custom(StrBuilder b) { for(int i = 0; i < b.size; i++) printsl_custom(b.ptr[i]); }
 
 StrBuilder make_str_builder(u8* ptr, s32 size) {
     StrBuilder s = {};
@@ -388,17 +399,100 @@ void str_builder_append(StrBuilder* b, str to_append) {
     b->size = new_size;
 }
 
-// NOTE(cogno): since we're making a **string** builder, everything gets converted to a string representation (for example a bool becomes the string "true" or "false"). If you need to append without conversion you should use str_builder_append_raw()
-// API(cogno): I don't know yet if this is a good idea, maybe append should just add and not convert to str?
+// NOTE(cogno): since we're making a **string** builder, everything gets converted to a string representation (for example a bool becomes the string "true" or "false", the number 12 becomes the string "12" etc.). If you need to append without conversion you should use str_builder_append_raw()
 
 void str_builder_append(StrBuilder* b, const char* to_append) {
     str converted = to_append;
     str_builder_append(b, converted);
 }
 
-void str_builder_append(StrBuilder* b, bool boolean) { str_builder_append(b, boolean? "true" : "false" ); }
+void str_builder_append(StrBuilder* b, bool boolean) {
+    // minor optimization where we immediately create the string with the proper size since we know what they are
+    str to_append;
+    if (boolean) {
+        to_append.ptr = (u8*)"true";
+        to_append.size = 4;
+    } else {
+        to_append.ptr = (u8*)"false";
+        to_append.size = 5;
+    }
+    str_builder_append(b, to_append);
+}
 
-// TODO(cogno): string builder append u8, u16, s16, u32, s32, u64, s64, f32, f64, char
+void str_builder_append(StrBuilder* b, char c) {
+    str_builder_reserve(b, 1);
+    b->ptr[b->size++] = c;
+}
+
+void str_builder_append(StrBuilder* b, u8 to_append) {
+    char buff[4];
+    sprintf(buff, "%u", to_append);
+    str converted = buff;
+    str_builder_append(b, converted);
+}
+
+void str_builder_append(StrBuilder* b, u16 to_append) {
+    char buff[6];
+    sprintf(buff, "%u", to_append);
+    str converted = buff;
+    str_builder_append(b, converted);
+}
+
+void str_builder_append(StrBuilder* b, u32 to_append) {
+    char buff[11];
+    sprintf(buff, "%lu", to_append);
+    str converted = buff;
+    str_builder_append(b, converted);
+}
+
+void str_builder_append(StrBuilder* b, u64 to_append) {
+    char buff[21];
+    sprintf(buff, "%llu", to_append);
+    str converted = buff;
+    str_builder_append(b, converted);
+}
+
+void str_builder_append(StrBuilder* b, s8 to_append) {
+    char buff[5];
+    sprintf(buff, "%d", to_append);
+    str converted = buff;
+    str_builder_append(b, converted);
+}
+
+void str_builder_append(StrBuilder* b, s16 to_append) {
+    char buff[8];
+    sprintf(buff, "%d", to_append);
+    str converted = buff;
+    str_builder_append(b, converted);
+}
+
+void str_builder_append(StrBuilder* b, s32 to_append) {
+    char buff[15];
+    sprintf(buff, "%ld", to_append);
+    str converted = buff;
+    str_builder_append(b, converted);
+}
+
+void str_builder_append(StrBuilder* b, s64 to_append) {
+    char buff[25];
+    sprintf(buff, "%lld", to_append);
+    str converted = buff;
+    str_builder_append(b, converted);
+}
+
+void str_builder_append(StrBuilder* b, f32 to_append) {
+    char buff[50];
+    sprintf(buff, "%.5f", to_append);
+    str converted = buff;
+    str_builder_append(b, converted);
+}
+
+void str_builder_append(StrBuilder* b, f64 to_append) {
+    char buff[50];
+    sprintf(buff, "%.5f", to_append);
+    str converted = buff;
+    str_builder_append(b, converted);
+}
 
 
 // NOTE(cogno): all append_raw are little-endian
