@@ -1,6 +1,15 @@
 #pragma once
 #define GYOPERFORMANCE_COUNTER
 
+/*
+In this file:
+Mostly performance counter related functions.
+- get_os_timer_freq() to know the frequency of OS timers
+- read_os_timer() to get the current os timer clock cycle
+- estimate_cpu_frequency() to estimate the cpu rdtsc timer frequency.
+- read_cpu_timer() to get the current cpu timer clock cycle (rdtsc is faster than os timers)
+*/
+
 #if _WIN32
 
 #ifndef DISABLE_INCLUDES

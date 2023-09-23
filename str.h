@@ -1,5 +1,12 @@
 #pragma once
 
+/*
+In this file:
+- unicode utility functions
+- str, a simple replacement to std::string, simply told, a ptr to char array + size, making them more useful in many situations.
+- str_builder, a simple way to dynamically construct str (since str is an array of bytes you can use str_builder to also build binary files and many other things!)
+*/
+
 #ifndef DISABLE_INCLUDES
     // Todo(Quattro) create our memcpy implementation
     #include <string.h>

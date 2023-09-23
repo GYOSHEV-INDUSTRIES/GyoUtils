@@ -1,5 +1,17 @@
 #pragma once
 
+/*
+In this file: 
+Basic benchmarking functionality
+- BENCHMARK_VOID_WITH_COUNT to run a function returning void a given number of times and get execution informations
+- BENCHMARK_WITH_COUNT to run a non-void function a given number of times and get execution informations
+- BENCHMARK_VOID_FUNC to run a function returning void many times and get execution informations
+- BENCHMARK_FUNC to run a non-void function many times and get execution informations
+- BENCHMARK_COMPARE_VOID to run 2 functions returning void at the same time and give info on the faster one
+- BENCHMARK_COMPARE to run 2 non-void functions at the same time and give info on the faster one
+*/
+
+
 #ifndef SIMPLE_BENCHMARK
 #define SIMPLE_BENCHMARK 1
 #endif

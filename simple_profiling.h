@@ -1,5 +1,12 @@
 #pragma once
 
+/*
+In this file: 
+The simplest possible way to profile a single block/function. Run it once and gather block/function speed.
+Since running a block once is VERY imprecise it's suggested to use functions/macros inside simple_benchmark,
+but you'll still be able to get quick info using this module.
+*/
+
 //
 // profiling of single blocks, usage: add PROFILE_FUNC or PROFILE_BLOCK("name") in the scope you want to profile,
 // it will be executed once and immediately print you profiling informations (location, cycle count and execution time)

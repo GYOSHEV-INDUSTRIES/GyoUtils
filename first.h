@@ -1,6 +1,16 @@
 #pragma once
 #define GYOFIRST
 
+/*
+In this file:
+- better type names for common types (s8, u8, s16, u16, s32, u32, s64, u64, f32, f64)
+- max and min values for unsigned and signed types
+- custom print replacement to printf, can be used to also print more complex custom types
+- printsl, like print but without \n at the end
+- ASSERT macro with custom message printing
+- defer macro, like golang's defer
+*/
+
 #ifndef DISABLE_INCLUDES
     #include <stdio.h>
     #include <stdint.h>
@@ -212,95 +222,6 @@ void print2(Types... others) {
     printsl_custom('\n');
     flush_to_stdout();
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-/*
-
-custom test implementation using str_builders to make the string to print
-it worked perfectly, and we might even go for it!
-we'd just need to find a better way for the user to implement it's own functions
-
-
-struct StrBuilder;
-struct str;
-StrBuilder make_str_builder();
-void str_builder_append(StrBuilder* b, str to_append);
-void str_builder_append(StrBuilder* b, const char* to_append);
-void str_builder_append(StrBuilder* b, bool boolean);
-void str_builder_append(StrBuilder* b, bool boolean);
-void str_builder_append(StrBuilder* b, u8 to_append);
-void str_builder_append(StrBuilder* b, u16 to_append);
-void str_builder_append(StrBuilder* b, u32 to_append);
-void str_builder_append(StrBuilder* b, u64 to_append);
-void str_builder_append(StrBuilder* b, s8 to_append);
-void str_builder_append(StrBuilder* b, s16 to_append);
-void str_builder_append(StrBuilder* b, s32 to_append);
-void str_builder_append(StrBuilder* b, s64 to_append);
-void str_builder_append(StrBuilder* b, f32 to_append);
-void str_builder_append(StrBuilder* b, f64 to_append);
-
-void prepare_string_for_printing(StrBuilder* b, const char* s) { str_builder_append(b, s); }
-
-template <typename T, typename... Types>
-void prepare_string_for_printing(StrBuilder* b, const char* s, T t1, Types... others) {
-    int current_index = 0;
-    while(true) {
-        char c = s[current_index++];
-        if(c == 0) return;
-        else if(c == '\\') {
-            char next = s[current_index];
-            // escape characters
-            if(next == '%') {
-                str_builder_append(b, '%');
-                current_index++;
-            }
-        } else if(c == '%') {
-            break; // put formatted input
-        } else {
-            // just a character to print
-            str_builder_append(b, c);
-        }
-    }
-    
-    str_builder_append(b, t1);
-    prepare_string_for_printing(b, s + current_index, others...);
-}
-
-// printsl formatting
-template <typename T, typename... Types>
-void printsl_builder(const char* s, T t1, Types... others) {
-    auto builder = make_str_builder(100);
-    prepare_string_for_printing(&builder, s, t1, others...);
-    fwrite(builder.ptr, 1, builder.size, stdout);
-    free(builder.ptr);
-}
-
-
-
-// print formatting
-template <typename T, typename... Types>
-void print_builder(const char* s, T t1, Types... others) {
-    auto builder = make_str_builder(100);
-    prepare_string_for_printing(&builder, s, t1, others...);
-    str_builder_append(&builder, '\n');
-    fwrite(builder.ptr, 1, builder.size, stdout);
-    free(builder.ptr);
-}
-
-*/
-
 
 
 #ifdef NO_ASSERT

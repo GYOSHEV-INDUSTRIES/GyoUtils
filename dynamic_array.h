@@ -1,5 +1,12 @@
 #pragma once
 
+/*
+In this file:
+- Array, a simple replacement to std::vector
+- For macro to provide a more convenient way to iterate over Array
+- Range macro to also simplify basic for cycle syntax
+*/
+
 #ifndef GYOFIRST
     #include "first.h"
 #endif

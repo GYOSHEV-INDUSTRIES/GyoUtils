@@ -1,6 +1,10 @@
 #pragma once
 
 /*
+In this file: Basic profile functionality for nested/recursive functions
+*/
+
+/*
 USAGE:
 - add 'END_OF_COMPILATION_UNIT' as the last line of the file with your app entry point
 - call begin_profile() when you want to start profiling

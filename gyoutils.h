@@ -2,7 +2,7 @@
 /*
 Configuration macros
 - NO_ASSERT
-    used to disable all types of assert, improves performance
+    used to disable all types of assert, improves performance but disables (some) safety checks
 - DISABLE_INCLUDES
     used to disable all the internal includes for a custom implementation
 - PROFILING_V1

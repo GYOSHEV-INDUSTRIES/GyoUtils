@@ -17,25 +17,27 @@ We want you to be in control of the software. We hope this brings you in the rig
 
 # How do we do that
 
-Gyoutils is a collection of simple tools that can help you during development.
+While working on our projects we've found ourselves frequently dissatisfied with the instruments we would be using.
+They would either be too slow, or too annoying to work with. So we've decided to build them ourselves.
+This is the collection of those simple tools. They have frequently helped us while developing our projects.
+We hope they might help you with yours.
 
-Here's a high level view of most of the things you can find in each file.
+Here's a high level view of most of the things you can find in gyoutils.
 For a more comprehensive list you should look into each file.
 For updates on recent changes you should look at CHANGELOG.txt
 
-- a new simpler alternative to printf
+- a new simpler alternative to printf, faster than std::cout
 - deactivatable assert macros with custom print messages
-- defer macro, similar as defer in go lang, useful for when
-- dynamic array, a simple replacement to std::vector
-- str, a simple replacement to std::string
-- str_builder, a simple structure to construct your strings and binary files
-- a for macro which will help you during iteration over some of gyoutils structures
-- simple deactivatable performance counters, for when you want to measure performance at low level
+- defer macro, similar to defer in go lang, useful for memory and resource management
+- dynamic array, a simple faster replacement to std::vector
+- str, a simple faster replacement to std::string
+- str_builder, a simple structure to construct your strings, also can help you when building binary files
+- a for macro which will help you during iteration over some of gyoutils structures, more powerful than c++'s range for loop
+- simple deactivatable performance counters, for when you want to measure performance at low level, with more resolution than chrono
 - simple profiling structure to help you in profiling nested/recursive functions
 - simple benchmarking functionality to help you test functions in a variety of cases
 - many common math constructs, among them you can find fast versions of vec2, vec3, vec4, mat4
-- Rotors, a replacement for quaternions from a branch of mathematics called Geometric Algebra, making them easier to understand and producing faster code
-- common functions for working with files
+- Rotors, a replacement for quaternions from a branch of mathematics called Geometric Algebra, making them easier to understand and producing faster code in many cases
 - many other things
 
 
