@@ -97,7 +97,7 @@ str str_new_alloc(const char* c_str) {
     return new_str;
 }
 
-inline void printsl_custom(str v) { fwrite(v.ptr, 1, v.size, stdout); }
+inline void printsl_custom(str v) { for(int i = 0; i < v.size; i++) printsl_custom((char)v.ptr[i]); }
 
 char* str_to_c_string(str to_convert) {
     ASSERT(to_convert.size != MAX_U32, "str is full, cannot convert to c str");
@@ -323,7 +323,7 @@ struct StrBuilder {
     u8& operator[](s32 i) { ASSERT_BOUNDS(i, 0, size); return ptr[i]; }
 };
 
-inline void printsl_custom(StrBuilder b) { fwrite(b.ptr, 1, b.size, stdout); }
+inline void printsl_custom(StrBuilder b) { for(int i = 0; i < b.size; i++) printsl_custom((char)b.ptr[i]); }
 
 StrBuilder make_str_builder(u8* ptr, s32 size) {
     StrBuilder s = {};
