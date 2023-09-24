@@ -1,4 +1,10 @@
-Version: 0.1.1 2023/09/2023
+Version: 0.1.2 2023/09/24
+---------------------------------
+
+Fixed print for str and str_builder being printed as arroy of u8 instead of a string.
+
+
+Version: 0.1.1 2023/09/23
 ---------------------------------
 
 Defined some macros to automatically import `first.h` if you include just a single module like `math.h`.
