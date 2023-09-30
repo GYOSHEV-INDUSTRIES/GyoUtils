@@ -102,8 +102,12 @@ void print_new_v2() {
 int main() {
    
     // BENCHMARK_VOID_WITH_COUNT(1000, fast_print_v2);
-    BENCHMARK_COMPARE_VOID(1000, c_printf, print_new_strat);
+    // BENCHMARK_COMPARE_VOID(1000, c_printf, print_new_strat);
     
+    // ASSERT(false, "testing");
+    
+    // printf("%.5f\n", (f32)111.0);
+    print((f32)11.12);
     // print_v2("the number ", 12, " and then the string ", "hello world");
     
     // init_print();
