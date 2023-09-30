@@ -286,7 +286,6 @@ ScopeExit<F> MakeScopeExit(F f) {
 // and you can't have recursive macros, so we need to make this shitfest of giant walls for like size 100 macros
 // i fucking hate this but at least it works
 //                         - cogno 2023/09/29
-/*
 
 #define MSVC_BUG(MACRO, ARGS) MACRO ARGS 
 // you just know something good is about to happen
@@ -410,7 +409,7 @@ ScopeExit<F> MakeScopeExit(F f) {
 #define STRINGIFY_(n, ...) TO_STR_N(n, __VA_ARGS__)
 #define STRINGIFY(...) MSVC_BUG(STRINGIFY_, (COUNTER(__VA_ARGS__), __VA_ARGS__))
 
-#define Enum(EnumName, ...) \
+#define ENUM(EnumName, ...) \
 enum class EnumName { __VA_ARGS__ }; \
 const int EnumName##Size = NUM_ARGS(__VA_ARGS__); \
 const char* EnumName##Strings[] = { STRINGIFY(__VA_ARGS__) }; \
@@ -419,8 +418,7 @@ const char* to_string(EnumName to_convert) { \
     ASSERT_BOUNDS(index, 0, EnumName##Size); \
     return EnumName##Strings[index]; \
 } \
-void printsl(EnumName to_print) { \
+void printsl_custom(EnumName to_print) { \
     printsl("%::%", #EnumName, to_string(to_print)); \
 }
 
-*/
