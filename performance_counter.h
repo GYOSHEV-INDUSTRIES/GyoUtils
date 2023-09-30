@@ -14,6 +14,9 @@ Mostly performance counter related functions.
 
 #ifndef DISABLE_INCLUDES
 	#include <windows.h>
+    #ifdef __GNUC__
+	#include <x86intrin.h>
+    #endif
 #endif
 
 static u64 get_os_timer_freq() {
