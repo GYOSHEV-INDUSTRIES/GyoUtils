@@ -5,6 +5,9 @@ Increased compatibility of __debugbreak with other systems.
 Replaced usages of sprintf_s with standard function snprintf for compatibility.
 Added INFINITY and NAN macros when working with float/double/f32/f64.
 
+Fixed in gcc ASSERT macro errors about __VA_ARGS__ when used without arguments.
+Fixed in gcc error about __m128 and {} in math.h.
+
 Version: 0.1.2 2023/09/24
 ---------------------------------
 

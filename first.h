@@ -248,7 +248,7 @@ void print_tab_if_there_is_a_message() { }
 if (!(expr)) { \
     print("### Assertion failed: '%'", #expr); \
     print_tab_if_there_is_a_message(message); \
-    print(message, __VA_ARGS__);  \
+    print(message, ##__VA_ARGS__);  \
     print("    File: %", __FILE__); \
     print("    Line: %", __LINE__); \
     print("    Function: %", __FUNCTION__); \
