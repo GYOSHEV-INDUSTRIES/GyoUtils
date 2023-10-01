@@ -166,7 +166,7 @@ inline vec3 operator /(float s, vec3 a) {return {s / a.x, s / a.y, s / a.z};}
 inline vec4 operator /(float s, vec4 a) {vec4 res; res.v = _mm_div_ps(_mm_set1_ps(s), a.v); return res;}
 inline vec2 operator -(vec2 a)  {return {-a.x, -a.y};}
 inline vec3 operator -(vec3 a)  {return {-a.x, -a.y, -a.z};}
-inline vec4 operator -(vec4 a)  {vec4 res;  res.v = _mm_sub_ps({}, a.v);  return res;}
+inline vec4 operator -(vec4 a)  {vec4 res;  res.v = _mm_sub_ps(__m128{}, a.v);  return res;}
 inline vec2 operator +=(vec2& a, const vec2 &b) {a = a + b;  return a;}
 inline vec3 operator +=(vec3& a, const vec3 &b) {a = a + b;  return a;}
 inline vec4 operator +=(vec4& a, const vec4 &b) {a = a + b;  return a;}
