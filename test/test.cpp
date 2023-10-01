@@ -99,15 +99,69 @@ void print_new_v2() {
     print2("Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nam semper tempor justo, eget efficitur lorem ultricies non. Duis tempor feugiat tortor et malesuada. Aenean malesuada, massa ut pretium vestibulum, quam dui suscipit sapien, a malesuada nisl sem at felis. Aliquam erat volutpat. Mauris ac tellus scelerisque, euismod turpis id, porttitor metus. Fusce aliquet, arcu ac cursus finibus, eros justo lobortis massa, at semper felis arcu vitae lorem. Nunc eget mauris velit. Fusce dignissim faucibus ante, nec tristique nisi euismod nec. Aenean dignissim, mauris sed venenatis porta, libero augue ornare urna, quis venenatis dui mi sed ante.", 15);
 }
 
+char dest[20];
+
+__declspec(noinline) void setup_test() {
+    PROFILE_BLOCK("setup");
+    dest[0] = 't';
+    dest[1] = 'e';
+    dest[2] = 's';
+    dest[3] = 't';
+    dest[4] = 'i';
+    dest[5] = 'n';
+    dest[6] = 'g';
+}
+
+__declspec(noinline) void memcpy_test() {
+    auto start = read_cpu_timer();
+    memcpy(dest, "0.00000", 7);
+    auto end = read_cpu_timer();
+    print("memcpy took % clocks to make '%'", end - start, dest);
+}
+
+__declspec(noinline) void dumb_shit() {
+    auto start = read_cpu_timer();
+    dest[0] = '0';
+    dest[1] = '.';
+    dest[2] = '0';
+    dest[3] = '0';
+    dest[4] = '0';
+    dest[5] = '0';
+    dest[6] = '0';
+    auto end = read_cpu_timer();
+    print("peak of performance took % clocks ot make '%'", end - start, dest);
+}
+
+int func_to_test(int thing) {
+    int sum = 0;
+    for(int i = 0; i < thing; i++) {
+        sum += i;
+    }
+    return sum;
+}
+
+
 int main() {
-   
+    
+    // setup_test();
+    // memcpy_test();
+    // dumb_shit();
+    // memcpy_test();
+    // dumb_shit();
+    
+    // BENCHMARK_MANY_INPUTS(10, func_to_test, 1, 10, 100, 1000, 10000, 100000, 1000000, 10000000, 100000000, 1000000000);
+    
+    print("start");
+    BENCHMARK_FUNC(func_to_test, 100000000);
+    print("end");
+    
     // BENCHMARK_VOID_WITH_COUNT(1000, fast_print_v2);
     // BENCHMARK_COMPARE_VOID(1000, c_printf, print_new_strat);
     
     // ASSERT(false, "testing");
     
     // printf("%.5f\n", (f32)111.0);
-    print((f32)11.12);
+    // print((f32)11.12);
     // print_v2("the number ", 12, " and then the string ", "hello world");
     
     // init_print();
@@ -177,25 +231,25 @@ int main() {
     print(false);
     */
     
-    Array<s32> arr = array_new<s32>(5);
-    array_append(&arr, 10);
-    array_append(&arr, 15);
-    array_append(&arr, 20);
+    // Array<s32> arr = array_new<s32>(5);
+    // array_append(&arr, 10);
+    // array_append(&arr, 15);
+    // array_append(&arr, 20);
     
-    print("reserved %", arr.reserved_size);
-    array_reserve(&arr, 10);
-    array_append(&arr, 25);
-    array_append(&arr, 30);
-    array_append(&arr, 35);
-    array_append(&arr, 40);
-    array_append(&arr, 45);
-    array_append(&arr, 50);
+    // print("reserved %", arr.reserved_size);
+    // array_reserve(&arr, 10);
+    // array_append(&arr, 25);
+    // array_append(&arr, 30);
+    // array_append(&arr, 35);
+    // array_append(&arr, 40);
+    // array_append(&arr, 45);
+    // array_append(&arr, 50);
     
-    For(arr) {
-        print("arr[%]=%", it_index, it);
-    }
+    // For(arr) {
+    //     print("arr[%]=%", it_index, it);
+    // }
     
-    print("reserved %", arr.reserved_size);
+    // print("reserved %", arr.reserved_size);
     
     // {
     //     PROFILE_BLOCK("print");
