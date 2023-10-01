@@ -3,6 +3,7 @@ Version: 0.1.3
 
 Added macro in first.h to automatically create basic Enums with size info, a to_string function and print compatible
 Added BENCHMARK_VOID_MANY_INPUTS and BENCHMARK_MANY_INPUTS in simple_benchmark.h to test the same function with different inputs and record data on each one
+Reimplemented BENCHMARK_FUNC and BENCHMARK_FUNC_VOID to run until there's been 10 seconds of no changes to the best recorded time.
 
 Increased compatibility of __debugbreak with other systems.
 Replaced usages of sprintf_s with standard function snprintf for compatibility.

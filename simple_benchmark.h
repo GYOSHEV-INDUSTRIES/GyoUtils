@@ -9,9 +9,11 @@ Basic benchmarking functionality
 - BENCHMARK_FUNC to run a non-void function many times and get execution informations
 - BENCHMARK_COMPARE_VOID to run 2 functions returning void at the same time and give info on the faster one
 - BENCHMARK_COMPARE to run 2 non-void functions at the same time and give info on the faster one
+- BENCHMARK_VOID_MANY_INPUTS to run a function returning void a given number of times with different inputs
+- BENCHMARK_MANY_INPUTS to run a non-void function a given number of times with different inputs
 */
 
-
+// to quickly deactivate benchmarking without changing code you can #define SIMPLE_BENCHMARK 0 before importing this file
 #ifndef SIMPLE_BENCHMARK
 #define SIMPLE_BENCHMARK 1
 #endif
@@ -49,6 +51,11 @@ void print_benchmark_times(u64 min_cycles, u64 avg_cycles, u64 max_cycles) {
     print("%, %, % (s)", min_time, avg_time, max_time);
 }
 
+/*
+Runs a given function a given number of times with the given inputs.
+If you function returns void you should use BENCHMARK_VOID_WITH_COUNT.
+Usage: BENCHMARK_WITH_COUNT(10000, func_to_run, input1, input2);
+*/
 #define BENCHMARK_WITH_COUNT(count, func_name, ...) \
 do { \
     u64 min_cycles = MAX_U64; \
@@ -68,6 +75,8 @@ do { \
     print_benchmark_times(min_cycles, total_cycles / count, max_cycles); \
 } while(0)
 
+// alternative to BENCHMARK_WITH_COUNT for functions returning void,
+// if your function returns something you should use BENCHMARK_WITH_COUNT
 #define BENCHMARK_VOID_WITH_COUNT(count, func_name, ...) \
 do { \
     u64 min_cycles = MAX_U64; \
@@ -87,8 +96,6 @@ do { \
     print_benchmark_times(min_cycles, total_cycles / count, max_cycles); \
 } while(0)
 
-// TODO(cogno): test the same func over and over for 10s, reset timer every time you get a new min
-
 /*
 Macro to repeatedly test a function n times with different inputs. Will record min, avg and max 
 execution time for each run and display it at the end of the whole test.
@@ -100,7 +107,6 @@ Functions with multiple inputs are NOT supported.
 
 Example:
 BENCHMARK_VOID_MANY_INPUTS(10000, func_to_test, "a", "a string", "a longer string", "a very very long string");
-
 */
 
 #define GET_FIRST(PAR, ...) PAR
@@ -131,6 +137,7 @@ do { \
     } \
 } while (0)
 
+// alternative to BENCHMARK_VOID_MANY_INPUTS for functions that return something,
 // we use volatile so the code doesn't get optimized away
 #define BENCHMARK_MANY_INPUTS(count, func_name, ...) \
 do { \
@@ -157,27 +164,76 @@ do { \
     } \
 } while (0)
 
-// TODO(cogno): deprecated, delete
-#define BENCHMARK_FUNC(func_name, ...) \
-do { \
-    BENCHMARK_WITH_COUNT(10, func_name, __VA_ARGS__); \
-    BENCHMARK_WITH_COUNT(100, func_name, __VA_ARGS__); \
-    BENCHMARK_WITH_COUNT(1000, func_name, __VA_ARGS__); \
-    BENCHMARK_WITH_COUNT(10000, func_name, __VA_ARGS__); \
-    BENCHMARK_WITH_COUNT(100000, func_name, __VA_ARGS__); \
-    BENCHMARK_WITH_COUNT(1000000, func_name, __VA_ARGS__); \
-} while(0)
+/*
+Runs a given function with given inputs many times and tells statistics.
+Will run the function until there's a run of 10 seconds with no changes to min execution time.
+If your function returns void you should use BENCHMARK_VOID_FUNC.
 
-// TODO(cogno): deprecated, delete
+Usage: BENCHMARK_FUNC(func_to_test, input_to_func);
+*/
+#define BENCHMARK_FUNC(func_name, ...) \
+{ \
+    u64 freq = estimate_cpu_frequency(); \
+    u64 timer_start = read_cpu_timer(); \
+    u64 min_time = MAX_U64; \
+    u64 max_time = 0; \
+    u64 total_time = 0; \
+    u64 count = 0; \
+    while(true) { \
+        u64 current_time = read_cpu_timer(); \
+        f64 seconds_elapsed = (current_time - timer_start) / freq; \
+        if(seconds_elapsed > 10.0f) break; \
+        u64 start = read_cpu_timer(); \
+        volatile auto temp = func_name(__VA_ARGS__); \
+        u64 end = read_cpu_timer(); \
+        u64 elapsed_time = end - start; \
+        if(elapsed_time < min_time) { \
+            min_time = elapsed_time; \
+            timer_start = read_cpu_timer(); \
+            print("new min time: %", min_time); \
+        } \
+        if(elapsed_time > max_time) max_time = elapsed_time; \
+        total_time += elapsed_time; \
+        count++; \
+    } \
+    print("function '%' tested x% times", STRING_JOIN( STRING_JOIN( STRING_JOIN(#func_name, "("), #__VA_ARGS__  ) , ")" ), count); \
+    print("    min: % cycles", min_time); \
+    print("    avg: % cycles", total_time / count); \
+    print("    max: % cycles", max_time); \
+}
+
+// Alternative to BENCHMARK_FUNC for functions returning void,
+// if your function returns something you should use BENCHMARK_FUNC
 #define BENCHMARK_VOID_FUNC(func_name, ...) \
-do { \
-    BENCHMARK_VOID_WITH_COUNT(10, func_name, __VA_ARGS__); \
-    BENCHMARK_VOID_WITH_COUNT(100, func_name, __VA_ARGS__); \
-    BENCHMARK_VOID_WITH_COUNT(1000, func_name, __VA_ARGS__); \
-    BENCHMARK_VOID_WITH_COUNT(10000, func_name, __VA_ARGS__); \
-    BENCHMARK_VOID_WITH_COUNT(100000, func_name, __VA_ARGS__); \
-    BENCHMARK_VOID_WITH_COUNT(1000000, func_name, __VA_ARGS__); \
-} while(0)
+{ \
+    u64 freq = estimate_cpu_frequency(); \
+    u64 timer_start = read_cpu_timer(); \
+    u64 min_time = MAX_U64; \
+    u64 max_time = 0; \
+    u64 total_time = 0; \
+    u64 count = 0; \
+    while(true) { \
+        u64 current_time = read_cpu_timer(); \
+        f64 seconds_elapsed = (current_time - timer_start) / freq; \
+        if(seconds_elapsed > 10.0f) break; \
+        u64 start = read_cpu_timer(); \
+        func_name(__VA_ARGS__); \
+        u64 end = read_cpu_timer(); \
+        u64 elapsed_time = end - start; \
+        if(elapsed_time < min_time) { \
+            min_time = elapsed_time; \
+            timer_start = read_cpu_timer(); \
+            print("new min time: %", min_time); \
+        } \
+        if(elapsed_time > max_time) max_time = elapsed_time; \
+        total_time += elapsed_time; \
+        count++; \
+    } \
+    print("function '%' tested x% times", STRING_JOIN( STRING_JOIN( STRING_JOIN(#func_name, "("), #__VA_ARGS__  ) , ")" ), count); \
+    print("    min: % cycles", min_time); \
+    print("    avg: % cycles", total_time / count); \
+    print("    max: % cycles", max_time); \
+}
 
 /*
 Compares 2 different functions against the same inputs n times to know if the second one is faster or slower.
@@ -285,5 +341,7 @@ do { \
 #define BENCHMARK_VOID_WITH_COUNT(count, func_name, ...)
 #define BENCHMARK_COMPARE_VOID(count, func1, func2, ...)
 #define BENCHMARK_COMPARE(count, func1, func2, ...)
+#define BENCHMARK_VOID_MANY_INPUTS(count, func_name, ...)
+#define BENCHMARK_MANY_INPUTS(count, func_name, ...)
 
 #endif
