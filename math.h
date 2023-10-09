@@ -20,7 +20,7 @@ In this file:
 
 inline int count_digits(u64 x){
     int n = 0;
-    int p = x; // BUG(cogno): count digits converts u64 to s32, you loose a lot of digits for big numbers!
+    u64 p = x;
     do{
         n++;
     }while(p /= 10);
@@ -90,6 +90,11 @@ struct vec2{
         float ptr[2];
         struct {float x, y;};
     };
+    vec2() = default;
+    template <typename A, typename B> vec2(A a, B b){
+        x = (float)a;
+        y = (float)b;
+    }
 };
 
 struct vec3{
@@ -97,6 +102,12 @@ struct vec3{
         float ptr[3];
         struct {float x, y, z;};
     };
+    vec3() = default;
+    template <typename A, typename B, typename C> vec3(A a, B b, C c){
+        x = (float)a;
+        y = (float)b;
+        z = (float)c;
+    }
 };
 
 struct vec4{
@@ -105,6 +116,13 @@ struct vec4{
         struct {float x, y, z, w;};
         __m128 v;
     };
+    vec4() = default;
+    template <typename A, typename B, typename C, typename D> vec4(A a, B b, C c, D d){
+        this->x = (float)a;
+        this->y = (float)b;
+        this->z = (float)c;
+        this->w = (float)d;
+    }
 };
 
 struct col{
@@ -155,15 +173,18 @@ inline vec4 operator *(vec4 a, float s) {vec4 res; res.v = _mm_mul_ps(a.v, _mm_s
 inline vec2 operator *(float s, vec2 a) {return {a.x * s, a.y * s};}
 inline vec3 operator *(float s, vec3 a) {return {a.x * s, a.y * s, a.z * s};}
 inline vec4 operator *(float s, vec4 a) {vec4 res; res.v = _mm_mul_ps(a.v, _mm_set1_ps(s)); return res;}
-inline vec2 operator *(vec2 a, vec2 b) {return {a.x * b.x, a.y * b.y};}
-inline vec3 operator *(vec3 a, vec3 b) {return {a.x * b.x, a.y * b.y, a.z * b.z};}
-inline vec4 operator *(vec4 a, vec4 b) {vec4 res; res.v = _mm_mul_ps(a.v, b.v); return res;}
+inline vec2 operator *(vec2 a, vec2 b)  {return {a.x * b.x, a.y * b.y};}
+inline vec3 operator *(vec3 a, vec3 b)  {return {a.x * b.x, a.y * b.y, a.z * b.z};}
+inline vec4 operator *(vec4 a, vec4 b)  {vec4 res; res.v = _mm_mul_ps(a.v, b.v); return res;}
 inline vec2 operator /(vec2 a, float s) {return {a.x / s, a.y / s};}
 inline vec3 operator /(vec3 a, float s) {return {a.x / s, a.y / s, a.z / s};}
 inline vec4 operator /(vec4 a, float s) {vec4 res; res.v = _mm_div_ps(a.v, _mm_set1_ps(s)); return res;}
 inline vec2 operator /(float s, vec2 a) {return {s / a.x, s / a.y};}
 inline vec3 operator /(float s, vec3 a) {return {s / a.x, s / a.y, s / a.z};}
 inline vec4 operator /(float s, vec4 a) {vec4 res; res.v = _mm_div_ps(_mm_set1_ps(s), a.v); return res;}
+inline vec2 operator /(vec2 a, vec2 b)  {return {a.x / b.x, a.y / b.y};}
+inline vec3 operator /(vec3 a, vec3 b)  {return {a.x / b.x, a.y / b.y, a.z / b.z};}
+inline vec4 operator /(vec4 a, vec4 b)  {vec4 res; res.v = _mm_div_ps(a.v, b.v); return res;}
 inline vec2 operator -(vec2 a)  {return {-a.x, -a.y};}
 inline vec3 operator -(vec3 a)  {return {-a.x, -a.y, -a.z};}
 inline vec4 operator -(vec4 a)  {vec4 res;  res.v = _mm_sub_ps(__m128{}, a.v);  return res;}
@@ -219,12 +240,17 @@ inline vec3 remap(vec3 in, vec3 old_from, vec3 old_to, vec3 new_from, vec3 new_t
 }
 
 inline vec4 remap(vec4 in, vec4 old_from, vec4 old_to, vec4 new_from, vec4 new_to) {
-    return vec4{
-        remap(in.x, old_from.x, old_to.x, new_from.x, new_to.x),
-        remap(in.y, old_from.y, old_to.y, new_from.y, new_to.y),
-        remap(in.z, old_from.z, old_to.z, new_from.z, new_to.z),
-        remap(in.w, old_from.w, old_to.w, new_from.w, new_to.w)
-    };
+    vec4 num;
+    num.v = _mm_sub_ps(in.v, old_from.v);
+    vec4 den;
+    den.v = _mm_sub_ps(old_to.v, old_from.v);
+    vec4 t;
+    t.v = _mm_sub_ps(new_to.v, new_from.v);
+    vec4 res;
+    res.v = _mm_div_ps(num.v, den.v);
+    res.v = _mm_mul_ps(res.v, t.v);
+    res.v = _mm_add_ps(res.v, new_from.v);
+    return res;
 }
 
 
@@ -359,6 +385,17 @@ inline mat4 operator *(mat4 m1, mat4 m2){
     res.r2 = _mm_or_ps(_mm_or_ps(_mm_dp_ps(m1.r2, temp.r1, 0b11110001), _mm_dp_ps(m1.r2, temp.r2, 0b11110010)), _mm_or_ps(_mm_dp_ps(m1.r2, temp.r3, 0b11110100), _mm_dp_ps(m1.r2, temp.r4, 0b11111000)));
     res.r3 = _mm_or_ps(_mm_or_ps(_mm_dp_ps(m1.r3, temp.r1, 0b11110001), _mm_dp_ps(m1.r3, temp.r2, 0b11110010)), _mm_or_ps(_mm_dp_ps(m1.r3, temp.r3, 0b11110100), _mm_dp_ps(m1.r3, temp.r4, 0b11111000)));
     res.r4 = _mm_or_ps(_mm_or_ps(_mm_dp_ps(m1.r4, temp.r1, 0b11110001), _mm_dp_ps(m1.r4, temp.r2, 0b11110010)), _mm_or_ps(_mm_dp_ps(m1.r4, temp.r3, 0b11110100), _mm_dp_ps(m1.r4, temp.r4, 0b11111000)));
+    return res;
+}
+inline vec4 operator* (mat4 m, vec4 v) {
+    vec4 res;
+    res.v = _mm_or_ps(_mm_or_ps(_mm_dp_ps(m.r1, v.v, 0b11110001), _mm_dp_ps(m.r2, v.v, 0b11110010)), _mm_or_ps(_mm_dp_ps(m.r3, v.v, 0b11110100), _mm_dp_ps(m.r4, v.v, 0b11111000)));
+    return res;
+}
+inline vec4 operator* (vec4 v, mat4 m) {
+    vec4 res;
+    mat4 mt = mat4_transpose(m);
+    res.v = _mm_or_ps(_mm_or_ps(_mm_dp_ps(mt.r1, v.v, 0b11110001), _mm_dp_ps(mt.r2, v.v, 0b11110010)), _mm_or_ps(_mm_dp_ps(mt.r3, v.v, 0b11110100), _mm_dp_ps(mt.r4, v.v, 0b11111000)));
     return res;
 }
 inline mat4 operator +=(mat4& m1, const mat4& m2) { m1 = m1 + m2; return m1;}

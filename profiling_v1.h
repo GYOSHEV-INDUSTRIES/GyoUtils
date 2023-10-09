@@ -95,7 +95,7 @@ void pad_right(int to_add) {
 #ifndef GYOMATH
     inline int count_digits(u64 x){
         int n = 0;
-        int p = x;
+        u64 p = x;
         do{
             n++;
         }while(p /= 10);
