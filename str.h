@@ -5,6 +5,7 @@ In this file:
 - unicode utility functions
 - str, a simple replacement to std::string, simply told, a ptr to char array + size, making them more useful in many situations.
 - str_builder, a simple way to dynamically construct str (since str is an array of bytes you can use str_builder to also build binary files and many other things!)
+- str_parser, a simple way to dynamically DEconstruct a str (since str is an array of bytes you can use str_parser to also parse binary files and many other things!)
 */
 
 #ifndef DISABLE_INCLUDES
@@ -314,6 +315,12 @@ bool str_matches(const char* a, const char* b) {return str_matches((str)a, (str)
 bool str_matches(str a, const char* b) {return str_matches(a, (str)b); }
 bool str_matches(const char* a, str b) {return str_matches((str)a, b); }
 
+
+/*
+StrBuilder, used to dinamically construct str.
+Since str is an array of bytes you can also use this to construct binary data (like files)
+*/
+
 #define STR_BUILDER_DEFAULT_SIZE 100
 
 struct StrBuilder {
@@ -527,3 +534,98 @@ void str_builder_append_raw(StrBuilder* b, f64 to_add) { str_builder_append_raw(
 // TODO(cogno): string builder replace
 
 void str_builder_remove_last_bytes(StrBuilder* b, s32 bytes_to_remove) { b->size -= bytes_to_remove; }
+
+
+/*
+StrParser, used to dinamically deconstruct str.
+Since str is an array of bytes you can also use this to parse binary data (like files)
+*/
+
+struct StrParser {
+    u8* ptr;
+    s32 size;
+    u8& operator[](s32 i) { ASSERT_BOUNDS(i, 0, size); return ptr[i]; }
+};
+
+inline void printsl_custom(StrParser p) { printsl_custom(str(p.ptr, p.size)); }
+
+StrParser make_str_parser(str s) {
+    StrParser p = {};
+    p.size = s.size;
+    p.ptr = s.ptr;
+    return p;
+}
+
+StrParser make_str_parser(u8* ptr, s32 size) {
+    StrParser p = {};
+    p.size = size;
+    p.ptr = ptr;
+    return p;
+}
+
+StrParser copy_str_parser(StrParser to_copy) {
+    StrParser p = {};
+    p.size = to_copy.size;
+    p.ptr = to_copy.ptr;
+    return p;
+}
+
+bool str_parser_is_empty(StrParser* p) { return p->size == 0; }
+
+void str_parser_advance(StrParser* p, s32 size) {
+    ASSERT(size <= p->size, "advancing by too much! the string is % long, but you're advancing by %", p->size, size);
+    p->ptr  += size;
+    p->size -= size;
+}
+
+bool str_parser_starts_with(StrParser* p, str start) {
+    if(start.size > p->size) return false;
+    
+    for(int i = 0; i < start.size; i++) {
+        char ch_p = p->ptr[i];
+        char ch_s = start[i];
+        if(ch_p != ch_s) return false;
+    }
+    
+    return true;
+}
+
+bool str_parser_check_magic(StrParser* p, str magic) {
+    ASSERT(magic.size == 4, "magic should only be 4 characters long!");
+    bool magic_correct = str_parser_starts_with(p, magic);
+    str_parser_advance(p, 4);
+    return magic_correct;
+}
+
+// parse functions convert str to types and return them
+// TODO(cogno): parse bool
+// TODO(cogno): parse u8
+// TODO(cogno): parse u16
+// TODO(cogno): parse u32
+// TODO(cogno): parse u64
+// TODO(cogno): parse s8
+// TODO(cogno): parse s16
+// TODO(cogno): parse s32
+// TODO(cogno): parse s64
+// TODO(cogno): parse f32
+// TODO(cogno): parse f64
+
+
+// get functions return raw bytes as types
+u8 str_parser_get_u8(StrParser* p) {
+    auto* start = (u8*)p->ptr;
+    u8 out = *start;
+    str_parser_advance(p, sizeof(u8));
+    return out;
+}
+
+// TODO: get bool
+// TODO: get u16
+// TODO: get u32
+// TODO: get u64
+// TODO: get s8
+// TODO: get s16
+// TODO: get s32
+// TODO: get s64
+// TODO: get f32
+// TODO: get f64

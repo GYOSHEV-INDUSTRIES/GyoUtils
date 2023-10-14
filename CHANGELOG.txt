@@ -1,6 +1,8 @@
 For the upcoming version
 ---------------------------------
 
+Added str_parser in str.h, a new construct to parse str and binary files
+
 Added vec2, vec3 and vec4 constructor, so it will be automatically cast variables to float (e.g. `int a = 4;  vec2 b = {a, a*2};`)
 Added vec4 * mat4 and mat4 * vec4 operations
 Added vecN / vecN operations ({1, 5, 3} / {2, 6, 7} == {1 / 2, 5 / 6, 3 / 7})
@@ -27,7 +29,7 @@ Fixed in gcc __rdtsc error.
 Version: 0.1.2 2023/09/24
 ---------------------------------
 
-Fixed print for str and str_builder being printed as arroy of u8 instead of a string.
+Fixed print for str and str_builder being printed as array of u8 instead of a string.
 
 
 Version: 0.1.1 2023/09/23

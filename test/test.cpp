@@ -143,6 +143,17 @@ int func_to_test(int thing) {
 
 int main() {
     
+    StrBuilder b = make_str_builder();
+    str_builder_append(&b, "edit");
+    str_builder_append_raw(&b, 1);
+    str_builder_append_raw(&b, 12.5);
+    str_builder_append_raw(&b, 13.2);
+    
+    StrParser p = make_str_parser(b.ptr, b.size);
+    str_parser_check_magic(&p, "edit");
+    u8 version = str_parser_get_u8(&p);
+    ASSERT(version == 1, "wrong value");
+    
     // setup_test();
     // memcpy_test();
     // dumb_shit();
