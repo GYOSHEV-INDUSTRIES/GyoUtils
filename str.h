@@ -431,70 +431,70 @@ void str_builder_append(StrBuilder* b, char c) {
 
 void str_builder_append(StrBuilder* b, u8 to_append) {
     char buff[4];
-    sprintf(buff, "%u", to_append);
+    snprintf(buff, 4, "%u", to_append);
     str converted = buff;
     str_builder_append(b, converted);
 }
 
 void str_builder_append(StrBuilder* b, u16 to_append) {
     char buff[6];
-    sprintf(buff, "%u", to_append);
+    snprintf(buff, 6, "%u", to_append);
     str converted = buff;
     str_builder_append(b, converted);
 }
 
 void str_builder_append(StrBuilder* b, u32 to_append) {
     char buff[11];
-    sprintf(buff, "%lu", to_append);
+    snprintf(buff, 11, "%lu", to_append);
     str converted = buff;
     str_builder_append(b, converted);
 }
 
 void str_builder_append(StrBuilder* b, u64 to_append) {
     char buff[21];
-    sprintf(buff, "%llu", to_append);
+    snprintf(buff, 21, "%llu", to_append);
     str converted = buff;
     str_builder_append(b, converted);
 }
 
 void str_builder_append(StrBuilder* b, s8 to_append) {
     char buff[5];
-    sprintf(buff, "%d", to_append);
+    snprintf(buff, 5, "%d", to_append);
     str converted = buff;
     str_builder_append(b, converted);
 }
 
 void str_builder_append(StrBuilder* b, s16 to_append) {
     char buff[8];
-    sprintf(buff, "%d", to_append);
+    snprintf(buff, 8, "%d", to_append);
     str converted = buff;
     str_builder_append(b, converted);
 }
 
 void str_builder_append(StrBuilder* b, s32 to_append) {
     char buff[15];
-    sprintf(buff, "%ld", to_append);
+    snprintf(buff, 15, "%ld", to_append);
     str converted = buff;
     str_builder_append(b, converted);
 }
 
 void str_builder_append(StrBuilder* b, s64 to_append) {
     char buff[25];
-    sprintf(buff, "%lld", to_append);
+    snprintf(buff, 25, "%lld", to_append);
     str converted = buff;
     str_builder_append(b, converted);
 }
 
 void str_builder_append(StrBuilder* b, f32 to_append) {
     char buff[50];
-    sprintf(buff, "%.5f", to_append);
+    snprintf(buff, 50, "%.5f", to_append);
     str converted = buff;
     str_builder_append(b, converted);
 }
 
 void str_builder_append(StrBuilder* b, f64 to_append) {
     char buff[50];
-    sprintf(buff, "%.5f", to_append);
+    snprintf(buff, 50, "%.5f", to_append);
     str converted = buff;
     str_builder_append(b, converted);
 }
