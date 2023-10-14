@@ -2,6 +2,7 @@ Version: 0.1.4
 ---------------------------------
 
 Added str_parser in str.h, a new construct to parse str and binary files
+Added get_only_files_in_dir in win64_files.h to know which folders are in a directory
 Added get_drive_names in win64_files.h to know your drives names
 
 Added vec2, vec3 and vec4 constructor, so it will be automatically cast variables to float (e.g. `int a = 4;  vec2 b = {a, a*2};`)
