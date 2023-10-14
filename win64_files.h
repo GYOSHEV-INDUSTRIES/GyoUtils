@@ -3,7 +3,8 @@
 /*
 In this file:
 functions to simplify working with windows' file system.
-as of now only get_only_files_in_dir() is present, we'll slowly add more functions as needed/requested.
+- get_only_files_in_dir(...) to know which files only are in a dir
+- get_drive_names(...) to know which drives you have in your pc
 */
 
 #ifndef DISABLE_INCLUDES
@@ -14,7 +15,7 @@ as of now only get_only_files_in_dir() is present, we'll slowly add more functio
     #include "first.h"
 #endif
 
-bool get_only_files_in_dir(const char* folder_path, Array<str>* filenames) {
+bool get_only_files_in_dir(str folder_path, Array<str>* filenames) {
     StrBuilder builder = make_str_builder();
     defer(free(builder.ptr));
     str_builder_append(&builder, folder_path);
@@ -60,4 +61,37 @@ bool get_only_files_in_dir(const char* folder_path, Array<str>* filenames) {
     }
     
     return true;
+}
+
+// TODO(cogno): get_only_folders_in_dir 
+
+// NOTE(cogno): each name will be terminated with ":\", so you'll see "C:\" etc.
+bool get_drive_names(Array<str>* drive_names) {
+    const int BUFF_SIZE = 255;
+    char buf[BUFF_SIZE];
+    // get the drive letters as a set of strings
+    int sz = GetLogicalDriveStrings(sizeof(buf), buf);
+    if(sz == 0) {
+        // Oops! something went wrong so display the error message
+        DWORD dwError = GetLastError();
+        FormatMessage(FORMAT_MESSAGE_FROM_SYSTEM, 0, dwError, 0, buf, sizeof(buf), 0);
+        print(buf);
+        return false;
+    }
+    
+    ASSERT(sz <= BUFF_SIZE, "buffer not big enough (needs at least % bytes)", sz);
+
+    // buf now contains a list of all the drive letters. Each drive letter is
+    // terminated with '\0' and the last one is terminated by two consecutive '\0' bytes.
+    char* start = buf;
+    while(true) {
+        char ch = *start;
+        if(ch == 0) break;
+        
+        str drive_name = str_new_alloc(start);
+        array_append(drive_names, drive_name);
+        start += drive_name.size + 1;
+    }
+    
+    return drive_names->size > 0;
 }
