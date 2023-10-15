@@ -553,6 +553,39 @@ void str_builder_append(StrBuilder* b, f64 to_append) {
     str_builder_append(b, converted);
 }
 
+// custom str_builder variants, you can add yours too!
+void str_builder_append(StrBuilder* b, vec2 to_append) {
+    str_builder_append(b, '(');
+    str_builder_append(b, to_append.x);
+    str_builder_append(b, ',');
+    str_builder_append(b, to_append.y);
+    str_builder_append(b, ')');
+}
+
+void str_builder_append(StrBuilder* b, vec3 to_append) {
+    str_builder_append(b, '(');
+    str_builder_append(b, to_append.x);
+    str_builder_append(b, ',');
+    str_builder_append(b, to_append.y);
+    str_builder_append(b, ',');
+    str_builder_append(b, to_append.z);
+    str_builder_append(b, ')');
+}
+
+void str_builder_append(StrBuilder* b, vec4 to_append) {
+    str_builder_append(b, '(');
+    str_builder_append(b, to_append.x);
+    str_builder_append(b, ',');
+    str_builder_append(b, to_append.y);
+    str_builder_append(b, ',');
+    str_builder_append(b, to_append.z);
+    str_builder_append(b, ',');
+    str_builder_append(b, to_append.w);
+    str_builder_append(b, ')');
+}
+
+//TODO(cogno): str_builder append mat4, col, etc.
+
 
 // NOTE(cogno): all append_raw are little-endian
 
@@ -583,6 +616,24 @@ void str_builder_append_raw(StrBuilder* b, s32 to_add) { str_builder_append_raw(
 void str_builder_append_raw(StrBuilder* b, s16 to_add) { str_builder_append_raw(b, (u8*)(&to_add), sizeof(to_add)); }
 void str_builder_append_raw(StrBuilder* b, f32 to_add) { str_builder_append_raw(b, (u8*)(&to_add), sizeof(to_add)); }
 void str_builder_append_raw(StrBuilder* b, f64 to_add) { str_builder_append_raw(b, (u8*)(&to_add), sizeof(to_add)); }
+
+// custom str_builder variants, you can add yours too!
+void str_builder_append_raw(StrBuilder* b, vec2 to_add) {
+    str_builder_append_raw(b, to_add.x);
+    str_builder_append_raw(b, to_add.y);
+}
+void str_builder_append_raw(StrBuilder* b, vec3 to_add) {
+    str_builder_append_raw(b, to_add.x);
+    str_builder_append_raw(b, to_add.y);
+    str_builder_append_raw(b, to_add.z);
+}
+void str_builder_append_raw(StrBuilder* b, vec4 to_add) {
+    str_builder_append_raw(b, to_add.x);
+    str_builder_append_raw(b, to_add.y);
+    str_builder_append_raw(b, to_add.z);
+    str_builder_append_raw(b, to_add.w);
+}
+// TODO(cogno): str builder append raw mat4, col etc.
 
 // TODO(cogno): string builder insert at index
 // TODO(cogno): string builder replace

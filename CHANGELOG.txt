@@ -6,6 +6,8 @@ str.h:
     Added str_ends_with function (with char and str overloads) to know if a str ends with something.
     Added/Replaced str_trim with str_trim_inplace, now the _inplace version takes and edits the pointer, while the _trim version returns a new str.
     Added unicode_utf8_to_codepoint(...) function
+    Added custom str_builder_append overloads for vec2, vec3 and vec4
+    Added custom str_builder_append_raw overloads for vec2, vec3 and vec4
     
     Fixed some functions using printf instead of snprintf (the platform independent alternative).
     Changed unicode_utf8_to_size(...) and unicode_codepoint_to_size(...) to return s8 instead of u8, this leads to more performant code when used in array access (and since the returned value is always 1 to 4 it's simply a preferable choice)

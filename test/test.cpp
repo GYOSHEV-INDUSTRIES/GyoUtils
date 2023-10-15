@@ -23,6 +23,7 @@
 #include "src/math/vec4.cpp"
 #include "src/math/mat4.cpp"
 #include "src/unicode.cpp"
+#include "src/str.cpp"
 
 #include "src/prints.cpp"
 
@@ -155,7 +156,6 @@ int main() {
     // u8 version = str_parser_get_u8(&p);
     // ASSERT(version == 1, "wrong value");
     
-    test_unicode();
     // setup_test();
     // memcpy_test();
     // dumb_shit();
@@ -393,11 +393,13 @@ int main() {
     }
     #endif
     
+    test_str();
+    test_unicode();
     test_simple_math();
-    // test_vec2_math();
-    // test_vec3_math();
-    // test_vec4_math();
-    // test_mat4_math();
+    test_vec2_math();
+    test_vec3_math();
+    test_vec4_math();
+    test_mat4_math();
     
     // print("\nAll % tests passed succesfully", _cnt);
     return 0;
