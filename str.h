@@ -714,10 +714,12 @@ bool str_parser_check_magic(StrParser* p, str magic) {
 bool str_parser_parse_bool(StrParser* p, bool* out) {
     str to_check = str_parser_to_str(*p);
     if(str_starts_with(to_check, "true")) {
+        str_parser_advance(p, 4);
         *out = true;
         return true;
     }
     if(str_starts_with(to_check, "false")) {
+        str_parser_advance(p, 5);
         *out = false;
         return true;
     }
@@ -725,7 +727,6 @@ bool str_parser_parse_bool(StrParser* p, bool* out) {
 }
 
 // parse functions convert str to types and return them
-// TODO(cogno): parse bool
 // TODO(cogno): parse u8
 // TODO(cogno): parse u16
 // TODO(cogno): parse u32
@@ -740,9 +741,14 @@ bool str_parser_parse_bool(StrParser* p, bool* out) {
 
 // get functions return raw bytes as types
 u8 str_parser_get_u8(StrParser* p) {
-    auto* start = (u8*)p->ptr;
-    u8 out = *start;
+    u8 out = *p->ptr;
     str_parser_advance(p, sizeof(u8));
+    return out;
+}
+
+char str_parser_get_char(StrParser* p) {
+    char out = (char)*p->ptr;
+    str_parser_advance(p, sizeof(char));
     return out;
 }
 

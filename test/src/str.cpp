@@ -28,5 +28,7 @@ void test_str() {
         ok = str_parser_parse_bool(&p, &bool_out);
         REQUIRE(ok, true);
         REQUIRE(bool_out, true);
+        
+        REQUIRE(str_parser_get_char(&p), 'd');
     )
 }
