@@ -216,7 +216,7 @@ bool str_split_right(str to_split, u8 char_to_split, str* left_side, str* right_
     return false;
 }
 
-void str_trim_left(str* to_trim) {
+void str_trim_left_inplace(str* to_trim) {
     //API(cogno): I don't think space and \t are enough...
     while(true) {
         if(to_trim->size <= 0) return; // nothing left to trim
@@ -227,7 +227,7 @@ void str_trim_left(str* to_trim) {
     }
 }
 
-void str_trim_right(str* to_trim) {
+void str_trim_right_inplace(str* to_trim) {
     //API(cogno): I don't think space and \t are enough...
     while(true) {
         if(to_trim->size <= 0) return; // nothing left to trim
@@ -237,10 +237,40 @@ void str_trim_right(str* to_trim) {
     }
 }
 
-// TODO(cogno): return a new string trimmed instead of replacing, to edit the original call str_trim_inplace
-void str_trim(str* to_trim) {
-    str_trim_left(to_trim);
-    str_trim_right(to_trim);
+void str_trim_inplace(str* to_trim) {
+    str_trim_left_inplace(to_trim);
+    str_trim_right_inplace(to_trim);
+}
+
+str str_trim_left(str to_trim) {
+    //API(cogno): I don't think space and \t are enough...
+    str out = to_trim;
+    while(true) {
+        if(out.size <= 0) return; // nothing left to trim
+        if(out.ptr[0] == ' ' || out.ptr[0] == '\t') {
+            out.ptr++;
+            out.size--;
+        } else break;
+    }
+    return out;
+}
+
+str str_trim_right(str to_trim) {
+    //API(cogno): I don't think space and \t are enough...
+    str out = to_trim;
+    while(true) {
+        if(out.size <= 0) return; // nothing left to trim
+        if(out.ptr[out.size - 1] == ' ' || out.ptr[out.size - 1] == '\t') {
+            out.size--;
+        } else break;
+    }
+    return out;
+}
+
+str str_trim(str to_trim) {
+    str trim1 = str_trim_left(to_trim);
+    str trim2 = str_trim_right(trim1);
+    return trim2;
 }
 
 bool str_to_u32(str to_convert, u32* out_value) {
