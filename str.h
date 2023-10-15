@@ -675,6 +675,13 @@ StrParser copy_str_parser(StrParser to_copy) {
     return p;
 }
 
+str str_parser_to_str(StrParser p) {
+    str out = {};
+    out.ptr = p.ptr;
+    out.size = p.size;
+    return out;
+}
+
 bool str_parser_is_empty(StrParser* p) { return p->size == 0; }
 
 void str_parser_advance(StrParser* p, s32 size) {
@@ -700,6 +707,21 @@ bool str_parser_check_magic(StrParser* p, str magic) {
     bool magic_correct = str_parser_starts_with(p, magic);
     str_parser_advance(p, 4);
     return magic_correct;
+}
+
+// NOTE(cogno): each _parse function returns a boolean if it was parsed correctly and the given pointer with the parsed value
+
+bool str_parser_parse_bool(StrParser* p, bool* out) {
+    str to_check = str_parser_to_str(*p);
+    if(str_starts_with(to_check, "true")) {
+        *out = true;
+        return true;
+    }
+    if(str_starts_with(to_check, "false")) {
+        *out = false;
+        return true;
+    }
+    return false;
 }
 
 // parse functions convert str to types and return them
