@@ -52,7 +52,11 @@ bool get_only_files_in_dir(str folder_path, Array<str>* filenames) {
         // get info if it's a file or not
         str_builder_append_raw(&copy, (u8)0);
         auto result = GetFileAttributes((const char*)copy.ptr);
-        if((int)result < 0) return false;
+        if((int)result < 0) {
+            DWORD err = GetLastError();
+            if(err == ERROR_SHARING_VIOLATION) continue; // skip files we can't access
+            return false;
+        }
         
         if(result & FILE_ATTRIBUTE_ARCHIVE) {
             str file_name = str_new_alloc(win_file_data.cFileName); // else it doesn't live outside this function
@@ -96,7 +100,11 @@ bool get_only_folders_in_dir(str folder_path, Array<str>* folders) {
         // get info if it's a file or not
         str_builder_append_raw(&copy, (u8)0);
         auto result = GetFileAttributes((const char*)copy.ptr);
-        if((int)result < 0) return false;
+        if((int)result < 0) {
+            DWORD err = GetLastError();
+            if(err == ERROR_SHARING_VIOLATION) continue; // skip files we can't access
+            return false;
+        }
         
         if(result & FILE_ATTRIBUTE_DIRECTORY) {
             // NOTE(cogno): windows is so fucking stupid it adds '.' and '..' as folders, we need to filter them out

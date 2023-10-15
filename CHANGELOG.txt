@@ -7,10 +7,10 @@ str.h:
     Fixed some functions using printf instead of snprintf (the platform independent alternative).
 
 win64_files.h:
-    Added get_only_files_in_dir to know which folders are in a directory.
-    Added get_drive_names to know your drives names.
     Added win64_print_error() to quickly print any error that happened duinr windows api calls.
-    Fixed get_only_files_in_dir and get_only_folders_in_dir to fail when interacting with .sys files due to a "some process is using it" error.
+    Added get_drive_names to know your drives names.
+    Added get_only_files_in_dir to know which folders are in a directory.
+    Fixed get_only_files_in_dir and get_only_folders_in_dir failing when interacting with files used by other processes, now they simply get skipped since we can't get their attributes.
     Minor change of function signature for get_only_files_in_dir and get_only_folders_in_dir, now they take a str as folder_path instead of const char* (const char* get converted automatically to str so you shouldn't notice any change).
 
 math.h:
