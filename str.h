@@ -734,6 +734,10 @@ char str_parser_get_char(StrParser* p) {
 // TODO: get f64
 
 
+bool str_parser_starts_with_digit(StrParser* p) {
+    return p->ptr[0] >= '0' && p->ptr[0] <= '9';
+}
+
 // NOTE(cogno): each _parse function returns a boolean if it was parsed correctly and the given pointer with the parsed value
 
 bool str_parser_parse_bool(StrParser* p, bool* out) {
@@ -752,14 +756,56 @@ bool str_parser_parse_bool(StrParser* p, bool* out) {
 }
 
 bool str_parser_parse_u8(StrParser* p, u8* out) {
-    char start = str_parser_get_char(p);
-    if(start > '9' || start < '0') return false; //first digit is not even a number
+    if(!str_parser_starts_with_digit(p)) return false;
     
+    char start = str_parser_get_char(p);
     *out = start - '0';
     for(int i = 1; i < 3; i++) { // u8 have at most 3 digits (value 255)
-        char ch = str_parser_get_char(p);
-        if(ch > '9' || ch < '0') return true; //we no longer have portions of the number, but we previously found some, so we're done successfully
+        if(!str_parser_starts_with_digit(p)) return true; //we no longer have portions of the number, but we previously found some, so we're done successfully
         
+        char ch = str_parser_get_char(p);
+        *out = (*out * 10) + ch - '0'; // add the new digit to the mix
+    }
+    return true;
+}
+
+bool str_parser_parse_u16(StrParser* p, u16* out) {
+    if(!str_parser_starts_with_digit(p)) return false;
+    
+    char start = str_parser_get_char(p);
+    *out = start - '0';
+    for(int i = 1; i < 5; i++) { // u16 have at most 5 digits (value 65535)
+        if(!str_parser_starts_with_digit(p)) return true; //we no longer have portions of the number, but we previously found some, so we're done successfully
+
+        char ch = str_parser_get_char(p);
+        *out = (*out * 10) + ch - '0'; // add the new digit to the mix
+    }
+    return true;
+}
+
+bool str_parser_parse_u32(StrParser* p, u32* out) {
+    if(!str_parser_starts_with_digit(p)) return false;
+    
+    char start = str_parser_get_char(p);
+    *out = start - '0';
+    for(int i = 1; i < 10; i++) { // u32 have at most 10 digits (value 4294967295)
+        if(!str_parser_starts_with_digit(p)) return true; //we no longer have portions of the number, but we previously found some, so we're done successfully
+
+        char ch = str_parser_get_char(p);
+        *out = (*out * 10) + ch - '0'; // add the new digit to the mix
+    }
+    return true;
+}
+
+bool str_parser_parse_u64(StrParser* p, u64* out) {
+    if(!str_parser_starts_with_digit(p)) return false;
+    
+    char start = str_parser_get_char(p);
+    *out = start - '0';
+    for(int i = 1; i < 20; i++) { // u64 have at most 20 digits (value 18446744073709551615)
+        if(!str_parser_starts_with_digit(p)) return true; //we no longer have portions of the number, but we previously found some, so we're done successfully
+
+        char ch = str_parser_get_char(p);
         *out = (*out * 10) + ch - '0'; // add the new digit to the mix
     }
     return true;
