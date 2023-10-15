@@ -270,9 +270,22 @@ bool str_starts_with(str to_check, str checker) {
     if (to_check.size < checker.size) return false; //not enough character to check
     
     for(int i = 0; i < checker.size; i++) {
-        ASSERT_BOUNDS(i, 0, to_check.size); //should never happen because of check above
-        ASSERT_BOUNDS(i, 0, checker.size);  //should never happen because of check above
         if(to_check[i] != checker[i]) return false;
+    }
+    
+    return true;
+}
+
+bool str_ends_with(str to_check, char ch) {
+    return to_check.size > 0 && to_check[to_check.size - 1] == ch;
+}
+
+bool str_ends_with(str to_check, str checker) {
+    if(to_check.size < checker.size) return false; // not enough characters
+    
+    for(int i = 0; i < checker.size; i++) {
+        s32 index = to_check.size - checker.size + i;
+        if(to_check[index] != checker[i]) return false;
     }
     
     return true;
