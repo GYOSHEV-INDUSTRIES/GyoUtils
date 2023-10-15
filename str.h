@@ -18,14 +18,14 @@ In this file:
 #endif
 
 //UNICODE UTILS
-u8 unicode_utf8_to_size(u8 val) {
+s8 unicode_utf8_to_size(u8 val) {
     if (val < 128) return 1;
     if (val < 224) return 2;
     if (val < 240) return 3;
     else           return 4;
 }
 
-u8 unicode_codepoint_to_size(u32 codepoint) {
+s8 unicode_codepoint_to_size(u32 codepoint) {
     if (codepoint < 0x80)    return 1;
     if (codepoint < 0x800)   return 2;
     if (codepoint < 0x10000) return 3;
@@ -43,8 +43,19 @@ bool unicode_is_header(u8 byte) {
     return (byte & 0xc0) != 0x80;
 }
 
-//TODO(cogno): utf8 to codepoint (u32 to u32)
-//TODO(cogno): overload utf8 to codepoint (array of u8 to u32)
+u32 unicode_utf8_to_codepoint(u8* utf8) {
+    u8 utf8_head = utf8[0];
+    s8 unicode_size = unicode_utf8_to_size(utf8_head);
+    u32 codepoint_head = utf8_head & (0xff >> unicode_size);
+    u32 codepoint_body = 0;
+    for(int i = 1; i < unicode_size; i++) {
+        u8 portion = utf8[i];
+        u8 filtered = portion & 0x3f;
+        codepoint_body = (codepoint_body << 6) + filtered;
+    }
+    u32 codepoint = (codepoint_head << (6 * (unicode_size - 1))) + codepoint_body;
+    return codepoint;
+}
 
 // implemented manually to avoid the strlen dependency
 int c_string_length(const char* s) {
@@ -246,7 +257,7 @@ str str_trim_left(str to_trim) {
     //API(cogno): I don't think space and \t are enough...
     str out = to_trim;
     while(true) {
-        if(out.size <= 0) return; // nothing left to trim
+        if(out.size <= 0) return out; // nothing left to trim
         if(out.ptr[0] == ' ' || out.ptr[0] == '\t') {
             out.ptr++;
             out.size--;
@@ -259,7 +270,7 @@ str str_trim_right(str to_trim) {
     //API(cogno): I don't think space and \t are enough...
     str out = to_trim;
     while(true) {
-        if(out.size <= 0) return; // nothing left to trim
+        if(out.size <= 0) return out; // nothing left to trim
         if(out.ptr[out.size - 1] == ' ' || out.ptr[out.size - 1] == '\t') {
             out.size--;
         } else break;

@@ -22,6 +22,7 @@
 #include "src/math/vec3.cpp"
 #include "src/math/vec4.cpp"
 #include "src/math/mat4.cpp"
+#include "src/unicode.cpp"
 
 #include "src/prints.cpp"
 
@@ -143,17 +144,18 @@ int func_to_test(int thing) {
 
 int main() {
     
-    StrBuilder b = make_str_builder();
-    str_builder_append(&b, "edit");
-    str_builder_append_raw(&b, 1);
-    str_builder_append_raw(&b, 12.5);
-    str_builder_append_raw(&b, 13.2);
+    // StrBuilder b = make_str_builder();
+    // str_builder_append(&b, "edit");
+    // str_builder_append_raw(&b, 1);
+    // str_builder_append_raw(&b, 12.5);
+    // str_builder_append_raw(&b, 13.2);
     
-    StrParser p = make_str_parser(b.ptr, b.size);
-    str_parser_check_magic(&p, "edit");
-    u8 version = str_parser_get_u8(&p);
-    ASSERT(version == 1, "wrong value");
+    // StrParser p = make_str_parser(b.ptr, b.size);
+    // str_parser_check_magic(&p, "edit");
+    // u8 version = str_parser_get_u8(&p);
+    // ASSERT(version == 1, "wrong value");
     
+    test_unicode();
     // setup_test();
     // memcpy_test();
     // dumb_shit();
@@ -162,9 +164,9 @@ int main() {
     
     // BENCHMARK_MANY_INPUTS(10, func_to_test, 1, 10, 100, 1000, 10000, 100000, 1000000, 10000000, 100000000, 1000000000);
     
-    print("start");
-    BENCHMARK_FUNC(func_to_test, 100000000);
-    print("end");
+    // print("start");
+    // BENCHMARK_FUNC(func_to_test, 100000000);
+    // print("end");
     
     // BENCHMARK_VOID_WITH_COUNT(1000, fast_print_v2);
     // BENCHMARK_COMPARE_VOID(1000, c_printf, print_new_strat);
@@ -391,7 +393,7 @@ int main() {
     }
     #endif
     
-    // test_simple_math();
+    test_simple_math();
     // test_vec2_math();
     // test_vec3_math();
     // test_vec4_math();
