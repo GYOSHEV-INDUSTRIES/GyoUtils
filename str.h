@@ -709,36 +709,6 @@ bool str_parser_check_magic(StrParser* p, str magic) {
     return magic_correct;
 }
 
-// NOTE(cogno): each _parse function returns a boolean if it was parsed correctly and the given pointer with the parsed value
-
-bool str_parser_parse_bool(StrParser* p, bool* out) {
-    str to_check = str_parser_to_str(*p);
-    if(str_starts_with(to_check, "true")) {
-        str_parser_advance(p, 4);
-        *out = true;
-        return true;
-    }
-    if(str_starts_with(to_check, "false")) {
-        str_parser_advance(p, 5);
-        *out = false;
-        return true;
-    }
-    return false;
-}
-
-// parse functions convert str to types and return them
-// TODO(cogno): parse u8
-// TODO(cogno): parse u16
-// TODO(cogno): parse u32
-// TODO(cogno): parse u64
-// TODO(cogno): parse s8
-// TODO(cogno): parse s16
-// TODO(cogno): parse s32
-// TODO(cogno): parse s64
-// TODO(cogno): parse f32
-// TODO(cogno): parse f64
-
-
 // get functions return raw bytes as types
 u8 str_parser_get_u8(StrParser* p) {
     u8 out = *p->ptr;
@@ -762,3 +732,49 @@ char str_parser_get_char(StrParser* p) {
 // TODO: get s64
 // TODO: get f32
 // TODO: get f64
+
+
+// NOTE(cogno): each _parse function returns a boolean if it was parsed correctly and the given pointer with the parsed value
+
+bool str_parser_parse_bool(StrParser* p, bool* out) {
+    str to_check = str_parser_to_str(*p);
+    if(str_starts_with(to_check, "true")) {
+        str_parser_advance(p, 4);
+        *out = true;
+        return true;
+    }
+    if(str_starts_with(to_check, "false")) {
+        str_parser_advance(p, 5);
+        *out = false;
+        return true;
+    }
+    return false;
+}
+
+bool str_parser_parse_u8(StrParser* p, u8* out) {
+    char start = str_parser_get_char(p);
+    if(start > '9' || start < '0') return false; //first digit is not even a number
+    
+    *out = start - '0';
+    for(int i = 1; i < 3; i++) { // u8 have at most 3 digits (value 255)
+        char ch = str_parser_get_char(p);
+        if(ch > '9' || ch < '0') return true; //we no longer have portions of the number, but we previously found some, so we're done successfully
+        
+        *out = (*out * 10) + ch - '0'; // add the new digit to the mix
+    }
+    return true;
+}
+
+// parse functions convert str to types and return them
+// TODO(cogno): parse u8
+// TODO(cogno): parse u16
+// TODO(cogno): parse u32
+// TODO(cogno): parse u64
+// TODO(cogno): parse s8
+// TODO(cogno): parse s16
+// TODO(cogno): parse s32
+// TODO(cogno): parse s64
+// TODO(cogno): parse f32
+// TODO(cogno): parse f64
+
+
