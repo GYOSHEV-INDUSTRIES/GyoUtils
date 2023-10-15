@@ -812,10 +812,6 @@ bool str_parser_parse_u64(StrParser* p, u64* out) {
 }
 
 // parse functions convert str to types and return them
-// TODO(cogno): parse u8
-// TODO(cogno): parse u16
-// TODO(cogno): parse u32
-// TODO(cogno): parse u64
 // TODO(cogno): parse s8
 // TODO(cogno): parse s16
 // TODO(cogno): parse s32
