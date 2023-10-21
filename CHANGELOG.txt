@@ -24,6 +24,7 @@ math.h:
     Added vec4 * mat4 and mat4 * vec4 operations.
     Added vecN / vecN operations ({1, 5, 3} / {2, 6, 7} == {1 / 2, 5 / 6, 3 / 7}).
     Improved vec4 remap function to use SIMD.
+    Fixed potential bug due to types mismatch check in npow(...)
 
 first.h:
     Fixed a bug in the `count_digits` function (precision loss)

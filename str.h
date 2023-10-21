@@ -554,6 +554,7 @@ void str_builder_append(StrBuilder* b, f64 to_append) {
 }
 
 // custom str_builder variants, you can add yours too!
+#ifdef GYOMATH
 void str_builder_append(StrBuilder* b, vec2 to_append) {
     str_builder_append(b, '(');
     str_builder_append(b, to_append.x);
@@ -585,7 +586,7 @@ void str_builder_append(StrBuilder* b, vec4 to_append) {
 }
 
 //TODO(cogno): str_builder append mat4, col, etc.
-
+#endif
 
 // NOTE(cogno): all append_raw are little-endian
 
@@ -618,6 +619,7 @@ void str_builder_append_raw(StrBuilder* b, f32 to_add) { str_builder_append_raw(
 void str_builder_append_raw(StrBuilder* b, f64 to_add) { str_builder_append_raw(b, (u8*)(&to_add), sizeof(to_add)); }
 
 // custom str_builder variants, you can add yours too!
+#ifdef GYOMATH
 void str_builder_append_raw(StrBuilder* b, vec2 to_add) {
     str_builder_append_raw(b, to_add.x);
     str_builder_append_raw(b, to_add.y);
@@ -634,6 +636,7 @@ void str_builder_append_raw(StrBuilder* b, vec4 to_add) {
     str_builder_append_raw(b, to_add.w);
 }
 // TODO(cogno): str builder append raw mat4, col etc.
+#endif
 
 // TODO(cogno): string builder insert at index
 // TODO(cogno): string builder replace
@@ -710,29 +713,12 @@ bool str_parser_check_magic(StrParser* p, str magic) {
 }
 
 // get functions return raw bytes as types
-u8 str_parser_get_u8(StrParser* p) {
-    u8 out = *p->ptr;
-    str_parser_advance(p, sizeof(u8));
+template<typename T>
+T str_parser_get(StrParser* p) {
+    T out = *(T*)p->ptr;
+    str_parser_advance(p, sizeof(T));
     return out;
 }
-
-char str_parser_get_char(StrParser* p) {
-    char out = (char)*p->ptr;
-    str_parser_advance(p, sizeof(char));
-    return out;
-}
-
-// TODO: get bool
-// TODO: get u16
-// TODO: get u32
-// TODO: get u64
-// TODO: get s8
-// TODO: get s16
-// TODO: get s32
-// TODO: get s64
-// TODO: get f32
-// TODO: get f64
-
 
 bool str_parser_starts_with_digit(StrParser* p) {
     return p->ptr[0] >= '0' && p->ptr[0] <= '9';
@@ -758,12 +744,12 @@ bool str_parser_parse_bool(StrParser* p, bool* out) {
 bool str_parser_parse_u8(StrParser* p, u8* out) {
     if(!str_parser_starts_with_digit(p)) return false;
     
-    char start = str_parser_get_char(p);
+    char start = str_parser_get<char>(p);
     *out = start - '0';
     for(int i = 1; i < 3; i++) { // u8 have at most 3 digits (value 255)
         if(!str_parser_starts_with_digit(p)) return true; //we no longer have portions of the number, but we previously found some, so we're done successfully
         
-        char ch = str_parser_get_char(p);
+        char ch = str_parser_get<char>(p);
         *out = (*out * 10) + ch - '0'; // add the new digit to the mix
     }
     return true;
@@ -772,12 +758,12 @@ bool str_parser_parse_u8(StrParser* p, u8* out) {
 bool str_parser_parse_u16(StrParser* p, u16* out) {
     if(!str_parser_starts_with_digit(p)) return false;
     
-    char start = str_parser_get_char(p);
+    char start = str_parser_get<char>(p);
     *out = start - '0';
     for(int i = 1; i < 5; i++) { // u16 have at most 5 digits (value 65535)
         if(!str_parser_starts_with_digit(p)) return true; //we no longer have portions of the number, but we previously found some, so we're done successfully
 
-        char ch = str_parser_get_char(p);
+        char ch = str_parser_get<char>(p);
         *out = (*out * 10) + ch - '0'; // add the new digit to the mix
     }
     return true;
@@ -786,12 +772,12 @@ bool str_parser_parse_u16(StrParser* p, u16* out) {
 bool str_parser_parse_u32(StrParser* p, u32* out) {
     if(!str_parser_starts_with_digit(p)) return false;
     
-    char start = str_parser_get_char(p);
+    char start = str_parser_get<char>(p);
     *out = start - '0';
     for(int i = 1; i < 10; i++) { // u32 have at most 10 digits (value 4294967295)
         if(!str_parser_starts_with_digit(p)) return true; //we no longer have portions of the number, but we previously found some, so we're done successfully
 
-        char ch = str_parser_get_char(p);
+        char ch = str_parser_get<char>(p);
         *out = (*out * 10) + ch - '0'; // add the new digit to the mix
     }
     return true;
@@ -800,12 +786,12 @@ bool str_parser_parse_u32(StrParser* p, u32* out) {
 bool str_parser_parse_u64(StrParser* p, u64* out) {
     if(!str_parser_starts_with_digit(p)) return false;
     
-    char start = str_parser_get_char(p);
+    char start = str_parser_get<char>(p);
     *out = start - '0';
     for(int i = 1; i < 20; i++) { // u64 have at most 20 digits (value 18446744073709551615)
         if(!str_parser_starts_with_digit(p)) return true; //we no longer have portions of the number, but we previously found some, so we're done successfully
 
-        char ch = str_parser_get_char(p);
+        char ch = str_parser_get<char>(p);
         *out = (*out * 10) + ch - '0'; // add the new digit to the mix
     }
     return true;

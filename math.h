@@ -32,7 +32,7 @@ inline int count_digits(u64 x){
 
 inline float npow(float x, u32 n){
     float res = x;
-    for(int i = 1; i < n; i++){
+    for(u32 i = 1; i < n; i++){
         res *= x;
     }
     return res;
