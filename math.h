@@ -52,7 +52,7 @@ inline float remap(float in, float old_from, float old_to, float new_from, float
 #define sgn(a) (((a) == 0) ? (0) : (((a) > 0) ? 1 : -1))
 #define clamp(val, min_, max_) (max(min((val), (max_)), (min_)))
 #define fmod(x, y) ((x) - trunc((x) / (y)) * (y))
-#define lerp(start, dest, t) ((dest - start) * t + start)
+#define lerp(start, dest, t) (((dest) - (start)) * (t) + (start))
 
 #define PI        (3.1415926535f)
 #define TAU       (6.2831853072f)
