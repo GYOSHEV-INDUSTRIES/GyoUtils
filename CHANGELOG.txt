@@ -20,7 +20,7 @@ win64_files.h:
     Minor change of function signature for get_only_files_in_dir and get_only_folders_in_dir, now they take a str as folder_path instead of const char* (const char* get converted automatically to str so you shouldn't notice any change).
 
 math.h:
-    Added vec2, vec3 and vec4 constructor, so it will be automatically cast variables to float (e.g. `int a = 4;  vec2 b = {a, a*2};`).
+    Added vec2, vec3, vec4 and col constructor, so it will be automatically cast variables to float (e.g. `int a = 4;  vec2 b = {a, a*2};`).
     Added vec4 * mat4 and mat4 * vec4 operations.
     Added vecN / vecN operations ({1, 5, 3} / {2, 6, 7} == {1 / 2, 5 / 6, 3 / 7}).
     Improved vec4 remap function to use SIMD.

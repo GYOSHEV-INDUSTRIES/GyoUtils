@@ -131,6 +131,13 @@ struct col{
         struct {float r, g, b, a;};
         __m128 v;
     };
+    col() = default;
+    template <typename A, typename B, typename C, typename D> col(A r, B g, C b, D a){
+        this->r = (float)r;
+        this->g = (float)g;
+        this->b = (float)b;
+        this->a = (float)a;
+    }
 };
 
 struct mat4{
