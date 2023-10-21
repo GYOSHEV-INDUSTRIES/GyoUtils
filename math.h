@@ -431,6 +431,10 @@ inline mat4 ortho(float left, float right, float bottom, float top, float z_near
     res.m44 = 1;
     return res;
 }
+inline mat4 ortho(float left, float right, float bottom, float top) {
+    mat4 res = ortho(left, right, bottom, top, -2, 0);
+    return res;
+}
 inline float determinant(mat4 m){
     vec3 col1 = {m.m11, m.m21, m.m31};
     vec3 col2 = {m.m12, m.m22, m.m32};

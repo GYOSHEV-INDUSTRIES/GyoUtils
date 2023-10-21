@@ -23,6 +23,7 @@ math.h:
     Added vec2, vec3, vec4 and col constructor, so it will be automatically cast variables to float (e.g. `int a = 4;  vec2 b = {a, a*2};`).
     Added vec4 * mat4 and mat4 * vec4 operations.
     Added vecN / vecN operations ({1, 5, 3} / {2, 6, 7} == {1 / 2, 5 / 6, 3 / 7}).
+    Added overload of function ortho(...) with default near and far planes (equal to glm's ortho).
     Improved vec4 remap function to use SIMD.
     Changed count_digits(...) to return u8 instead of int.
     Fixed potential bugs in lerp macro caused by missing parenthesis.
