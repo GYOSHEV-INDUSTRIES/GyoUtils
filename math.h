@@ -18,12 +18,11 @@ In this file:
     #include "first.h"
 #endif
 
-inline int count_digits(u64 x){
-    int n = 0;
-    u64 p = x;
-    do{
+inline u8 count_digits(u64 x){
+    u8 n = 0;
+    do {
         n++;
-    }while(p /= 10);
+    } while(x /= 10);
     return n;
 }
 
