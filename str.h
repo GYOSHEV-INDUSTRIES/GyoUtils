@@ -5,6 +5,7 @@ In this file:
 - unicode utility functions
 - str, a simple replacement to std::string, simply told, a ptr to char array + size, making them more useful in many situations.
 - str_builder, a simple way to dynamically construct str (since str is an array of bytes you can use str_builder to also build binary files and many other things!)
+- str_parser, a simple way to dynamically DEconstruct a str (since str is an array of bytes you can use str_parser to also parse binary files and many other things!)
 */
 
 #ifndef DISABLE_INCLUDES
@@ -17,14 +18,14 @@ In this file:
 #endif
 
 //UNICODE UTILS
-u8 unicode_utf8_to_size(u8 val) {
+s8 unicode_utf8_to_size(u8 val) {
     if (val < 128) return 1;
     if (val < 224) return 2;
     if (val < 240) return 3;
     else           return 4;
 }
 
-u8 unicode_codepoint_to_size(u32 codepoint) {
+s8 unicode_codepoint_to_size(u32 codepoint) {
     if (codepoint < 0x80)    return 1;
     if (codepoint < 0x800)   return 2;
     if (codepoint < 0x10000) return 3;
@@ -42,8 +43,19 @@ bool unicode_is_header(u8 byte) {
     return (byte & 0xc0) != 0x80;
 }
 
-//TODO(cogno): utf8 to codepoint (u32 to u32)
-//TODO(cogno): overload utf8 to codepoint (array of u8 to u32)
+u32 unicode_utf8_to_codepoint(u8* utf8) {
+    u8 utf8_head = utf8[0];
+    s8 unicode_size = unicode_utf8_to_size(utf8_head);
+    u32 codepoint_head = utf8_head & (0xff >> unicode_size);
+    u32 codepoint_body = 0;
+    for(int i = 1; i < unicode_size; i++) {
+        u8 portion = utf8[i];
+        u8 filtered = portion & 0x3f;
+        codepoint_body = (codepoint_body << 6) + filtered;
+    }
+    u32 codepoint = (codepoint_head << (6 * (unicode_size - 1))) + codepoint_body;
+    return codepoint;
+}
 
 // implemented manually to avoid the strlen dependency
 int c_string_length(const char* s) {
@@ -215,7 +227,7 @@ bool str_split_right(str to_split, u8 char_to_split, str* left_side, str* right_
     return false;
 }
 
-void str_trim_left(str* to_trim) {
+void str_trim_left_inplace(str* to_trim) {
     //API(cogno): I don't think space and \t are enough...
     while(true) {
         if(to_trim->size <= 0) return; // nothing left to trim
@@ -226,7 +238,7 @@ void str_trim_left(str* to_trim) {
     }
 }
 
-void str_trim_right(str* to_trim) {
+void str_trim_right_inplace(str* to_trim) {
     //API(cogno): I don't think space and \t are enough...
     while(true) {
         if(to_trim->size <= 0) return; // nothing left to trim
@@ -236,10 +248,40 @@ void str_trim_right(str* to_trim) {
     }
 }
 
-// TODO(cogno): return a new string trimmed instead of replacing, to edit the original call str_trim_inplace
-void str_trim(str* to_trim) {
-    str_trim_left(to_trim);
-    str_trim_right(to_trim);
+void str_trim_inplace(str* to_trim) {
+    str_trim_left_inplace(to_trim);
+    str_trim_right_inplace(to_trim);
+}
+
+str str_trim_left(str to_trim) {
+    //API(cogno): I don't think space and \t are enough...
+    str out = to_trim;
+    while(true) {
+        if(out.size <= 0) return out; // nothing left to trim
+        if(out.ptr[0] == ' ' || out.ptr[0] == '\t') {
+            out.ptr++;
+            out.size--;
+        } else break;
+    }
+    return out;
+}
+
+str str_trim_right(str to_trim) {
+    //API(cogno): I don't think space and \t are enough...
+    str out = to_trim;
+    while(true) {
+        if(out.size <= 0) return out; // nothing left to trim
+        if(out.ptr[out.size - 1] == ' ' || out.ptr[out.size - 1] == '\t') {
+            out.size--;
+        } else break;
+    }
+    return out;
+}
+
+str str_trim(str to_trim) {
+    str trim1 = str_trim_left(to_trim);
+    str trim2 = str_trim_right(trim1);
+    return trim2;
 }
 
 bool str_to_u32(str to_convert, u32* out_value) {
@@ -269,9 +311,22 @@ bool str_starts_with(str to_check, str checker) {
     if (to_check.size < checker.size) return false; //not enough character to check
     
     for(int i = 0; i < checker.size; i++) {
-        ASSERT_BOUNDS(i, 0, to_check.size); //should never happen because of check above
-        ASSERT_BOUNDS(i, 0, checker.size);  //should never happen because of check above
         if(to_check[i] != checker[i]) return false;
+    }
+    
+    return true;
+}
+
+bool str_ends_with(str to_check, char ch) {
+    return to_check.size > 0 && to_check[to_check.size - 1] == ch;
+}
+
+bool str_ends_with(str to_check, str checker) {
+    if(to_check.size < checker.size) return false; // not enough characters
+    
+    for(int i = 0; i < checker.size; i++) {
+        s32 index = to_check.size - checker.size + i;
+        if(to_check[index] != checker[i]) return false;
     }
     
     return true;
@@ -313,6 +368,12 @@ bool str_matches(str a, str b) {
 bool str_matches(const char* a, const char* b) {return str_matches((str)a, (str)b); }
 bool str_matches(str a, const char* b) {return str_matches(a, (str)b); }
 bool str_matches(const char* a, str b) {return str_matches((str)a, b); }
+
+
+/*
+StrBuilder, used to dinamically construct str.
+Since str is an array of bytes you can also use this to construct binary data (like files)
+*/
 
 #define STR_BUILDER_DEFAULT_SIZE 100
 
@@ -424,74 +485,108 @@ void str_builder_append(StrBuilder* b, char c) {
 
 void str_builder_append(StrBuilder* b, u8 to_append) {
     char buff[4];
-    sprintf(buff, "%u", to_append);
+    snprintf(buff, 4, "%u", to_append);
     str converted = buff;
     str_builder_append(b, converted);
 }
 
 void str_builder_append(StrBuilder* b, u16 to_append) {
     char buff[6];
-    sprintf(buff, "%u", to_append);
+    snprintf(buff, 6, "%u", to_append);
     str converted = buff;
     str_builder_append(b, converted);
 }
 
 void str_builder_append(StrBuilder* b, u32 to_append) {
     char buff[11];
-    sprintf(buff, "%lu", to_append);
+    snprintf(buff, 11, "%lu", to_append);
     str converted = buff;
     str_builder_append(b, converted);
 }
 
 void str_builder_append(StrBuilder* b, u64 to_append) {
     char buff[21];
-    sprintf(buff, "%llu", to_append);
+    snprintf(buff, 21, "%llu", to_append);
     str converted = buff;
     str_builder_append(b, converted);
 }
 
 void str_builder_append(StrBuilder* b, s8 to_append) {
     char buff[5];
-    sprintf(buff, "%d", to_append);
+    snprintf(buff, 5, "%d", to_append);
     str converted = buff;
     str_builder_append(b, converted);
 }
 
 void str_builder_append(StrBuilder* b, s16 to_append) {
     char buff[8];
-    sprintf(buff, "%d", to_append);
+    snprintf(buff, 8, "%d", to_append);
     str converted = buff;
     str_builder_append(b, converted);
 }
 
 void str_builder_append(StrBuilder* b, s32 to_append) {
     char buff[15];
-    sprintf(buff, "%ld", to_append);
+    snprintf(buff, 15, "%ld", to_append);
     str converted = buff;
     str_builder_append(b, converted);
 }
 
 void str_builder_append(StrBuilder* b, s64 to_append) {
     char buff[25];
-    sprintf(buff, "%lld", to_append);
+    snprintf(buff, 25, "%lld", to_append);
     str converted = buff;
     str_builder_append(b, converted);
 }
 
 void str_builder_append(StrBuilder* b, f32 to_append) {
     char buff[50];
-    sprintf(buff, "%.5f", to_append);
+    snprintf(buff, 50, "%.5f", to_append);
     str converted = buff;
     str_builder_append(b, converted);
 }
 
 void str_builder_append(StrBuilder* b, f64 to_append) {
     char buff[50];
-    sprintf(buff, "%.5f", to_append);
+    snprintf(buff, 50, "%.5f", to_append);
     str converted = buff;
     str_builder_append(b, converted);
 }
 
+// custom str_builder variants, you can add yours too!
+#ifdef GYOMATH
+void str_builder_append(StrBuilder* b, vec2 to_append) {
+    str_builder_append(b, '(');
+    str_builder_append(b, to_append.x);
+    str_builder_append(b, ',');
+    str_builder_append(b, to_append.y);
+    str_builder_append(b, ')');
+}
+
+void str_builder_append(StrBuilder* b, vec3 to_append) {
+    str_builder_append(b, '(');
+    str_builder_append(b, to_append.x);
+    str_builder_append(b, ',');
+    str_builder_append(b, to_append.y);
+    str_builder_append(b, ',');
+    str_builder_append(b, to_append.z);
+    str_builder_append(b, ')');
+}
+
+void str_builder_append(StrBuilder* b, vec4 to_append) {
+    str_builder_append(b, '(');
+    str_builder_append(b, to_append.x);
+    str_builder_append(b, ',');
+    str_builder_append(b, to_append.y);
+    str_builder_append(b, ',');
+    str_builder_append(b, to_append.z);
+    str_builder_append(b, ',');
+    str_builder_append(b, to_append.w);
+    str_builder_append(b, ')');
+}
+
+//TODO(cogno): str_builder append mat4, col, etc.
+#endif
 
 // NOTE(cogno): all append_raw are little-endian
 
@@ -523,7 +618,191 @@ void str_builder_append_raw(StrBuilder* b, s16 to_add) { str_builder_append_raw(
 void str_builder_append_raw(StrBuilder* b, f32 to_add) { str_builder_append_raw(b, (u8*)(&to_add), sizeof(to_add)); }
 void str_builder_append_raw(StrBuilder* b, f64 to_add) { str_builder_append_raw(b, (u8*)(&to_add), sizeof(to_add)); }
 
+// custom str_builder variants, you can add yours too!
+#ifdef GYOMATH
+void str_builder_append_raw(StrBuilder* b, vec2 to_add) {
+    str_builder_append_raw(b, to_add.x);
+    str_builder_append_raw(b, to_add.y);
+}
+void str_builder_append_raw(StrBuilder* b, vec3 to_add) {
+    str_builder_append_raw(b, to_add.x);
+    str_builder_append_raw(b, to_add.y);
+    str_builder_append_raw(b, to_add.z);
+}
+void str_builder_append_raw(StrBuilder* b, vec4 to_add) {
+    str_builder_append_raw(b, to_add.x);
+    str_builder_append_raw(b, to_add.y);
+    str_builder_append_raw(b, to_add.z);
+    str_builder_append_raw(b, to_add.w);
+}
+// TODO(cogno): str builder append raw mat4, col etc.
+#endif
+
 // TODO(cogno): string builder insert at index
 // TODO(cogno): string builder replace
 
 void str_builder_remove_last_bytes(StrBuilder* b, s32 bytes_to_remove) { b->size -= bytes_to_remove; }
+
+
+/*
+StrParser, used to dinamically deconstruct str.
+Since str is an array of bytes you can also use this to parse binary data (like files)
+*/
+
+struct StrParser {
+    u8* ptr;
+    s32 size;
+    u8& operator[](s32 i) { ASSERT_BOUNDS(i, 0, size); return ptr[i]; }
+};
+
+inline void printsl_custom(StrParser p) { printsl_custom(str(p.ptr, p.size)); }
+
+StrParser make_str_parser(str s) {
+    StrParser p = {};
+    p.size = s.size;
+    p.ptr = s.ptr;
+    return p;
+}
+
+StrParser make_str_parser(u8* ptr, s32 size) {
+    StrParser p = {};
+    p.size = size;
+    p.ptr = ptr;
+    return p;
+}
+
+StrParser copy_str_parser(StrParser to_copy) {
+    StrParser p = {};
+    p.size = to_copy.size;
+    p.ptr = to_copy.ptr;
+    return p;
+}
+
+str str_parser_to_str(StrParser p) {
+    str out = {};
+    out.ptr = p.ptr;
+    out.size = p.size;
+    return out;
+}
+
+bool str_parser_is_empty(StrParser* p) { return p->size == 0; }
+
+void str_parser_advance(StrParser* p, s32 size) {
+    ASSERT(size <= p->size, "advancing by too much! the string is % long, but you're advancing by %", p->size, size);
+    p->ptr  += size;
+    p->size -= size;
+}
+
+bool str_parser_starts_with(StrParser* p, str start) {
+    if(start.size > p->size) return false;
+    
+    for(int i = 0; i < start.size; i++) {
+        char ch_p = p->ptr[i];
+        char ch_s = start[i];
+        if(ch_p != ch_s) return false;
+    }
+    
+    return true;
+}
+
+bool str_parser_check_magic(StrParser* p, str magic) {
+    ASSERT(magic.size == 4, "magic should only be 4 characters long!");
+    bool magic_correct = str_parser_starts_with(p, magic);
+    str_parser_advance(p, 4);
+    return magic_correct;
+}
+
+// get functions return raw bytes as types
+template<typename T>
+T str_parser_get(StrParser* p) {
+    T out = *(T*)p->ptr;
+    str_parser_advance(p, sizeof(T));
+    return out;
+}
+
+bool str_parser_starts_with_digit(StrParser* p) {
+    return p->ptr[0] >= '0' && p->ptr[0] <= '9';
+}
+
+// NOTE(cogno): each _parse function returns a boolean if it was parsed correctly and the given pointer with the parsed value
+
+bool str_parser_parse_bool(StrParser* p, bool* out) {
+    str to_check = str_parser_to_str(*p);
+    if(str_starts_with(to_check, "true")) {
+        str_parser_advance(p, 4);
+        *out = true;
+        return true;
+    }
+    if(str_starts_with(to_check, "false")) {
+        str_parser_advance(p, 5);
+        *out = false;
+        return true;
+    }
+    return false;
+}
+
+bool str_parser_parse_u8(StrParser* p, u8* out) {
+    if(!str_parser_starts_with_digit(p)) return false;
+    
+    char start = str_parser_get<char>(p);
+    *out = start - '0';
+    for(int i = 1; i < 3; i++) { // u8 have at most 3 digits (value 255)
+        if(!str_parser_starts_with_digit(p)) return true; //we no longer have portions of the number, but we previously found some, so we're done successfully
+        
+        char ch = str_parser_get<char>(p);
+        *out = (*out * 10) + ch - '0'; // add the new digit to the mix
+    }
+    return true;
+}
+
+bool str_parser_parse_u16(StrParser* p, u16* out) {
+    if(!str_parser_starts_with_digit(p)) return false;
+    
+    char start = str_parser_get<char>(p);
+    *out = start - '0';
+    for(int i = 1; i < 5; i++) { // u16 have at most 5 digits (value 65535)
+        if(!str_parser_starts_with_digit(p)) return true; //we no longer have portions of the number, but we previously found some, so we're done successfully
+
+        char ch = str_parser_get<char>(p);
+        *out = (*out * 10) + ch - '0'; // add the new digit to the mix
+    }
+    return true;
+}
+
+bool str_parser_parse_u32(StrParser* p, u32* out) {
+    if(!str_parser_starts_with_digit(p)) return false;
+    
+    char start = str_parser_get<char>(p);
+    *out = start - '0';
+    for(int i = 1; i < 10; i++) { // u32 have at most 10 digits (value 4294967295)
+        if(!str_parser_starts_with_digit(p)) return true; //we no longer have portions of the number, but we previously found some, so we're done successfully
+
+        char ch = str_parser_get<char>(p);
+        *out = (*out * 10) + ch - '0'; // add the new digit to the mix
+    }
+    return true;
+}
+
+bool str_parser_parse_u64(StrParser* p, u64* out) {
+    if(!str_parser_starts_with_digit(p)) return false;
+    
+    char start = str_parser_get<char>(p);
+    *out = start - '0';
+    for(int i = 1; i < 20; i++) { // u64 have at most 20 digits (value 18446744073709551615)
+        if(!str_parser_starts_with_digit(p)) return true; //we no longer have portions of the number, but we previously found some, so we're done successfully
+
+        char ch = str_parser_get<char>(p);
+        *out = (*out * 10) + ch - '0'; // add the new digit to the mix
+    }
+    return true;
+}
+
+// parse functions convert str to types and return them
+// TODO(cogno): parse s8
+// TODO(cogno): parse s16
+// TODO(cogno): parse s32
+// TODO(cogno): parse s64
+// TODO(cogno): parse f32
+// TODO(cogno): parse f64
+
+

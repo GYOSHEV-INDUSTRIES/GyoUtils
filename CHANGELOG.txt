@@ -1,3 +1,41 @@
+Version: 0.1.4 2023/11/04
+---------------------------------
+
+dynamic_array.h:
+    removed the OLDFor cycle macro, since we have the non-broken alternative For (and variants)
+
+str.h:
+    Added str_parser, a new construct to parse str and binary files.
+    Added str_ends_with function (with char and str overloads) to know if a str ends with something.
+    Added/Replaced str_trim with str_trim_inplace, now the _inplace version takes and edits the pointer, while the _trim version returns a new str.
+    Added unicode_utf8_to_codepoint(...) function
+    Added custom str_builder_append overloads for vec2, vec3 and vec4
+    Added custom str_builder_append_raw overloads for vec2, vec3 and vec4
+    
+    Fixed some functions using printf instead of snprintf (the platform independent alternative).
+    Changed unicode_utf8_to_size(...) and unicode_codepoint_to_size(...) to return s8 instead of u8, this leads to more performant code when used in array access (and since the returned value is always 1 to 4 it's simply a preferable choice)
+    
+win64_files.h:
+    Added win64_print_error() to quickly print any error that happened duinr windows api calls.
+    Added get_drive_names to know your drives names.
+    Added get_only_files_in_dir to know which folders are in a directory.
+    Fixed get_only_files_in_dir and get_only_folders_in_dir failing when interacting with files used by other processes, now they simply get skipped since we can't get their attributes.
+    Minor change of function signature for get_only_files_in_dir and get_only_folders_in_dir, now they take a str as folder_path instead of const char* (const char* get converted automatically to str so you shouldn't notice any change).
+
+math.h:
+    Added vec2, vec3, vec4 and col constructor, so it will be automatically cast variables to float (e.g. `int a = 4;  vec2 b = {a, a*2};`).
+    Added vec4 * mat4 and mat4 * vec4 operations.
+    Added vecN / vecN operations ({1, 5, 3} / {2, 6, 7} == {1 / 2, 5 / 6, 3 / 7}).
+    Added overload of function ortho(...) with default near and far planes (equal to glm's ortho).
+    Improved vec4 remap function to use SIMD.
+    Changed count_digits(...) to return u8 instead of int.
+    Fixed potential bugs in lerp macro caused by missing parenthesis.
+    Fixed potential bug due to types mismatch check in npow(...).
+
+first.h:
+    Fixed a bug in the `count_digits` function (precision loss)
+    Fixed macro redefinition warning/error for INFINITY and NAN in first.h
+
 Version: 0.1.3 2023/10/01
 ---------------------------------
 
@@ -16,7 +54,7 @@ Fixed in gcc __rdtsc error.
 Version: 0.1.2 2023/09/24
 ---------------------------------
 
-Fixed print for str and str_builder being printed as arroy of u8 instead of a string.
+Fixed print for str and str_builder being printed as array of u8 instead of a string.
 
 
 Version: 0.1.1 2023/09/23

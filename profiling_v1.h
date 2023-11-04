@@ -93,14 +93,13 @@ void pad_right(int to_add) {
 }
 
 #ifndef GYOMATH
-    inline int count_digits(u64 x){
-        int n = 0;
-        int p = x;
-        do{
-            n++;
-        }while(p /= 10);
-        return n;
-    }
+inline u8 count_digits(u64 x){
+    u8 n = 0;
+    do {
+        n++;
+    } while(x /= 10);
+    return n;
+}
 #endif
 
 void end_and_print_profile() {
@@ -110,8 +109,8 @@ void end_and_print_profile() {
     
     //calculate lengths of texts for vertical formatting
     int max_label_len = 0;
-    int max_time_length = 0;
-    int max_incl_time_length = 0;
+    u8 max_time_length = 0;
+    u8 max_incl_time_length = 0;
     bool one_has_childrens = false;
     for(int i = 0; i < ANCHORS_AMT; i++) {
         TimeAnchor t = _anchors[i];
@@ -121,10 +120,10 @@ void end_and_print_profile() {
         while(t.label[label_len++]) {}
         if(label_len > max_label_len) max_label_len = label_len;
 
-        int digits_count = count_digits(t.elapsed_exclusive);
+        u8 digits_count = count_digits(t.elapsed_exclusive);
         if (digits_count > max_time_length) max_time_length = digits_count;
         
-        int incl_digits_count = count_digits(t.elapsed_inclusive);
+        u8 incl_digits_count = count_digits(t.elapsed_inclusive);
         if (incl_digits_count > max_incl_time_length) max_incl_time_length = incl_digits_count;
         
         if(t.elapsed_inclusive != t.elapsed_exclusive) one_has_childrens = true;
@@ -159,7 +158,7 @@ void end_and_print_profile() {
         
         //total time
         printf("total=%lld ", t.elapsed_exclusive);
-        int digits_count = count_digits(t.elapsed_exclusive);
+        u8 digits_count = count_digits(t.elapsed_exclusive);
         pad_right(max_time_length - digits_count);
         
         //total time percentage
@@ -168,7 +167,7 @@ void end_and_print_profile() {
         //children time
         if(t.elapsed_inclusive != t.elapsed_exclusive) {
             printf("incl=%lld ", t.elapsed_inclusive);
-            int incl_digits_count = count_digits(t.elapsed_inclusive);
+            u8 incl_digits_count = count_digits(t.elapsed_inclusive);
             pad_right(max_incl_time_length - incl_digits_count);
             printf("(%5.2f%% w/ childs), ", percentage_with_children);
         } else if(one_has_childrens) {

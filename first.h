@@ -41,9 +41,12 @@ typedef double   f64;
 #define MIN_S32 0x80000000
 #define MIN_S64 0x8000000000000000
 
+#ifndef INFINITY
 #define INFINITY   ((float)(1e+300 * 1e+300))
+#endif
+#ifndef NAN
 #define NAN        (-(float)(INFINITY * 0.0F))
-
+#endif
 
 //
 // alternative to printf, print and printsl:
