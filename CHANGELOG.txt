@@ -1,6 +1,9 @@
 Version: 0.1.4
 ---------------------------------
 
+dynamic_array.h:
+    removed the OLDFor cycle macro, since we have the non-broken alternative For (and variants)
+
 str.h:
     Added str_parser, a new construct to parse str and binary files.
     Added str_ends_with function (with char and str overloads) to know if a str ends with something.
