@@ -1,5 +1,4 @@
 #pragma once
-#define GYODYNAMIC_ARRAY
 
 /*
 In this file:
