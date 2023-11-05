@@ -23,6 +23,7 @@ Configuration macros
 #include "simple_profiling.h"
 #include "profiling_v1.h"
 #include "simple_benchmark.h"
+#include "hashmap.cpp"
 
 #if _WIN32
     #include "win64_files.h"
