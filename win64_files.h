@@ -25,19 +25,19 @@ void win64_print_error() {
 
 bool get_only_files_in_dir(str folder_path, Array<str>* filenames) {
     StrBuilder builder = make_str_builder();
-    defer(free(builder.ptr));
+    defer { free(builder.ptr); };
     str_builder_append(&builder, folder_path);
     str_builder_append(&builder, "\\*");
     str_builder_append_raw(&builder, (u8)0);
     
     WIN32_FIND_DATA win_file_data = {};
     HANDLE handle = FindFirstFile((char*)builder.ptr, &win_file_data);
-    defer(FindClose(handle));
+    defer { FindClose(handle); };
     if(handle == INVALID_HANDLE_VALUE) return false;
     
     str_builder_remove_last_bytes(&builder, 2);
     StrBuilder copy = str_builder_copy(&builder);
-    defer(free(copy.ptr));
+    defer { free(copy.ptr); };
     
     do {
         // reset str builder into the initial folder path
@@ -73,19 +73,19 @@ bool get_only_files_in_dir(str folder_path, Array<str>* filenames) {
 
 bool get_only_folders_in_dir(str folder_path, Array<str>* folders) {
     StrBuilder builder = make_str_builder();
-    defer(free(builder.ptr));
+    defer { free(builder.ptr); };
     str_builder_append(&builder, folder_path);
     str_builder_append(&builder, "\\*");
     str_builder_append_raw(&builder, (u8)0);
     
     WIN32_FIND_DATA win_file_data = {};
     HANDLE handle = FindFirstFile((char*)builder.ptr, &win_file_data);
-    defer(FindClose(handle));
+    defer { FindClose(handle); };
     if(handle == INVALID_HANDLE_VALUE) return false;
     
     str_builder_remove_last_bytes(&builder, 2);
     StrBuilder copy = str_builder_copy(&builder);
-    defer(free(copy.ptr));
+    defer { free(copy.ptr); };
     
     do {
         // reset str builder into the initial folder path

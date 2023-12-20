@@ -32,12 +32,12 @@
 
 bool test(int a) {
     print("a %", a);
-    defer({print("b %", a); print("another one"); });
+    defer { print("b %", a); print("another one"); };
     
     if(a < 3) return false;
     
     print("c %", a);
-    defer(print("d %", a));
+    defer { print("d %", a); };
     
     return true;
 }
@@ -145,11 +145,22 @@ int func_to_test(int thing) {
 
 int main() {
     
-    // StrBuilder b = make_str_builder();
-    // str_builder_append(&b, "edit");
-    // str_builder_append_raw(&b, 1);
-    // str_builder_append_raw(&b, 12.5);
-    // str_builder_append_raw(&b, 13.2);
+    StrBuilder b = make_str_builder();
+    {
+        print("str builder pre");
+        
+        defer { 
+            str_builder_free(&b);
+        };
+        
+        str_builder_append(&b, "edit");
+        str_builder_append(&b, "text");
+        
+        print("str builder post: %", str_builder_get_str(&b));
+    }
+    
+    print("ptr: %", b.ptr);
+    b.ptr[0] = 's'; // should explode
     
     // StrParser p = make_str_parser(b.ptr, b.size);
     // str_parser_check_magic(&p, "edit");

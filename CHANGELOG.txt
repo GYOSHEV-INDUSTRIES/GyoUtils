@@ -1,3 +1,16 @@
+Version: 0.1.5
+---------------------------------
+
+first.h:
+    Improved defer macro in 2 ways:
+        1. There were some cases where the code would complain about input variables not being const, this is no more the case
+        2. Syntax has been updated to avoid parenthesis, the new syntax is as follows:
+        defer {
+            // your multiline code
+        }; <- remember the ending comma!
+        
+        defer { free(ptr); };
+
 Version: 0.1.4 2023/11/04
 ---------------------------------
 

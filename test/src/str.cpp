@@ -40,38 +40,38 @@ void test_str() {
         
         StrParser p = make_str_parser(out);
         REQUIRE(str_parser_check_magic(&p, "ciao"), true);
-        REQUIRE(str_parser_get_char(&p), 'x');
+        REQUIRE(str_parser_get<char>(&p), 'x');
         bool ok, bool_out;
         ok = str_parser_parse_bool(&p, &bool_out);
         REQUIRE(ok, true);
         REQUIRE(bool_out, true);
         
-        REQUIRE(str_parser_get_char(&p), 'x');
-        REQUIRE(str_parser_get_char(&p), 'd');
-        REQUIRE(str_parser_get_char(&p), 'x');
+        REQUIRE(str_parser_get<char>(&p), 'x');
+        REQUIRE(str_parser_get<char>(&p), 'd');
+        REQUIRE(str_parser_get<char>(&p), 'x');
         
         u8 parsed_u8 = 0;
         ok = str_parser_parse_u8(&p, &parsed_u8);
         REQUIRE(ok, true);
         REQUIRE(parsed_u8, 120);
-        REQUIRE(str_parser_get_char(&p), 'x');
+        REQUIRE(str_parser_get<char>(&p), 'x');
         
         u16 parsed_u16 = 0;
         ok = str_parser_parse_u16(&p, &parsed_u16);
         REQUIRE(ok, true);
         REQUIRE(parsed_u16, 12000);
-        REQUIRE(str_parser_get_char(&p), 'x');
+        REQUIRE(str_parser_get<char>(&p), 'x');
         
         u32 parsed_u32 = 0;
         ok = str_parser_parse_u32(&p, &parsed_u32);
         REQUIRE(ok, true);
         REQUIRE(parsed_u32, 70000);
-        REQUIRE(str_parser_get_char(&p), 'x');
+        REQUIRE(str_parser_get<char>(&p), 'x');
         
         u64 parsed_u64 = 0;
         ok = str_parser_parse_u64(&p, &parsed_u64);
         REQUIRE(ok, true);
         REQUIRE(parsed_u64, 12345678901);
-        REQUIRE(str_parser_get_char(&p), 'x');
+        REQUIRE(str_parser_get<char>(&p), 'x');
     )
 }

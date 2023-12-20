@@ -265,8 +265,7 @@ if (!(expr)) { \
 
 #endif
 
-//defer macros. calls code inside a defer(...) macro when the current scope closes (function exit, if ending, for cycle ending, ...)
-//API(cogno): I've seen a macro where you can do defer { code } instead of defer({ code }), can you figure out how?
+//defer macros. calls code inside a defer {...}; macro when the current scope closes (function exit, block ending, for cycle ending, ...)
 template <typename F>
 struct ScopeExit {
     ScopeExit(F f) : f(f) {}
@@ -274,14 +273,16 @@ struct ScopeExit {
     F f;
 };
 
-template <typename F>
-ScopeExit<F> MakeScopeExit(F f) {
-    return ScopeExit<F>(f);
-};
+struct {
+    template <typename F>
+    ScopeExit<F> operator<<(F f) {
+        return ScopeExit<F>(f);
+    }
+} the_trick_that_lets_us_concatenate;
 
 #define STRING_JOIN_(arg1, arg2) arg1 ## arg2
 #define STRING_JOIN(arg1, arg2) STRING_JOIN_(arg1, arg2)
-#define defer(code) auto STRING_JOIN(scope_exit_, __LINE__) = MakeScopeExit([=](){code;})
+#define defer auto STRING_JOIN(scope_exit_, __LINE__) = the_trick_that_lets_us_concatenate << [&]
 
 
 
