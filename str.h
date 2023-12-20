@@ -97,7 +97,7 @@ struct str{
     
     str() = default; //NOTE(cogno): c++ is shit so we need to define this to do "str{};"
 
-    u8& operator[](s32 i) { ASSERT_BOUNDS(i, 0, size); return ptr[i]; }
+    u8& operator[](s32 i) { MUST_ASSERT_BOUNDS(i, 0, size); return ptr[i]; }
 };
 
 // makes a new string from a c_str allocating a new buffer for it
@@ -112,7 +112,7 @@ str str_new_alloc(const char* c_str) {
 inline void printsl_custom(str v) { for(int i = 0; i < v.size; i++) printsl_custom((char)v.ptr[i]); }
 
 char* str_to_c_string(str to_convert) {
-    ASSERT(to_convert.size != MAX_U32, "str is full, cannot convert to c str");
+    MUST_ASSERT(to_convert.size != MAX_U32, "str is full, cannot convert to c str");
     u32 c_size = to_convert.size + 1;
     char* ptr = (char*)malloc(c_size);
     memcpy(ptr, to_convert.ptr, to_convert.size);
@@ -171,8 +171,8 @@ bool str_split_left(str to_split, str splitter, str* left_side, str* right_side)
         for(int to_split_index = 0; to_split_index < splitter.size; to_split_index++) {
             if(original_index + to_split_index >= to_split.size) return false; //string finished, couldn't find anything
             
-            ASSERT(original_index + to_split_index < to_split.size, "reading outside memory");
-            ASSERT(to_split_index < to_split.size, "reading outside memory");
+            MUST_ASSERT(original_index + to_split_index < to_split.size, "reading outside memory");
+            MUST_ASSERT(to_split_index < to_split.size, "reading outside memory");
             
             if(to_split[original_index + to_split_index] != to_split[to_split_index]) {
                 matches = false;
@@ -338,7 +338,7 @@ u32 str_length_in_char(str string) {
     int read_index = 0;
     while(true) {
         if (read_index >= string.size) return char_count;
-        ASSERT(read_index < string.size, "reading out of memory");
+        MUST_ASSERT(read_index < string.size, "reading out of memory");
         u8 unicode_header = string[read_index];
         u8 unicode_size = unicode_utf8_to_size(unicode_header);
         read_index += unicode_size;
@@ -381,7 +381,7 @@ struct StrBuilder {
     u8* ptr;
     s32 size;
     s32 reserved_size;
-    u8& operator[](s32 i) { ASSERT_BOUNDS(i, 0, size); return ptr[i]; }
+    u8& operator[](s32 i) { MUST_ASSERT_BOUNDS(i, 0, size); return ptr[i]; }
 };
 
 inline void printsl_custom(StrBuilder b) { for(int i = 0; i < b.size; i++) printsl_custom((char)b.ptr[i]); }
@@ -432,7 +432,7 @@ void str_builder_resize(StrBuilder* b) {
     s32 new_size = b->reserved_size * 2;
     new_size = new_size >= STR_BUILDER_DEFAULT_SIZE ? new_size : STR_BUILDER_DEFAULT_SIZE; // API(cogno): 'max' identifier not found error
     b->ptr = (u8*)realloc(b->ptr, new_size);
-    ASSERT(b->ptr[0] == old_start, "ERROR ON REALLOC, initial byte unexpectedly change, Undefined Behaviour prevented");
+    MUST_ASSERT(b->ptr[0] == old_start, "ERROR ON REALLOC, initial byte unexpectedly change, Undefined Behaviour prevented");
 }
 
 void str_builder_resize(StrBuilder* b, s32 min_size) {
@@ -442,7 +442,7 @@ void str_builder_resize(StrBuilder* b, s32 min_size) {
     new_size = new_size >= min_size ? new_size : min_size; // API(cogno): 'max' identifier not found error
     b->ptr = (u8*)realloc(b->ptr, new_size);
     b->reserved_size = new_size;
-    ASSERT(b->ptr[0] == old_start, "ERROR ON REALLOC, initial byte unexpectedly change, Undefined Behaviour prevented");
+    MUST_ASSERT(b->ptr[0] == old_start, "ERROR ON REALLOC, initial byte unexpectedly change, Undefined Behaviour prevented");
 }
 
 void str_builder_reserve(StrBuilder* b, s32 to_reserve) {
@@ -453,7 +453,7 @@ void str_builder_reserve(StrBuilder* b, s32 to_reserve) {
 void str_builder_append(StrBuilder* b, str to_append) {
     s32 new_size = b->size + to_append.size;
     if(new_size > b->reserved_size) str_builder_resize(b, new_size);
-    ASSERT(b->reserved_size >= new_size, "not enough memory allocated, wanted % but allocated %", new_size, b->reserved_size);
+    MUST_ASSERT(b->reserved_size >= new_size, "not enough memory allocated, wanted % but allocated %", new_size, b->reserved_size);
     memcpy(b->ptr + b->size, to_append.ptr, to_append.size);
     b->size = new_size;
 }
@@ -592,7 +592,7 @@ void str_builder_append(StrBuilder* b, vec4 to_append) {
 
 void str_builder_append_raw(StrBuilder* b, u8* pointer_to_data, s32 data_size) {
     str_builder_reserve(b, data_size);
-    ASSERT(b->size + data_size <= b->reserved_size, "out of memory after a reserve??");
+    MUST_ASSERT(b->size + data_size <= b->reserved_size, "out of memory after a reserve??");
     for(int i = 0; i < data_size; i++) {
         b->ptr[b->size + i] = pointer_to_data[i];
     }
@@ -601,7 +601,7 @@ void str_builder_append_raw(StrBuilder* b, u8* pointer_to_data, s32 data_size) {
 
 void str_builder_append_raw(StrBuilder* b, u8 to_add) {
     str_builder_reserve(b, 1);
-    ASSERT(b->size + 1 <= b->reserved_size, "out of memory after a reserve??");
+    MUST_ASSERT(b->size + 1 <= b->reserved_size, "out of memory after a reserve??");
     b->ptr[b->size++] = to_add;
 }
 
@@ -652,7 +652,7 @@ Since str is an array of bytes you can also use this to parse binary data (like 
 struct StrParser {
     u8* ptr;
     s32 size;
-    u8& operator[](s32 i) { ASSERT_BOUNDS(i, 0, size); return ptr[i]; }
+    u8& operator[](s32 i) { MUST_ASSERT_BOUNDS(i, 0, size); return ptr[i]; }
 };
 
 inline void printsl_custom(StrParser p) { printsl_custom(str(p.ptr, p.size)); }
@@ -688,7 +688,7 @@ str str_parser_to_str(StrParser p) {
 bool str_parser_is_empty(StrParser* p) { return p->size == 0; }
 
 void str_parser_advance(StrParser* p, s32 size) {
-    ASSERT(size <= p->size, "advancing by too much! the string is % long, but you're advancing by %", p->size, size);
+    MUST_ASSERT(size <= p->size, "advancing by too much! the string is % long, but you're advancing by %", p->size, size);
     p->ptr  += size;
     p->size -= size;
 }
@@ -706,7 +706,7 @@ bool str_parser_starts_with(StrParser* p, str start) {
 }
 
 bool str_parser_check_magic(StrParser* p, str magic) {
-    ASSERT(magic.size == 4, "magic should only be 4 characters long!");
+    MUST_ASSERT(magic.size == 4, "magic should only be 4 characters long!");
     bool magic_correct = str_parser_starts_with(p, magic);
     str_parser_advance(p, 4);
     return magic_correct;

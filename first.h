@@ -7,7 +7,9 @@ In this file:
 - max and min values for unsigned and signed types
 - custom print replacement to printf, can be used to also print more complex custom types
 - printsl, like print but without \n at the end
-- ASSERT macro with custom message printing
+- MUST_ASSERT macro with custom message printing
+- ASSERT macro, an alternative to MUST_ASSERT which can be deactivated
+- ASSERT_BOUNDS and MUST_ASSERT_BOUNDS, to make out of bounds checks easier
 - defer macro, like golang's defer
 */
 
@@ -47,6 +49,8 @@ typedef double   f64;
 #ifndef NAN
 #define NAN        (-(float)(INFINITY * 0.0F))
 #endif
+
+#define MSVC_BUG(MACRO, ARGS) MACRO ARGS // fuck you microsoft
 
 //
 // alternative to printf, print and printsl:
@@ -209,36 +213,6 @@ void print(const char* s, T t1, Types... others) {
 
 
 
-//
-// a new type of print, even faster but with a different syntax
-// print("this is a var: %, this is another var: %", var1, var2);
-// now becomes
-// print2("this is a var: ", var, ", this is another var: ", var2);
-//
-void accumulate_v2() { }
-template <typename T, typename... Types>
-void accumulate_v2(T t1, Types... others) {
-    printsl_custom(t1);
-    accumulate_v2(others...);
-}
-
-// print formatting
-template <typename... Types>
-void print2(Types... others) {
-    accumulate_v2(others...);
-    printsl_custom('\n');
-    flush_to_stdout();
-}
-
-
-#ifdef NO_ASSERT
-#define ASSERT(expr, message, ...)
-#define ASSERT_BOUNDS(var, min_val, max_val)
-#else
-
-void print_tab_if_there_is_a_message(const char* msg) { printsl("    "); }
-void print_tab_if_there_is_a_message() { }
-
 #ifdef _MSC_VER
 #define DEBUG_BREAK __debugbreak()
 #elif __GNUC__
@@ -247,7 +221,10 @@ void print_tab_if_there_is_a_message() { }
 #define DEBUG_BREAK
 #endif
 
-#define ASSERT(expr, message, ...) \
+void print_tab_if_there_is_a_message(const char* msg) { printsl("    "); }
+void print_tab_if_there_is_a_message() { }
+
+#define MUST_ASSERT(expr, message, ...) \
 if (!(expr)) { \
     print("### Assertion failed: '%'", #expr); \
     print_tab_if_there_is_a_message(message); \
@@ -259,10 +236,14 @@ if (!(expr)) { \
     DEBUG_BREAK; \
     abort(); \
 }
+#define MUST_ASSERT_BOUNDS(var, start, length) MSVC_BUG(MUST_ASSERT, (((var) >= (start)) && ((var) < ((start) + (length))), "OUT OF BOUNDS! expected between % and % but was %", (start), ((start) + (length)), (var)))
 
-//NOTE(cogno): careful, the max_val is NOT included (so you can directly pass array.size instead of array.size - 1)
-#define ASSERT_BOUNDS(var, min_val, max_val) ASSERT(((var) >= (min_val)) && ((var) < (max_val)), "OUT OF BOUNDS! expected between % and % but was %", (min_val), (max_val - 1), (var))
-
+#ifdef NO_ASSERT
+#define ASSERT(expr, message, ...)
+#define ASSERT_BOUNDS(var, min_val, max_val)
+#else
+#define ASSERT(expr, message, ...) MSVC_BUG(MUST_ASSERT, (expr, message, __VA_ARGS__))
+#define ASSERT_BOUNDS(var, start, length) MSVC_BUG(MUST_ASSERT_BOUNDS, (var, start, length))
 #endif
 
 //defer macros. calls code inside a defer {...}; macro when the current scope closes (function exit, block ending, for cycle ending, ...)
@@ -290,11 +271,6 @@ struct {
 // and you can't have recursive macros, so we need to make this shitfest of giant walls for like size 100 macros
 // i fucking hate this but at least it works
 //                         - cogno 2023/09/29
-
-#define MSVC_BUG(MACRO, ARGS) MACRO ARGS 
-// you just know something good is about to happen
-
-
 
 #define NUM_ARGS_2(_1,_2,_3,_4,_5,_6,_7,_8,_9,_10,_11,_12,_13,_14,_15,_16,_17,_18,_19,_20,_21,_22,_23,_24,_25,_26,_27,_28,_29,_30,_31,_32,_33,_34,_35,_36,_37,_38,_39,_40,_41,_42,_43,_44,_45,_46,_47,_48,_49,_50,_51,_52,_53,_54,_55,_56,_57,_58,_59,_60,_61,_62,_63,_64,_65,_66,_67,_68,_69,_70,_71,_72,_73,_74,_75,_76,_77,_78,_79,_80,_81,_82,_83,_84,_85,_86,_87,_88,_89,_90,_91,_92,_93,_94,_95,_96,_97,_98,_99,_100, TOTAL, ...) TOTAL
 #define NUM_ARGS_1(...) MSVC_BUG(NUM_ARGS_2, (__VA_ARGS__))
@@ -419,7 +395,7 @@ const int EnumName##Size = NUM_ARGS(__VA_ARGS__); \
 const char* EnumName##Strings[] = { STRINGIFY(__VA_ARGS__) }; \
 const char* to_string(EnumName to_convert) { \
     int index = (s32)to_convert; \
-    ASSERT_BOUNDS(index, 0, EnumName##Size); \
+    MUST_ASSERT_BOUNDS(index, 0, EnumName##Size); \
     return EnumName##Strings[index]; \
 } \
 void printsl_custom(EnumName to_print) { \

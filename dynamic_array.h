@@ -16,7 +16,7 @@ struct Array {
     s32 size;
     s32 reserved_size;
     T* ptr;
-    T& operator[](s32 i) { ASSERT_BOUNDS(i, 0, size); return ptr[i]; }
+    T& operator[](s32 i) { MUST_ASSERT_BOUNDS(i, 0, size); return ptr[i]; }
 };
 
 template<typename T>
@@ -40,12 +40,12 @@ void array_reserve(Array<T>* array, s32 to_add) {
     
     s32 new_size = (array->reserved_size * 2) > (array->reserved_size + to_add) ? array->reserved_size * 2 : array->reserved_size + to_add;
     array_resize(array, new_size);
-    ASSERT(array->size + to_add <= array->reserved_size, "not enough memory allocated! wanted % but was %", array->size + to_add, array->reserved_size);
+    MUST_ASSERT(array->size + to_add <= array->reserved_size, "not enough memory allocated! wanted % but was %", array->size + to_add, array->reserved_size);
 }
 
 template<typename T>
 void array_add(Array<T>* array, T data, s32 index) {
-    ASSERT(index >= 0 && index < array->reserved_size * 2, "index out of range, index is %, 2*reserved is %", index, array->reserved_size * 2);
+    MUST_ASSERT(index >= 0 && index < array->reserved_size * 2, "index out of range, index is %, 2*reserved is %", index, array->reserved_size * 2);
     
     //allocate if necessary
     if (array->size + 1 > array->reserved_size) {
@@ -65,7 +65,7 @@ void array_add(Array<T>* array, T data, s32 index) {
 template<typename T>
 void array_append(Array<T>* array, T data) {
     s32 index = array->size;
-    ASSERT(index >= 0 && index < array->reserved_size * 2, "index out of range, index is %, 2*reserved is %", index, array->reserved_size * 2);
+    MUST_ASSERT(index >= 0 && index < array->reserved_size * 2, "index out of range, index is %, 2*reserved is %", index, array->reserved_size * 2);
     
     //allocate if necessary
     if (array->size + 1 > array->reserved_size) {
@@ -79,12 +79,12 @@ void array_append(Array<T>* array, T data) {
 
 template<typename T>
 void array_remove_at(Array<T>* array, s32 index) {
-    ASSERT(array->size > 0, "cannot remove an element of an empty array");
-    ASSERT(index >= 0 && index < array->size, "index out of range, index is %, buffer size is %", index, array->size);
+    MUST_ASSERT(array->size > 0, "cannot remove an element of an empty array");
+    MUST_ASSERT(index >= 0 && index < array->size, "index out of range, index is %, buffer size is %", index, array->size);
     
     //move every data from index to end back by 1
     for(s32 i = index; i < array->size - 1; i++) {
-        ASSERT(i >= 0 && i + 1 < array->size, "out of memory access");
+        MUST_ASSERT(i >= 0 && i + 1 < array->size, "out of memory access");
         array->ptr[i] = array->ptr[i + 1];
     }
     
@@ -96,19 +96,19 @@ void array_remove_at(Array<T>* array, s32 index) {
 
 template<typename T>
 T array_get_data(Array<T>* array, s32 index) {
-    ASSERT(index >= 0 && index < array->size, "index out of range, index is %, buffer size is %", index, array->size);
+    MUST_ASSERT(index >= 0 && index < array->size, "index out of range, index is %, buffer size is %", index, array->size);
     return array->ptr[index];
 }
 
 template<typename T>
 T array_set(Array<T>* array, s32 index, s32 value) {
-    ASSERT(index >= 0 && index < array->size, "index out of range, index is %, buffer size is %", index, array->size);
+    MUST_ASSERT(index >= 0 && index < array->size, "index out of range, index is %, buffer size is %", index, array->size);
     array->ptr[index] = value;
 }
 
 template<typename T>
 T* array_get_ptr(Array<T>* array, s32 index) {
-    ASSERT(index >= 0 && index < array->size, "index out of range, index is %, buffer size is %", index, array->size);
+    MUST_ASSERT(index >= 0 && index < array->size, "index out of range, index is %, buffer size is %", index, array->size);
     return &array->ptr[index];
 }
 

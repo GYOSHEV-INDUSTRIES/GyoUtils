@@ -130,7 +130,7 @@ bool get_drive_names(Array<str>* drive_names) {
     int sz = GetLogicalDriveStrings(sizeof(buf), buf);
     if(sz == 0) return false;
     
-    ASSERT(sz <= BUFF_SIZE, "buffer not big enough (needs at least % bytes)", sz);
+    MUST_ASSERT(sz <= BUFF_SIZE, "buffer not big enough (needs at least % bytes)", sz);
 
     // buf now contains a list of all the drive letters. Each drive letter is
     // terminated with '\0' and the last one is terminated by two consecutive '\0' bytes.
