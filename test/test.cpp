@@ -24,6 +24,7 @@
 #include "src/math/mat4.cpp"
 #include "src/unicode.cpp"
 #include "src/str.cpp"
+#include "src/dynamic_array.cpp"
 
 #include "src/prints.cpp"
 
@@ -96,11 +97,6 @@ void full_buffered_printf() {
 
 
 
-// 56.77
-void print_new_v2() {
-    print2("Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nam semper tempor justo, eget efficitur lorem ultricies non. Duis tempor feugiat tortor et malesuada. Aenean malesuada, massa ut pretium vestibulum, quam dui suscipit sapien, a malesuada nisl sem at felis. Aliquam erat volutpat. Mauris ac tellus scelerisque, euismod turpis id, porttitor metus. Fusce aliquet, arcu ac cursus finibus, eros justo lobortis massa, at semper felis arcu vitae lorem. Nunc eget mauris velit. Fusce dignissim faucibus ante, nec tristique nisi euismod nec. Aenean dignissim, mauris sed venenatis porta, libero augue ornare urna, quis venenatis dui mi sed ante.", 15);
-}
-
 char dest[20];
 
 __declspec(noinline) void setup_test() {
@@ -160,7 +156,7 @@ int main() {
     }
     
     print("ptr: %", b.ptr);
-    b.ptr[0] = 's'; // should explode
+    // b.ptr[0] = 's'; // should explode
     
     // StrParser p = make_str_parser(b.ptr, b.size);
     // str_parser_check_magic(&p, "edit");
@@ -411,7 +407,8 @@ int main() {
     test_vec3_math();
     test_vec4_math();
     test_mat4_math();
-    
+    test_dynamic_array();
+        
     // print("\nAll % tests passed succesfully", _cnt);
     return 0;
 }

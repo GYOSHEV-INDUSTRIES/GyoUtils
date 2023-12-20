@@ -1,5 +1,20 @@
 int _cnt;
 int _local_cnt = 1;
+
+template<typename T>
+inline void REQUIRE_NULL(T* ptr) {
+    ASSERT(ptr == NULL, "ptr was NOT null, but it was supposed to");
+    ++_cnt;
+    ++_local_cnt;
+}
+
+template<typename T>
+inline void REQUIRE_NOT_NULL(T* ptr) {
+    ASSERT(ptr != NULL, "ptr was null, but it wasn't supposed to");
+    ++_cnt;
+    ++_local_cnt;
+}
+
 inline void REQUIRE(float test, float expected){
     if(test == expected){
         ++_cnt;

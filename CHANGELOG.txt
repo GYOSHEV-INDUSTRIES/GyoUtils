@@ -1,7 +1,11 @@
 Version: 0.2.0
 ---------------------------------
 
-BREAKING CHANGES: ASSERT_BOUNDS and defer macros changed, print2 removed (read below).
+BREAKING CHANGES (read below for more info): 
+- ASSERT_BOUNDS changed
+- defer macro changed
+- print2 removed
+- array_add renamed to array_insert
 
 first.h:
     Removed print2, since it wasn't used by pratically anyone.
@@ -17,6 +21,19 @@ first.h:
         
         defer { free(ptr); };
 
+dynamic_array.h:
+    Renamed array_add to array_insert for clarity.
+    Added array_pop and array_dequeue so you can use this as a stack/queue.
+    
+    Now you don't have to call make_array at the start, if you construct the array with empty data it will get automatically filled later.
+    This means that you can now do:
+        Array<int> a;
+        array_append(&a, 20);
+    Instead of
+        Array<int> a = make_array();
+        array_append(&a, 20);
+    Meaning you don't need to setup the array before using it.
+    
 Version: 0.1.4 2023/11/04
 ---------------------------------
 
