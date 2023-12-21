@@ -224,6 +224,47 @@ void print(const char* s, T t1, Types... others) {
 void print_tab_if_there_is_a_message(const char* msg) { printsl("    "); }
 void print_tab_if_there_is_a_message() { }
 
+
+template <typename... Types>
+inline bool assert_func(bool expr, const char* expression_as_string, const char* filename, int line_count, const char* function_name) {
+    #ifndef NO_ASSERT
+    if(!expr) {
+        print("### Assertion failed");
+        print("    Code: '%'", expression_as_string);
+        print("    File: %", filename);
+        print("    Line: %", line_count);
+        print("    Function: %", function_name);
+        print("Stack Trace:"); // TODO(cogno): can we display it only when needed/when it actually works?
+        DEBUG_BREAK;
+        abort(); // so the stack trace works (exit(-1) or exit(0) don't)
+    }
+    #endif
+    return expr;
+}
+
+template <typename... Types>
+inline bool assert_func(bool expr, const char* expression_as_string, const char* filename, int line_count, const char* function_name, const char* optional_message, Types... message_inputs) {
+    #ifndef NO_ASSERT
+    if(!expr) {
+        printsl("### Assertion failed: ");
+        print(optional_message, message_inputs...);
+        print("    Code: '%'", expression_as_string);
+        print("    File: %", filename);
+        print("    Line: %", line_count);
+        print("    Function: %", function_name);
+        print("Stack Trace:"); // TODO(cogno): can we display it only when needed/when it actually works?
+        DEBUG_BREAK;
+        abort(); // so the stack trace works (exit(-1) or exit(0) don't)
+    }
+    #endif
+    return expr;
+}
+
+
+
+#define ASSERT(expr, ...) (assert_func(expr, #expr, __FILE__, __LINE__, __FUNCTION__,##__VA_ARGS__))
+#define ASSERT_BOUNDS(var, start, length) ASSERT(((var) >= (start)) && ((var) < ((start) + (length))), "OUT OF BOUNDS! expected between % and % but was %", (start), ((start) + (length)), (var))
+
 #define MUST_ASSERT(expr, message, ...) \
 if (!(expr)) { \
     print("### Assertion failed: '%'", #expr); \
@@ -237,14 +278,6 @@ if (!(expr)) { \
     abort(); \
 }
 #define MUST_ASSERT_BOUNDS(var, start, length) MSVC_BUG(MUST_ASSERT, (((var) >= (start)) && ((var) < ((start) + (length))), "OUT OF BOUNDS! expected between % and % but was %", (start), ((start) + (length)), (var)))
-
-#ifdef NO_ASSERT
-#define ASSERT(expr, message, ...)
-#define ASSERT_BOUNDS(var, min_val, max_val)
-#else
-#define ASSERT(expr, message, ...) MSVC_BUG(MUST_ASSERT, (expr, message, __VA_ARGS__))
-#define ASSERT_BOUNDS(var, start, length) MSVC_BUG(MUST_ASSERT_BOUNDS, (var, start, length))
-#endif
 
 //defer macros. calls code inside a defer {...}; macro when the current scope closes (function exit, block ending, for cycle ending, ...)
 template <typename F>

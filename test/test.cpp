@@ -158,6 +158,13 @@ int main() {
     print("ptr: %", b.ptr);
     // b.ptr[0] = 's'; // should explode
     
+    
+    // if(ASSERT(false)) {
+    //     print("CALLED");
+    // } else {
+    //     print("NOT CALLED");
+    // }
+    
     // StrParser p = make_str_parser(b.ptr, b.size);
     // str_parser_check_magic(&p, "edit");
     // u8 version = str_parser_get_u8(&p);
