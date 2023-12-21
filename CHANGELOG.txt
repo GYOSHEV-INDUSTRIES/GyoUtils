@@ -7,6 +7,9 @@ BREAKING CHANGES (read below for more info):
 - print2 removed
 - array_add renamed to array_insert
 
+NEW: fixed_array.h
+An array of fixed size with bounds checking
+
 first.h:
     Removed print2, since it wasn't used by pratically anyone.
     Created an alternative to ASSERT and ASSERT_BOUNDS which CANNOT be deactivated (MUST_ASSERT, MUST_ASSERT_BOUNDS), usefull for security related checks.

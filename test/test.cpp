@@ -25,6 +25,7 @@
 #include "src/unicode.cpp"
 #include "src/str.cpp"
 #include "src/dynamic_array.cpp"
+#include "src/fixed_array.cpp"
 
 #include "src/prints.cpp"
 
@@ -415,7 +416,8 @@ int main() {
     test_vec4_math();
     test_mat4_math();
     test_dynamic_array();
-        
+    test_fixed_array();
+    
     // print("\nAll % tests passed succesfully", _cnt);
     return 0;
 }
