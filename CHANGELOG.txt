@@ -6,6 +6,7 @@ BREAKING CHANGES (read below for more info):
 - defer macro changed
 - print2 removed
 - array_add renamed to array_insert
+- array_free_all renamed to array_free
 
 NEW: fixed_array.h
 An array of fixed size with bounds checking, basically Array without automatic expansion.
@@ -36,7 +37,7 @@ first.h:
         defer { free(ptr); };
 
 dynamic_array.h:
-    Renamed array_add to array_insert for clarity.
+    Renamed array_add to array_insert and array_free_all to array_free for clarity/brevity.
     Added array_pop and array_dequeue so you can use this as a stack/queue.
     
     Now you don't have to call make_array at the start, if you construct the array with empty data it will get automatically filled later.
