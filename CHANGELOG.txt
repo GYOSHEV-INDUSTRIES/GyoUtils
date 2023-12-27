@@ -8,13 +8,11 @@ BREAKING CHANGES (read below for more info):
 - array_add renamed to array_insert
 
 NEW: fixed_array.h
-An array of fixed size with bounds checking
+An array of fixed size with bounds checking, basically Array without automatic expansion.
 
 first.h:
     Removed print2, since it wasn't used by pratically anyone.
-    Created an alternative to ASSERT and ASSERT_BOUNDS which CANNOT be deactivated (MUST_ASSERT, MUST_ASSERT_BOUNDS), usefull for security related checks.
     Changed ASSERT_BOUNDS macro to be start + length instead of start to end, you shouldn't notice any change for array bounds, but you might for variables.
-    Used new MUST_ASSERT alternative macros to impose checks to arrays and buffers, so there will never involuntarily be security problems related to buffer overflows and out of bounds reads/writes in release mode.
     
     Changed ASSERT macro to return the expression, so it can be used inside if statements. When asserts are deactivated it will be compiled into the expression, so protective checks will still work.
     You can use it like this:
@@ -26,6 +24,7 @@ first.h:
     if(!(index <= array_size)) return;
     meaning the check will still apply.
     
+    Improved security of Array, str, StrBuilder and StrParser when ASSERT is deactivated.
     
     Improved defer macro in 2 ways:
         1. There were some cases where the code would complain about input variables not being const, this is no more the case

@@ -45,7 +45,7 @@ void fixed_array_clear(FixedArray<T>* array) {
 
 template<typename T>
 void fixed_array_insert(FixedArray<T>* array, T data, s32 index) {
-    MUST_ASSERT_BOUNDS(index, 0, array->size + 1);
+    if(!ASSERT_BOUNDS(index, 0, array->size + 1)) return;
     
     //move every data from index to end forward by 1
     for(s32 i = array->size; i > index; i--) {
@@ -64,11 +64,11 @@ void fixed_array_append(FixedArray<T>* array, T data) {
 
 template<typename T>
 void fixed_array_remove_at(FixedArray<T>* array, s32 index) {
-    MUST_ASSERT_BOUNDS(index, 0, array->size);
+    if(!ASSERT_BOUNDS(index, 0, array->size)) return;
     
     //move every data from index to end back by 1
     for(s32 i = index; i < array->size - 1; i++) {
-        MUST_ASSERT(i >= 0 && i + 1 < array->size, "out of memory access");
+        ASSERT(i >= 0 && i + 1 < array->size, "out of memory access");
         array->ptr[i] = array->ptr[i + 1];
     }
     
@@ -80,7 +80,7 @@ void fixed_array_remove_at(FixedArray<T>* array, s32 index) {
 // so you can use this as a stack (push=append)
 template<typename T>
 T fixed_array_pop(FixedArray<T>* array) {
-    MUST_ASSERT(array->size > 0, "cannot pop from an empty stack/array");
+    ASSERT(array->size > 0, "cannot pop from an empty stack/array");
     T element = array->ptr[array->size - 1];
     fixed_array_remove_at(array, array->size - 1);
     return element;
@@ -89,7 +89,7 @@ T fixed_array_pop(FixedArray<T>* array) {
 // so you can use this as a queue (queue=append)
 template<typename T>
 T fixed_array_dequeue(FixedArray<T>* array) {
-    MUST_ASSERT(array->size > 0, "cannot dequeue from an empty queue/array");
+    ASSERT(array->size > 0, "cannot dequeue from an empty queue/array");
     T element = array->ptr[0];
     fixed_array_remove_at(array, 0);
     return element;
@@ -98,18 +98,18 @@ T fixed_array_dequeue(FixedArray<T>* array) {
 // NOTE(cogno): most of the times you can simply use the operator overload, so doing array[0] = 10; or auto temp = array[15];, but if you have the pointer to the array (instead of the array) then the operator overload will not work (because you'll be accessing the pointer!) so these functions can be used instead (or you can take a reference to the array instead of a pointer)
 template<typename T>
 T fixed_array_get_data(FixedArray<T>* array, s32 index) {
-    MUST_ASSERT_BOUNDS(index, 0, array->size);
+    ASSERT_BOUNDS(index, 0, array->size);
     return array->ptr[index];
 }
 
 template<typename T>
-T fixed_array_set(FixedArray<T>* array, s32 index, s32 value) {
-    MUST_ASSERT_BOUNDS(index, 0, array->size);
+void fixed_array_set(FixedArray<T>* array, s32 index, s32 value) {
+    if(!ASSERT_BOUNDS(index, 0, array->size)) return;
     array->ptr[index] = value;
 }
 
 template<typename T>
 T* fixed_array_get_ptr(FixedArray<T>* array, s32 index) {
-    MUST_ASSERT_BOUNDS(index, 0, array->size);
+    ASSERT_BOUNDS(index, 0, array->size);
     return &array->ptr[index];
 }

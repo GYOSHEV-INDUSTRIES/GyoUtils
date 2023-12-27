@@ -7,9 +7,8 @@ In this file:
 - max and min values for unsigned and signed types
 - custom print replacement to printf, can be used to also print more complex custom types
 - printsl, like print but without \n at the end
-- MUST_ASSERT macro with custom message printing
-- ASSERT macro, an alternative to MUST_ASSERT which can be deactivated
-- ASSERT_BOUNDS and MUST_ASSERT_BOUNDS, to make out of bounds checks easier
+- ASSERT macro which can be deactivated, prints a custom (optional) formatted message and returns the expression value
+- ASSERT_BOUNDS to make out of bounds checks easier
 - defer macro, like golang's defer
 */
 
@@ -211,7 +210,20 @@ void print(const char* s, T t1, Types... others) {
 }
 
 
-
+//
+// ASSERT macros. stops program execution with a given (optional) message if an expression is not satisfied.
+// can be deactivated by defining 'NO_ASSERT'. When deactivated the macro is turned into the expression, so it
+// can be used inside if to keep runtime checks.
+// Example:
+// if(!ASSERT(index < array_size, "attempting to read out of bounds! reading at %", index)) return;
+// array[index] = value;
+//
+// When this code is run with asserts enabled if the index is above array_size the program will stop with an info message
+// But when asserts are disabled this code is equivalent to
+// if(!(index < array_size)) return;
+// Which is very useful to keep the check even at runtime!
+//
+//
 
 #ifdef _MSC_VER
 #define DEBUG_BREAK __debugbreak()
@@ -221,13 +233,8 @@ void print(const char* s, T t1, Types... others) {
 #define DEBUG_BREAK
 #endif
 
-void print_tab_if_there_is_a_message(const char* msg) { printsl("    "); }
-void print_tab_if_there_is_a_message() { }
-
-
 template <typename... Types>
 inline bool assert_func(bool expr, const char* expression_as_string, const char* filename, int line_count, const char* function_name) {
-    #ifndef NO_ASSERT
     if(!expr) {
         print("### Assertion failed");
         print("    Code: '%'", expression_as_string);
@@ -238,13 +245,11 @@ inline bool assert_func(bool expr, const char* expression_as_string, const char*
         DEBUG_BREAK;
         abort(); // so the stack trace works (exit(-1) or exit(0) don't)
     }
-    #endif
     return expr;
 }
 
 template <typename... Types>
 inline bool assert_func(bool expr, const char* expression_as_string, const char* filename, int line_count, const char* function_name, const char* optional_message, Types... message_inputs) {
-    #ifndef NO_ASSERT
     if(!expr) {
         printsl("### Assertion failed: ");
         print(optional_message, message_inputs...);
@@ -256,30 +261,21 @@ inline bool assert_func(bool expr, const char* expression_as_string, const char*
         DEBUG_BREAK;
         abort(); // so the stack trace works (exit(-1) or exit(0) don't)
     }
-    #endif
     return expr;
 }
 
 
-
+#ifndef NO_ASSERT
 #define ASSERT(expr, ...) (assert_func(expr, #expr, __FILE__, __LINE__, __FUNCTION__,##__VA_ARGS__))
 #define ASSERT_BOUNDS(var, start, length) ASSERT(((var) >= (start)) && ((var) < ((start) + (length))), "OUT OF BOUNDS! expected between % and % but was %", (start), ((start) + (length)), (var))
+#else
+#define ASSERT(expr, ...) (expr)
+#define ASSERT_BOUNDS(var, start, length) (((var) >= (start)) && ((var) < ((start) + (length))))
+#endif
 
-#define MUST_ASSERT(expr, message, ...) \
-if (!(expr)) { \
-    print("### Assertion failed: '%'", #expr); \
-    print_tab_if_there_is_a_message(message); \
-    print(message, ##__VA_ARGS__);  \
-    print("    File: %", __FILE__); \
-    print("    Line: %", __LINE__); \
-    print("    Function: %", __FUNCTION__); \
-    print("Stack Trace:"); \
-    DEBUG_BREAK; \
-    abort(); \
-}
-#define MUST_ASSERT_BOUNDS(var, start, length) MSVC_BUG(MUST_ASSERT, (((var) >= (start)) && ((var) < ((start) + (length))), "OUT OF BOUNDS! expected between % and % but was %", (start), ((start) + (length)), (var)))
-
-//defer macros. calls code inside a defer {...}; macro when the current scope closes (function exit, block ending, for cycle ending, ...)
+//
+// defer macro. calls code inside a defer {...}; block when the current scope closes (function exit, block ending, for cycle ending, ...)
+//
 template <typename F>
 struct ScopeExit {
     ScopeExit(F f) : f(f) {}
@@ -428,7 +424,7 @@ const int EnumName##Size = NUM_ARGS(__VA_ARGS__); \
 const char* EnumName##Strings[] = { STRINGIFY(__VA_ARGS__) }; \
 const char* to_string(EnumName to_convert) { \
     int index = (s32)to_convert; \
-    MUST_ASSERT_BOUNDS(index, 0, EnumName##Size); \
+    if(!ASSERT_BOUNDS(index, 0, EnumName##Size)) return; \
     return EnumName##Strings[index]; \
 } \
 void printsl_custom(EnumName to_print) { \
