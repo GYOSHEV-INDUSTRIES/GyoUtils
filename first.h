@@ -424,7 +424,7 @@ const int EnumName##Size = NUM_ARGS(__VA_ARGS__); \
 const char* EnumName##Strings[] = { STRINGIFY(__VA_ARGS__) }; \
 const char* to_string(EnumName to_convert) { \
     int index = (s32)to_convert; \
-    if(!ASSERT_BOUNDS(index, 0, EnumName##Size)) return; \
+    ASSERT_BOUNDS(index, 0, EnumName##Size); \
     return EnumName##Strings[index]; \
 } \
 void printsl_custom(EnumName to_print) { \
