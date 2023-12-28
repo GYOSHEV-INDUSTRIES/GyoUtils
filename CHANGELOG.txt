@@ -49,6 +49,8 @@ dynamic_array.h:
         array_append(&a, 20);
     Meaning you don't need to setup the array before using it.
     
+    Fixed array_insert not working if you wanted to append something
+    
 Version: 0.1.4 2023/11/04
 ---------------------------------
 

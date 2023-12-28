@@ -63,7 +63,7 @@ void array_reserve(Array<T>* array, s32 to_add) {
 template<typename T>
 void array_insert(Array<T>* array, T data, s32 index) {
     array_reserve(array, 1);
-    if(!ASSERT_BOUNDS(index, 0, array->size)) return;
+    if(!ASSERT_BOUNDS(index, 0, array->size + 1)) return;
     
     //move every data from index to end forward by 1
     for(s32 i = array->size; i > index; i--) {
