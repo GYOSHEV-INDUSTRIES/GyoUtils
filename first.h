@@ -133,7 +133,6 @@ inline void flush_to_stdout() {
 // print standard specializations
 // API(cogno): maybe a name like custom_format is better? I don't know
 inline void printsl_custom(const char* s) { int index = 0; while(s[index]) __print_buff[__buffer_index++] = s[index++]; }
-inline void printsl_custom(char* s)       { int index = 0; while(s[index]) __print_buff[__buffer_index++] = s[index++]; }
 inline void printsl_custom(char c)        { __print_buff[__buffer_index++] = c; }
 inline void printsl_custom(s8  d)         { __buffer_index += s8_to_char_ptr( d, __print_buff + __buffer_index); }
 inline void printsl_custom(s16 d)         { __buffer_index += s16_to_char_ptr(d, __print_buff + __buffer_index); }

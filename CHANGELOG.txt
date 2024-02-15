@@ -3,6 +3,10 @@ The Allocators Revolution
 ---------------------------------
 
 
+BREAKING CHANGES:
+- in print, char* are now printed as pointers instead of strings (you have to cast them to const char* to print them as strings)
+- in str, str_to_c_string returns a const char* instead of a char*
+
 first.h:
     fixed print incorrectly printing percentages if they're the last thing to be print
         print("%\\%", 20); would print "20\%" instead of "20%".

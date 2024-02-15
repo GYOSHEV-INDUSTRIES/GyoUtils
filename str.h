@@ -111,13 +111,13 @@ str str_new_alloc(const char* c_str) {
 
 inline void printsl_custom(str v) { for(int i = 0; i < v.size; i++) printsl_custom((char)v.ptr[i]); }
 
-char* str_to_c_string(str to_convert) {
+const char* str_to_c_string(str to_convert) {
     ASSERT(to_convert.size != MAX_U32, "str is full, cannot convert to c str");
     u32 c_size = to_convert.size + 1;
     char* ptr = (char*)malloc(c_size);
     memcpy(ptr, to_convert.ptr, to_convert.size);
     ptr[to_convert.size] = 0;
-    return ptr;
+    return (const char*)ptr;
 }
 
 str str_concat(str s1, str s2) {
