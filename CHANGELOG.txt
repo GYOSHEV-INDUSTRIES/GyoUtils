@@ -1,4 +1,4 @@
-Version: 0.2.0
+Version: 0.2.0 2024/02/15
 ---------------------------------
 
 BREAKING CHANGES (read below for more info): 
@@ -37,6 +37,7 @@ first.h:
         defer { free(ptr); };
 
 dynamic_array.h:
+    Array can be directly printed with out print(). Will be formatted in a single line. You can change how this works by changing the printsl_custom implementation
     Renamed array_add to array_insert and array_free_all to array_free for clarity/brevity.
     Added array_pop and array_dequeue so you can use this as a stack/queue.
     

@@ -19,6 +19,16 @@ struct Array {
     T& operator[](s32 i) { ASSERT_BOUNDS(i, 0, size); return ptr[i]; }
 };
 
+template <typename T>
+void printsl_custom(Array<T> arr) {
+    printsl("[");
+    For(arr) {
+        if (it_index != 0) printsl(",");
+        printsl(it);
+    }
+    printsl("]");
+}
+
 template<typename T>
 Array<T> array_new(s32 size) {
     ASSERT(size >= 0, "cannot create array with negative size %", size);
