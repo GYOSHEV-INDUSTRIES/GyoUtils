@@ -1,3 +1,16 @@
+Version: 0.3.0
+The Allocators Revolution
+---------------------------------
+
+
+first.h:
+    fixed print incorrectly printing percentages if they're the last thing to be print
+        print("%\\%", 20); would print "20\%" instead of "20%".
+    improved print to tell you if you've added more % than inputs to print
+        print("% % %", 20); would print "20 % %", now it will print "20 (missing input) (missing input)"
+    improved print to tell you if you've added more inputs than %
+        print("%", 20, 30, 40) would print "20", now it will print "20(extra inputs given)"
+
 Version: 0.2.0 2024/02/15
 ---------------------------------
 

@@ -154,18 +154,41 @@ template<typename T> void printsl_custom(T* v) { buffer_append("0x%p", v); } // 
 
 
 // first we recursively accumulate into a buffer, then we flush it
-inline void accumulate_into_buffer(const char* s) { buffer_append("%s", s); }
-template <typename T, typename... Types>
-void accumulate_into_buffer(const char* s, T t1, Types... others) {
+inline void accumulate_into_buffer(const char* s) {
+    // we don't have any more inputs but we might still need to escape some '\%' to print percentages
+    //API(cogno): maybe we can write '(missing input)' ?
     int current_index = 0;
     while(true) {
         char c = s[current_index++];
         if(c == 0) return;
+        if(c == '\\') {
+            char next = s[current_index];
+            if(next == '%') { printsl_custom('%'); current_index++; }
+        } else if(c == '%') {
+            printsl_custom("(missing input)");
+        } else {
+            printsl_custom(c);
+        }
+    }
+}
+
+template <typename T, typename... Types>
+void accumulate_into_buffer(const char* s, T t1, Types... others) {
+    // printf("'%s'\n", s);
+    int current_index = 0;
+    while(true) {
+        char c = s[current_index++];
+        if(c == 0) {
+            // if we are at the end of the string *here* we have more inputs to print, but there's obviously no space (we should be in the function above!)
+            printsl_custom("(extra inputs given)");
+            return;
+        }
         else if(c == '\\') {
             char next = s[current_index];
             // escape characters
             if(next == '%') { printsl_custom('%'); current_index++; }
         } else if(c == '%') {
+            // printf("'putting format'\n");
             break; // put formatted input
         } else {
             // just a character to print
