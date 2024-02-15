@@ -14,6 +14,7 @@ Configuration macros
 */
 
 #include "first.h"
+#include "allocators.h"
 
 #include "math.h"
 #include "dynamic_array.h"

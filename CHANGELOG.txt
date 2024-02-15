@@ -2,6 +2,33 @@ Version: 0.3.0
 The Allocators Revolution
 ---------------------------------
 
+Created some allocators that you can use to control memory as needed.
+These include:
+- A Bump allocator (control a fixed memory region, doesn't expand)
+- An Arena allocator (linearly increase it's memory used, can only free the entire region, automatically expands when full)
+
+Moreover you can use the generic Allocator version both to hold these allocators, but also implement your own!
+
+Created a globally accessible arena allocator (called "temporary_arena"), used for temporary memory storage.
+You can learn more how it works and how to use it inside allocators.h
+
+Since allocators control memory we've integrated them into Array.
+By default Array will use the temporary arena. 
+If you want your arrays to keep memory for longer periods of time you can creat them with different allocators.
+You'll see an usage example inside allocators.h
+Because of this **we've removed FixedArray**, because you can simply create an array with a Bump Allocator to have an equivalent Fixed array.
+We've obviously made this simple to do with new methods, more on that later.
+
+TODO: give an example of how to use allocators
+TODO: give an example of how to make new custom allocators
+TODO: give an example of how to use temporary allocator
+TODO: remove fixed array
+TODO: make the array use allocators
+TODO: make_array where you give an arena as input
+TODO: make_array where you give an allocator as input
+TODO: make_array where it creates an arena automatically given the initial size
+TODO: make_array_fixed where you give a bump as input
+TODO: make_array_fixed where it creates automatically a bump given the size of the array
 
 BREAKING CHANGES:
 - in print, char* are now printed as pointers instead of strings (you have to cast them to const char* to print them as strings)

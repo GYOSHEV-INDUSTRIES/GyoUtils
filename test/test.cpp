@@ -50,7 +50,7 @@ void c_printf() {
     printf("Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nam semper tempor justo, eget efficitur lorem ultricies non. Duis tempor feugiat tortor et malesuada. Aenean malesuada, massa ut pretium vestibulum, quam dui suscipit sapien, a malesuada nisl sem at felis. Aliquam erat volutpat. Mauris ac tellus scelerisque, euismod turpis id, porttitor metus. Fusce aliquet, arcu ac cursus finibus, eros justo lobortis massa, at semper felis arcu vitae lorem. Nunc eget mauris velit. Fusce dignissim faucibus ante, nec tristique nisi euismod nec. Aenean dignissim, mauris sed venenatis porta, libero augue ornare urna, quis venenatis dui mi sed ante.%d\n", 15);
 }
 
-void gyoutils_old() {
+void gyoutils_print() {
     print("Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nam semper tempor justo, eget efficitur lorem ultricies non. Duis tempor feugiat tortor et malesuada. Aenean malesuada, massa ut pretium vestibulum, quam dui suscipit sapien, a malesuada nisl sem at felis. Aliquam erat volutpat. Mauris ac tellus scelerisque, euismod turpis id, porttitor metus. Fusce aliquet, arcu ac cursus finibus, eros justo lobortis massa, at semper felis arcu vitae lorem. Nunc eget mauris velit. Fusce dignissim faucibus ante, nec tristique nisi euismod nec. Aenean dignissim, mauris sed venenatis porta, libero augue ornare urna, quis venenatis dui mi sed ante.%", 15);
 }
 
@@ -139,24 +139,47 @@ int func_to_test(int thing) {
     return sum;
 }
 
+#define TESTS_ACTIVE 0
+
 
 int main() {
     
-    StrBuilder b = make_str_builder();
-    {
-        print("str builder pre");
-        
-        defer { 
-            str_builder_free(&b);
-        };
-        
-        str_builder_append(&b, "edit");
-        str_builder_append(&b, "text");
-        
-        print("str builder post: %", str_builder_get_str(&b));
-    }
+    // print("% % %", 20);
+    // print("%", 20, 30, 40);
+    // print("%\\%", 20);
+    // print("%\\% %", 20);
+    // print("%\\% %", 20, 30);
+    // print("%\\% %", 20, 30, 40, 50);
     
-    print("ptr: %", b.ptr);
+    Bump bump = make_bump_allocator(100);
+    char* single_char = (char*)bump_alloc(&bump, sizeof(char));
+    single_char = (char*)bump_alloc(&bump, sizeof(char));
+    single_char = (char*)bump_alloc(&bump, sizeof(char));
+    single_char = (char*)bump_alloc(&bump, sizeof(char));
+    print("%, from % received %", bump, bump.data, single_char);
+    
+    
+    
+    
+    
+    
+    
+    
+    // StrBuilder b = make_str_builder();
+    // {
+    //     print("str builder pre");
+        
+    //     defer { 
+    //         str_builder_free(&b);
+    //     };
+        
+    //     str_builder_append(&b, "edit");
+    //     str_builder_append(&b, "text");
+        
+    //     print("str builder post: %", str_builder_get_str(&b));
+    // }
+    
+    // print("ptr: %", b.ptr);
     // b.ptr[0] = 's'; // should explode
     
     
@@ -184,7 +207,7 @@ int main() {
     // print("end");
     
     // BENCHMARK_VOID_WITH_COUNT(1000, fast_print_v2);
-    // BENCHMARK_COMPARE_VOID(1000, c_printf, print_new_strat);
+    // BENCHMARK_COMPARE_VOID(1000, c_printf, gyoutils_print);
     
     // ASSERT(false, "testing");
     
@@ -408,6 +431,7 @@ int main() {
     }
     #endif
     
+    #if TESTS_ACTIVE
     test_str();
     test_unicode();
     test_simple_math();
@@ -417,6 +441,7 @@ int main() {
     test_mat4_math();
     test_dynamic_array();
     test_fixed_array();
+    #endif
     
     // print("\nAll % tests passed succesfully", _cnt);
     return 0;
