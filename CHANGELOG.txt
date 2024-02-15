@@ -1,3 +1,57 @@
+Version: 0.2.0 2024/02/15
+---------------------------------
+
+BREAKING CHANGES (read below for more info): 
+- ASSERT_BOUNDS changed
+- defer macro changed
+- print2 removed
+- array_add renamed to array_insert
+- array_free_all renamed to array_free
+
+NEW: fixed_array.h
+An array of fixed size with bounds checking, basically Array without automatic expansion.
+
+first.h:
+    Removed print2, since it wasn't used by pratically anyone.
+    Changed ASSERT_BOUNDS macro to be start + length instead of start to end, you shouldn't notice any change for array bounds, but you might for variables.
+    
+    Changed ASSERT macro to return the expression, so it can be used inside if statements. When asserts are deactivated it will be compiled into the expression, so protective checks will still work.
+    You can use it like this:
+    if(!ASSERT(index <= array_size)) return;
+    // ...
+    array[index] = value;
+    
+    If asserts are deactivated this will be transformed into
+    if(!(index <= array_size)) return;
+    meaning the check will still apply.
+    
+    Improved security of Array, str, StrBuilder and StrParser when ASSERT is deactivated.
+    
+    Improved defer macro in 2 ways:
+        1. There were some cases where the code would complain about input variables not being const, this is no more the case
+        2. Syntax has been updated to avoid parenthesis, the new syntax is as follows:
+        defer {
+            // your multiline code
+        }; <- remember the ending comma!
+        
+        defer { free(ptr); };
+
+dynamic_array.h:
+    Array can be directly printed with out print(). Will be formatted in a single line. You can change how this works by changing the printsl_custom implementation
+    Renamed array_add to array_insert and array_free_all to array_free for clarity/brevity.
+    Added array_pop and array_dequeue so you can use this as a stack/queue.
+    
+    Now you don't have to call make_array at the start, if you construct the array with empty data it will get automatically filled later.
+    This means that you can now do:
+        Array<int> a;
+        array_append(&a, 20);
+    Instead of
+        Array<int> a = make_array();
+        array_append(&a, 20);
+    Meaning you don't need to setup the array before using it.
+    
+    Fixed array_insert not working if you wanted to append something
+    
 Version: 0.1.4 2023/11/04
 ---------------------------------
 

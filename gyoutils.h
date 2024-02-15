@@ -17,6 +17,7 @@ Configuration macros
 
 #include "math.h"
 #include "dynamic_array.h"
+#include "fixed_array.h"
 #include "str.h"
 
 #include "performance_counter.h"

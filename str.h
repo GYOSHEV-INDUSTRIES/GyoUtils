@@ -432,7 +432,7 @@ void str_builder_resize(StrBuilder* b) {
     s32 new_size = b->reserved_size * 2;
     new_size = new_size >= STR_BUILDER_DEFAULT_SIZE ? new_size : STR_BUILDER_DEFAULT_SIZE; // API(cogno): 'max' identifier not found error
     b->ptr = (u8*)realloc(b->ptr, new_size);
-    ASSERT(b->ptr[0] == old_start, "ERROR ON REALLOC, initial byte unexpectedly change, Undefined Behaviour prevented");
+    ASSERT(b->ptr[0] == old_start, "ERROR ON REALLOC, initial byte unexpectedly changed, this is not supposed to happen...");
 }
 
 void str_builder_resize(StrBuilder* b, s32 min_size) {
@@ -442,7 +442,7 @@ void str_builder_resize(StrBuilder* b, s32 min_size) {
     new_size = new_size >= min_size ? new_size : min_size; // API(cogno): 'max' identifier not found error
     b->ptr = (u8*)realloc(b->ptr, new_size);
     b->reserved_size = new_size;
-    ASSERT(b->ptr[0] == old_start, "ERROR ON REALLOC, initial byte unexpectedly change, Undefined Behaviour prevented");
+    ASSERT(b->ptr[0] == old_start, "ERROR ON REALLOC, initial byte unexpectedly changed, this is not supposed to happen...");
 }
 
 void str_builder_reserve(StrBuilder* b, s32 to_reserve) {
@@ -688,7 +688,7 @@ str str_parser_to_str(StrParser p) {
 bool str_parser_is_empty(StrParser* p) { return p->size == 0; }
 
 void str_parser_advance(StrParser* p, s32 size) {
-    ASSERT(size <= p->size, "advancing by too much! the string is % long, but you're advancing by %", p->size, size);
+    if(!ASSERT(size <= p->size, "advancing by too much! the string is % long, but you're advancing by %", p->size, size)) return;
     p->ptr  += size;
     p->size -= size;
 }

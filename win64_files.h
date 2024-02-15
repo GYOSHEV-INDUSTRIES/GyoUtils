@@ -25,19 +25,19 @@ void win64_print_error() {
 
 bool get_only_files_in_dir(str folder_path, Array<str>* filenames) {
     StrBuilder builder = make_str_builder();
-    defer(free(builder.ptr));
+    defer { free(builder.ptr); };
     str_builder_append(&builder, folder_path);
     str_builder_append(&builder, "\\*");
     str_builder_append_raw(&builder, (u8)0);
     
     WIN32_FIND_DATA win_file_data = {};
     HANDLE handle = FindFirstFile((char*)builder.ptr, &win_file_data);
-    defer(FindClose(handle));
+    defer { FindClose(handle); };
     if(handle == INVALID_HANDLE_VALUE) return false;
     
     str_builder_remove_last_bytes(&builder, 2);
     StrBuilder copy = str_builder_copy(&builder);
-    defer(free(copy.ptr));
+    defer { free(copy.ptr); };
     
     do {
         // reset str builder into the initial folder path
@@ -73,19 +73,19 @@ bool get_only_files_in_dir(str folder_path, Array<str>* filenames) {
 
 bool get_only_folders_in_dir(str folder_path, Array<str>* folders) {
     StrBuilder builder = make_str_builder();
-    defer(free(builder.ptr));
+    defer { free(builder.ptr); };
     str_builder_append(&builder, folder_path);
     str_builder_append(&builder, "\\*");
     str_builder_append_raw(&builder, (u8)0);
     
     WIN32_FIND_DATA win_file_data = {};
     HANDLE handle = FindFirstFile((char*)builder.ptr, &win_file_data);
-    defer(FindClose(handle));
+    defer { FindClose(handle); };
     if(handle == INVALID_HANDLE_VALUE) return false;
     
     str_builder_remove_last_bytes(&builder, 2);
     StrBuilder copy = str_builder_copy(&builder);
-    defer(free(copy.ptr));
+    defer { free(copy.ptr); };
     
     do {
         // reset str builder into the initial folder path
@@ -130,7 +130,7 @@ bool get_drive_names(Array<str>* drive_names) {
     int sz = GetLogicalDriveStrings(sizeof(buf), buf);
     if(sz == 0) return false;
     
-    ASSERT(sz <= BUFF_SIZE, "buffer not big enough (needs at least % bytes)", sz);
+    if(!ASSERT(sz <= BUFF_SIZE, "buffer not big enough (needs at least % bytes)", sz)) return false;
 
     // buf now contains a list of all the drive letters. Each drive letter is
     // terminated with '\0' and the last one is terminated by two consecutive '\0' bytes.

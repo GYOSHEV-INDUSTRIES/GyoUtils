@@ -7,7 +7,8 @@ In this file:
 - max and min values for unsigned and signed types
 - custom print replacement to printf, can be used to also print more complex custom types
 - printsl, like print but without \n at the end
-- ASSERT macro with custom message printing
+- ASSERT macro which can be deactivated, prints a custom (optional) formatted message and returns the expression value
+- ASSERT_BOUNDS to make out of bounds checks easier
 - defer macro, like golang's defer
 */
 
@@ -47,6 +48,8 @@ typedef double   f64;
 #ifndef NAN
 #define NAN        (-(float)(INFINITY * 0.0F))
 #endif
+
+#define MSVC_BUG(MACRO, ARGS) MACRO ARGS // fuck you microsoft
 
 //
 // alternative to printf, print and printsl:
@@ -207,37 +210,20 @@ void print(const char* s, T t1, Types... others) {
 }
 
 
-
-
 //
-// a new type of print, even faster but with a different syntax
-// print("this is a var: %, this is another var: %", var1, var2);
-// now becomes
-// print2("this is a var: ", var, ", this is another var: ", var2);
+// ASSERT macros. stops program execution with a given (optional) message if an expression is not satisfied.
+// can be deactivated by defining 'NO_ASSERT'. When deactivated the macro is turned into the expression, so it
+// can be used inside if to keep runtime checks.
+// Example:
+// if(!ASSERT(index < array_size, "attempting to read out of bounds! reading at %", index)) return;
+// array[index] = value;
 //
-void accumulate_v2() { }
-template <typename T, typename... Types>
-void accumulate_v2(T t1, Types... others) {
-    printsl_custom(t1);
-    accumulate_v2(others...);
-}
-
-// print formatting
-template <typename... Types>
-void print2(Types... others) {
-    accumulate_v2(others...);
-    printsl_custom('\n');
-    flush_to_stdout();
-}
-
-
-#ifdef NO_ASSERT
-#define ASSERT(expr, message, ...)
-#define ASSERT_BOUNDS(var, min_val, max_val)
-#else
-
-void print_tab_if_there_is_a_message(const char* msg) { printsl("    "); }
-void print_tab_if_there_is_a_message() { }
+// When this code is run with asserts enabled if the index is above array_size the program will stop with an info message
+// But when asserts are disabled this code is equivalent to
+// if(!(index < array_size)) return;
+// Which is very useful to keep the check even at runtime!
+//
+//
 
 #ifdef _MSC_VER
 #define DEBUG_BREAK __debugbreak()
@@ -247,26 +233,49 @@ void print_tab_if_there_is_a_message() { }
 #define DEBUG_BREAK
 #endif
 
-#define ASSERT(expr, message, ...) \
-if (!(expr)) { \
-    print("### Assertion failed: '%'", #expr); \
-    print_tab_if_there_is_a_message(message); \
-    print(message, ##__VA_ARGS__);  \
-    print("    File: %", __FILE__); \
-    print("    Line: %", __LINE__); \
-    print("    Function: %", __FUNCTION__); \
-    print("Stack Trace:"); \
-    DEBUG_BREAK; \
-    abort(); \
+template <typename... Types>
+inline bool assert_func(bool expr, const char* expression_as_string, const char* filename, int line_count, const char* function_name) {
+    if(!expr) {
+        print("### Assertion failed");
+        print("    Code: '%'", expression_as_string);
+        print("    File: %", filename);
+        print("    Line: %", line_count);
+        print("    Function: %", function_name);
+        print("Stack Trace:"); // TODO(cogno): can we display it only when needed/when it actually works?
+        DEBUG_BREAK;
+        abort(); // so the stack trace works (exit(-1) or exit(0) don't)
+    }
+    return expr;
 }
 
-//NOTE(cogno): careful, the max_val is NOT included (so you can directly pass array.size instead of array.size - 1)
-#define ASSERT_BOUNDS(var, min_val, max_val) ASSERT(((var) >= (min_val)) && ((var) < (max_val)), "OUT OF BOUNDS! expected between % and % but was %", (min_val), (max_val - 1), (var))
+template <typename... Types>
+inline bool assert_func(bool expr, const char* expression_as_string, const char* filename, int line_count, const char* function_name, const char* optional_message, Types... message_inputs) {
+    if(!expr) {
+        printsl("### Assertion failed: ");
+        print(optional_message, message_inputs...);
+        print("    Code: '%'", expression_as_string);
+        print("    File: %", filename);
+        print("    Line: %", line_count);
+        print("    Function: %", function_name);
+        print("Stack Trace:"); // TODO(cogno): can we display it only when needed/when it actually works?
+        DEBUG_BREAK;
+        abort(); // so the stack trace works (exit(-1) or exit(0) don't)
+    }
+    return expr;
+}
 
+
+#ifndef NO_ASSERT
+#define ASSERT(expr, ...) (assert_func(expr, #expr, __FILE__, __LINE__, __FUNCTION__,##__VA_ARGS__))
+#define ASSERT_BOUNDS(var, start, length) ASSERT(((var) >= (start)) && ((var) < ((start) + (length))), "OUT OF BOUNDS! expected between % and % but was %", (start), ((start) + (length)), (var))
+#else
+#define ASSERT(expr, ...) (expr)
+#define ASSERT_BOUNDS(var, start, length) (((var) >= (start)) && ((var) < ((start) + (length))))
 #endif
 
-//defer macros. calls code inside a defer(...) macro when the current scope closes (function exit, if ending, for cycle ending, ...)
-//API(cogno): I've seen a macro where you can do defer { code } instead of defer({ code }), can you figure out how?
+//
+// defer macro. calls code inside a defer {...}; block when the current scope closes (function exit, block ending, for cycle ending, ...)
+//
 template <typename F>
 struct ScopeExit {
     ScopeExit(F f) : f(f) {}
@@ -274,14 +283,16 @@ struct ScopeExit {
     F f;
 };
 
-template <typename F>
-ScopeExit<F> MakeScopeExit(F f) {
-    return ScopeExit<F>(f);
-};
+struct {
+    template <typename F>
+    ScopeExit<F> operator<<(F f) {
+        return ScopeExit<F>(f);
+    }
+} the_trick_that_lets_us_concatenate;
 
 #define STRING_JOIN_(arg1, arg2) arg1 ## arg2
 #define STRING_JOIN(arg1, arg2) STRING_JOIN_(arg1, arg2)
-#define defer(code) auto STRING_JOIN(scope_exit_, __LINE__) = MakeScopeExit([=](){code;})
+#define defer auto STRING_JOIN(scope_exit_, __LINE__) = the_trick_that_lets_us_concatenate << [&]
 
 
 
@@ -289,11 +300,6 @@ ScopeExit<F> MakeScopeExit(F f) {
 // and you can't have recursive macros, so we need to make this shitfest of giant walls for like size 100 macros
 // i fucking hate this but at least it works
 //                         - cogno 2023/09/29
-
-#define MSVC_BUG(MACRO, ARGS) MACRO ARGS 
-// you just know something good is about to happen
-
-
 
 #define NUM_ARGS_2(_1,_2,_3,_4,_5,_6,_7,_8,_9,_10,_11,_12,_13,_14,_15,_16,_17,_18,_19,_20,_21,_22,_23,_24,_25,_26,_27,_28,_29,_30,_31,_32,_33,_34,_35,_36,_37,_38,_39,_40,_41,_42,_43,_44,_45,_46,_47,_48,_49,_50,_51,_52,_53,_54,_55,_56,_57,_58,_59,_60,_61,_62,_63,_64,_65,_66,_67,_68,_69,_70,_71,_72,_73,_74,_75,_76,_77,_78,_79,_80,_81,_82,_83,_84,_85,_86,_87,_88,_89,_90,_91,_92,_93,_94,_95,_96,_97,_98,_99,_100, TOTAL, ...) TOTAL
 #define NUM_ARGS_1(...) MSVC_BUG(NUM_ARGS_2, (__VA_ARGS__))
