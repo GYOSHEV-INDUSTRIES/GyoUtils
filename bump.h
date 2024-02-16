@@ -1,22 +1,34 @@
 
 struct Bump {
     void* data;
-    int size;
-    int prev_offset;
-    int curr_offset;
-    u8 padding[4];
+    int size_available;
+    int prev_offset = 0;
+    int curr_offset = 0;
+    
+    // API(cogno): I don't like this very much.
+    // basically: if we want the bump to be used in the array without being annoying
+    //  we need to store allocator data inside the allocation itself 
+    // (as in, first put the allocator with its data and then the array storage).
+    // but when you free an allocator you don't know if it's an allocator that points to a
+    // block that can be free or if the allocator itself is the start of the block to free,
+    // so we use this flag.
+    // to avoid this as of now I see 2 solutions: 
+    // 1. every bump allocator is floating.
+    // 2. every bump is non floating, and we find another way to make fixed array convenient.
+    bool is_floating = false;
+    u8 padding[3];
 };
 
 void printsl_custom(Bump b) {
-    if (b.size == 0) {
+    if (b.size_available == 0) {
         printsl("Uninitialized bump allocator");
         return;
     }
     
-    float fill_percentage = 100.0f * b.curr_offset / b.size;
+    float fill_percentage = 100.0f * b.curr_offset / b.size_available;
     int last_alloc_size = b.curr_offset - b.prev_offset;
-    float last_alloc_percentage = 100.0f * last_alloc_size / b.size;
-    printsl("Bump allocator of % bytes (%\\% full), last allocation of % bytes (%\\%)", b.size, fill_percentage, last_alloc_size, last_alloc_percentage);
+    float last_alloc_percentage = 100.0f * last_alloc_size / b.size_available;
+    printsl("Bump allocator of % bytes (%\\% full), last allocation of % bytes (%\\%)", b.size_available, fill_percentage, last_alloc_size, last_alloc_percentage);
 }
 
 #define DEFAULT_ALIGNMENT (sizeof(char*))
@@ -35,25 +47,27 @@ void bump_reset(Bump* a) {
 // TODO(cogno): test memory alignment at 0, 4 and 8 bytes
 
 // generic functionality used by Allocator in allocators.h, you can use the functions below for ease of use
-void* bump_handle(AllocOp op, Bump* allocator, s32 size_requested, void* to_free) {
+void* bump_handle(AllocOp op, void* alloc, s32 size_requested, void* to_free) {
+    Bump* allocator = (Bump*)alloc;
     switch(op) {
+        case AllocOp::GET_NAME: return (void*)"Bump Allocator";
         case AllocOp::INIT: {
             bump_reset(allocator);
             allocator->data = calloc(size_requested, sizeof(u8));
-            allocator->size = size_requested;
+            allocator->size_available = size_requested;
             return allocator->data;
         } break;
         case AllocOp::ALLOC: {
             char* top = (char*)allocator->data + allocator->curr_offset;
             // TODO(cogno): this assumes the initial pointer is aligned, is it so? should we better align this?
             int unaligned_by = allocator->curr_offset % DEFAULT_ALIGNMENT;
-            int space_left_in_cache_line = DEFAULT_ALIGNMENT - unaligned_by;
+            int space_left_in_block = DEFAULT_ALIGNMENT - unaligned_by;
             
             // NOTE(cogno): since the processor retrives data in chunks, if an allocation crosses a word boundary, you will require 1 extra access, which is slow! If we can fit the new allocation in the space remaining we do so, else we align to avoid being slow.
-            if(space_left_in_cache_line < size_requested) allocator->curr_offset += space_left_in_cache_line;
+            if(unaligned_by != 0 && space_left_in_block < size_requested) allocator->curr_offset += space_left_in_block;
             
             // bump allocators do NOT resize
-            ASSERT(allocator->curr_offset + size_requested <= allocator->size, "arena out of memory (currently at %, requested %, size %)", allocator->curr_offset, size_requested, allocator->size);
+            ASSERT(allocator->curr_offset + size_requested <= allocator->size_available, "arena out of memory (currently at %, requested %, available %)", allocator->curr_offset, size_requested, allocator->size_available);
             
             auto* alloc_start = (char*)allocator->data + allocator->curr_offset;
             allocator->prev_offset = allocator->curr_offset;
@@ -62,8 +76,9 @@ void* bump_handle(AllocOp op, Bump* allocator, s32 size_requested, void* to_free
         } break;
         case AllocOp::FREE_ALL: {
             bump_reset(allocator);
-            allocator->size = 0;
-            free(allocator->data); // TAG: MaybeWeShouldDoThisBetter
+            allocator->size_available = 0;
+            if(allocator->is_floating) free(alloc);
+            else                       free(allocator->data); // TAG: MaybeWeShouldDoThisBetter
             return NULL;
         }; break;
         default: return NULL; // not implemented
@@ -74,7 +89,7 @@ void* bump_handle(AllocOp op, Bump* allocator, s32 size_requested, void* to_free
 Bump make_bump_allocator(void* buffer, int buffer_length) {
     Bump a = {};
     a.data = (char*)buffer;
-    a.size = buffer_length;
+    a.size_available = buffer_length;
     return a;
 }
 
@@ -89,11 +104,13 @@ Bump make_bump_allocator(int min_size) {
 // the entire allocation is AT LEAST min_size + sizeof(Bump), 
 Bump* make_bump_allocator_floating(int min_size) {
     void* memory = calloc(min_size + sizeof(Bump), sizeof(u8));
+    print("made memory of size % at %", min_size + sizeof(Bump), memory);
     Bump* allocator = (Bump*)memory;
     allocator->curr_offset = 0;
     allocator->prev_offset = 0;
-    allocator->size = min_size;
+    allocator->size_available = min_size;
     allocator->data = (u8*)(allocator + 1);
+    allocator->is_floating = true;
     return allocator;
 }
 

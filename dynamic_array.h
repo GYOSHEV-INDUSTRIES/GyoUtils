@@ -16,6 +16,7 @@ struct Array {
     s32 size = 0;
     s32 reserved_size = 0;
     T* ptr = NULL;
+    Allocator alloc;
     T& operator[](s32 i) { ASSERT_BOUNDS(i, 0, size); return ptr[i]; }
 };
 
@@ -35,16 +36,36 @@ Array<T> array_new(s32 size) {
     Array<T> array;
     array.reserved_size = size;
     array.size = 0;
-    array.ptr = (T*)calloc(size, sizeof(T));
+    array.ptr = (T*)calloc(size, sizeof(T)); // TODO(cogno): replace with temporary allocator
     return array;
 }
 
 template<typename T>
+Array<T> make_fixed_array(s32 size) {
+    ASSERT(size >= 0, "cannot create array with negative size %", size);
+    Array<T> array;
+    array.reserved_size = size;
+    array.size = 0;
+    array.alloc = make_allocator(make_bump_allocator_floating(size));
+    array.ptr = (T*)array.alloc.handle(AllocOp::ALLOC, array.alloc.data, size, NULL);
+    return array;
+}
+
+
+// will free from the allocator only the space used by the array
+template<typename T>
 void array_free(Array<T>* array) {
-    free(array->ptr);
+    array->ptr = (T*)array->alloc.handle(AllocOp::FREE, array->alloc.data, 0, array->ptr);
     array->size = 0;
     array->reserved_size = 0;
-    array->ptr = NULL;
+}
+
+// will free the complete allocator (with everything inside it, including the array)
+template<typename T>
+void array_free_all(Array<T>* array) {
+    array->ptr = (T*)array->alloc.handle(AllocOp::FREE_ALL, array->alloc.data, 0, array->ptr);
+    array->size = 0;
+    array->reserved_size = 0;
 }
 
 template<typename T>
@@ -55,7 +76,8 @@ void array_clear(Array<T>* array) {
 
 template<typename T>
 void array_resize(Array<T>* array, s32 new_size) {
-    array->ptr = (T*)realloc(array->ptr, sizeof(*array->ptr) * new_size);
+    array->ptr = (T*)array->alloc.handle(AllocOp::REALLOC, array->alloc.data, new_size, NULL);
+    ASSERT(array->ptr != NULL, "couldn't allocate new memory (array is full!)");
     array->reserved_size = new_size;
 }
 

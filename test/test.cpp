@@ -155,15 +155,42 @@ int main() {
     
     // print("sizeof %", sizeof(Bump));
     
-    Bump* bump = make_bump_allocator_floating(100);
-    char* single_char = (char*)bump_alloc(bump, sizeof(char));
-    single_char = (char*)bump_alloc(bump, sizeof(char));
-    single_char = (char*)bump_alloc(bump, sizeof(char));
-    single_char = (char*)bump_alloc(bump, sizeof(char));
-    single_char = (char*)bump_alloc(bump, sizeof(char) * 8);
-    print("% (at %), from % received %", *bump, bump, bump->data, single_char);
+    // Bump* bump = make_bump_allocator_floating(100);
+    // char* single_char = (char*)bump_alloc(bump, sizeof(char));
+    // single_char = (char*)bump_alloc(bump, sizeof(char));
+    // single_char = (char*)bump_alloc(bump, sizeof(char));
+    // single_char = (char*)bump_alloc(bump, sizeof(char));
+    // single_char = (char*)bump_alloc(bump, sizeof(char) * 8);
+    // Allocator alloc = make_allocator(bump);
+    // print("% (at %), from % received %", *bump, bump, bump->data, single_char);
+    // print("alloc: %", alloc);
+    
+    // u8* allocated = (u8*)malloc(200 * sizeof(u8));
+    // u8* moved = allocated + 100;
+    // print("works 1: allocated: %, moved: %", allocated, moved);
+    // free(moved);
+    
+    // print("works 2: allocated: %, moved: %", allocated, moved);
     
     
+    auto arr = make_fixed_array<int>(10);
+    array_append(&arr, 1);
+    array_append(&arr, 2);
+    array_append(&arr, 3);
+    array_append(&arr, 4);
+    array_append(&arr, 5);
+    array_append(&arr, 6);
+    array_append(&arr, 7);
+    array_append(&arr, 8);
+    array_append(&arr, 9);
+    array_append(&arr, 10);
+    For(arr) {
+        print("arr[%]=%", it_index, it);
+    }
+    array_free_all(&arr);
+    // array_append(&arr, 11);
+    
+    print("works");
     
     
     

@@ -7,7 +7,8 @@ ENUM(AllocOp,
     FREE,
     FREE_ALL,
     INIT,
-    DEINIT
+    DEINIT,
+    GET_NAME
 );
 
 
@@ -18,9 +19,19 @@ ENUM(AllocOp,
 
 struct Allocator {
     void* data;
-    void* (handle)(AllocOp op, void* allocator_data, s32 size_requested, void* alloc_to_free);
+    void* (*handle)(AllocOp op, void* allocator_data, s32 size_requested, void* alloc_to_free);
 };
 
+void printsl_custom(Allocator alloc) {
+    printsl((const char*)alloc.handle(AllocOp::GET_NAME, &alloc, 0, NULL));
+}
+
+Allocator make_allocator(Bump* allocator) {
+    Allocator out = {};
+    out.data = (void*)allocator;
+    out.handle = bump_handle;
+    return out;
+}
 
 
 
