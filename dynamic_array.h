@@ -30,6 +30,19 @@ void printsl_custom(Array<T> arr) {
     printsl("]");
 }
 
+// uses the custom given allocator
+template<typename T>
+Array<T> array_new(s32 size, Allocator alloc) {
+    ASSERT(size >= 0, "cannot create array with negative size %", size);
+    Array<T> array;
+    array.reserved_size = size;
+    array.size = 0;
+    array.alloc = alloc;
+    array.ptr = (T*)array.alloc.handle(AllocOp::ALLOC, array.alloc.data, size, NULL);
+    return array;
+}
+
+// defaults to using the temporary allocator
 template<typename T>
 Array<T> array_new(s32 size) {
     ASSERT(size >= 0, "cannot create array with negative size %", size);
@@ -40,6 +53,24 @@ Array<T> array_new(s32 size) {
     return array;
 }
 
+// quicker way to make a fixed-size array
+template<typename T>
+Array<T> make_fixed_array(s32 size, Bump* alloc) { return array_new<T>(size, make_allocator(alloc)); }
+
+
+#if 0
+API(cogno): UNSAFE EXPERIMENTAL API, DO NOT USE IF YOU DON'T KNOW WHAT YOU'RE DOING!
+// these 2 functions are used to make in a much more convenient way a fixed-size array,
+// they will create a bump allocator which controls both itself and the array memory.
+// The problem is that when you deallocate the array, you also should deallocate the hidden
+// bump allocator. If you don't you have a memory leak. If we make it so array_free also
+// deallocs the array allocator, you risk undefined behaviours (we don't know if the given
+// allocator holds only this array or also something else!). So we created the new
+// array_free_all(...) function, which should be used instead of array_free(...), but only for
+// fixed size arrays (and arrays which create their hidden allocators).
+// since we've realized that we're never using these anyway we might remove these and keep the 
+// more verbose but actually much more useful functions which require an allocator as input.
+//                                  - Cogno 2023/02/16
 template<typename T>
 Array<T> make_fixed_array(s32 size) {
     ASSERT(size >= 0, "cannot create array with negative size %", size);
@@ -51,6 +82,14 @@ Array<T> make_fixed_array(s32 size) {
     return array;
 }
 
+// will free the complete allocator (with everything inside it, including the array)
+template<typename T>
+void array_free_all(Array<T>* array) {
+    array->ptr = (T*)array->alloc.handle(AllocOp::FREE_ALL, array->alloc.data, 0, array->ptr);
+    array->size = 0;
+    array->reserved_size = 0;
+}
+#endif
 
 // will free from the allocator only the space used by the array
 template<typename T>
@@ -60,13 +99,6 @@ void array_free(Array<T>* array) {
     array->reserved_size = 0;
 }
 
-// will free the complete allocator (with everything inside it, including the array)
-template<typename T>
-void array_free_all(Array<T>* array) {
-    array->ptr = (T*)array->alloc.handle(AllocOp::FREE_ALL, array->alloc.data, 0, array->ptr);
-    array->size = 0;
-    array->reserved_size = 0;
-}
 
 template<typename T>
 void array_clear(Array<T>* array) {
