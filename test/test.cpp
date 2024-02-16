@@ -151,12 +151,17 @@ int main() {
     // print("%\\% %", 20, 30);
     // print("%\\% %", 20, 30, 40, 50);
     
-    Bump bump = make_bump_allocator(100);
-    char* single_char = (char*)bump_alloc(&bump, sizeof(char));
-    single_char = (char*)bump_alloc(&bump, sizeof(char));
-    single_char = (char*)bump_alloc(&bump, sizeof(char));
-    single_char = (char*)bump_alloc(&bump, sizeof(char));
-    print("%, from % received %", bump, bump.data, single_char);
+    // auto array_of_strings = make_fixed_array(100);
+    
+    // print("sizeof %", sizeof(Bump));
+    
+    Bump* bump = make_bump_allocator_floating(100);
+    char* single_char = (char*)bump_alloc(bump, sizeof(char));
+    single_char = (char*)bump_alloc(bump, sizeof(char));
+    single_char = (char*)bump_alloc(bump, sizeof(char));
+    single_char = (char*)bump_alloc(bump, sizeof(char));
+    single_char = (char*)bump_alloc(bump, sizeof(char) * 8);
+    print("% (at %), from % received %", *bump, bump, bump->data, single_char);
     
     
     

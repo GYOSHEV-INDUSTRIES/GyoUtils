@@ -4,6 +4,7 @@ struct Bump {
     int size;
     int prev_offset;
     int curr_offset;
+    u8 padding[4];
 };
 
 void printsl_custom(Bump b) {
@@ -46,8 +47,12 @@ void* bump_handle(AllocOp op, Bump* allocator, s32 size_requested, void* to_free
             char* top = (char*)allocator->data + allocator->curr_offset;
             // TODO(cogno): this assumes the initial pointer is aligned, is it so? should we better align this?
             int unaligned_by = allocator->curr_offset % DEFAULT_ALIGNMENT;
-            print("unaligned by %", unaligned_by);
-            if(unaligned_by != 0) allocator->curr_offset += DEFAULT_ALIGNMENT - unaligned_by;
+            int space_left_in_cache_line = DEFAULT_ALIGNMENT - unaligned_by;
+            
+            // NOTE(cogno): since the processor retrives data in chunks, if an allocation crosses a word boundary, you will require 1 extra access, which is slow! If we can fit the new allocation in the space remaining we do so, else we align to avoid being slow.
+            if(space_left_in_cache_line < size_requested) allocator->curr_offset += space_left_in_cache_line;
+            
+            // bump allocators do NOT resize
             ASSERT(allocator->curr_offset + size_requested <= allocator->size, "arena out of memory (currently at %, requested %, size %)", allocator->curr_offset, size_requested, allocator->size);
             
             auto* alloc_start = (char*)allocator->data + allocator->curr_offset;
@@ -79,22 +84,18 @@ Bump make_bump_allocator(int min_size) {
     bump_handle(AllocOp::INIT, &b, min_size, NULL);
     return b;
 }
-// API: from make_bump
-// int unaligned_by = min_size % DEFAULT_ALIGNMENT;
-// if(unaligned_by != 0) min_size += DEFAULT_ALIGNMENT - unaligned_by;
-// return arena_init(services->alloc(min_size), min_size);
 
+// makes a bump allocator and stores it's memory inside the allocation (so you don't have to hold it yourself).
+// the entire allocation is AT LEAST min_size + sizeof(Bump), 
+Bump* make_bump_allocator_floating(int min_size) {
+    void* memory = calloc(min_size + sizeof(Bump), sizeof(u8));
+    Bump* allocator = (Bump*)memory;
+    allocator->curr_offset = 0;
+    allocator->prev_offset = 0;
+    allocator->size = min_size;
+    allocator->data = (u8*)(allocator + 1);
+    return allocator;
+}
 
 void bump_free_all(Bump* a) { bump_handle(AllocOp::FREE_ALL, a, 0, NULL); }
 void* bump_alloc(Bump* a, int size) { return bump_handle(AllocOp::ALLOC, a, size, NULL); }
-
-// API: from bump_alloc
-// char* top = a->data + a->curr_offset;
-// int unaligned_by = a->curr_offset % DEFAULT_ALIGNMENT;
-// if(unaligned_by != 0) a->curr_offset += DEFAULT_ALIGNMENT - unaligned_by;
-// ASSERT(a->curr_offset + size <= a->size, "arena out of memory");
-
-// void* new_start = a->data + a->curr_offset;
-// a->prev_offset = a->curr_offset;
-// a->curr_offset = a->curr_offset + size;
-// return new_start;

@@ -31,16 +31,19 @@ TODO: make_array_fixed where you give a bump as input
 TODO: make_array_fixed where it creates automatically a bump given the size of the array
 
 BREAKING CHANGES:
-- in print, char* are now printed as pointers instead of strings (you have to cast them to const char* to print them as strings)
-- in str, str_to_c_string returns a const char* instead of a char*
+- in print, char* are now printed as pointers instead of strings (you have to cast them to const char* to print them as strings).
+- in str, str_to_c_string returns a const char* instead of a char*.
 
 first.h:
-    fixed print incorrectly printing percentages if they're the last thing to be print
+    fixed print incorrectly printing percentages if they're the last thing to be print.
         print("%\\%", 20); would print "20\%" instead of "20%".
-    improved print to tell you if you've added more % than inputs to print
-        print("% % %", 20); would print "20 % %", now it will print "20 (missing input) (missing input)"
-    improved print to tell you if you've added more inputs than %
-        print("%", 20, 30, 40) would print "20", now it will print "20(extra inputs given)"
+    improved print to tell you if you've added more % than inputs to print.
+        print("% % %", 20); would print "20 % %", now it will print "20 (missing input) (missing input)".
+    improved print to tell you if you've added more inputs than %.
+        print("%", 20, 30, 40) would print "20", now it will print "20(extra inputs given)".
+
+math.h:
+    Fixed wrong calculations for matrix functions perspective(...) and ortho(...).
 
 Version: 0.2.0 2024/02/15
 ---------------------------------
