@@ -416,8 +416,8 @@ inline mat4 perspective(float fov, float aspect_ratio, float z_near, float z_far
     res.m11 = 1 / (aspect_ratio * tan_value);
     res.m22 = cotangent;
     res.m33 = - (z_far + z_near) / (z_far - z_near);
-    res.m34 = -1.0;
-    res.m43 = -(2.0 * z_near * z_far) / (z_far - z_near);
+    res.m43 = -1.0;
+    res.m34 = -(2.0 * z_near * z_far) / (z_far - z_near);
     return res;
 }
 inline mat4 ortho(float left, float right, float bottom, float top, float z_near, float z_far){
@@ -425,9 +425,9 @@ inline mat4 ortho(float left, float right, float bottom, float top, float z_near
     res.m11 = 2.0f / (right - left);
     res.m22 = 2.0f / (top - bottom);
     res.m33 = -2.0f / (z_far - z_near);
-    res.m41 = -(right + left) / (right - left);
-    res.m42 = -(top + bottom) / (top - bottom);
-    res.m43 = -(z_far + z_near) / (z_far - z_near);
+    res.m14 = -(right + left) / (right - left);
+    res.m24 = -(top + bottom) / (top - bottom);
+    res.m34 = -(z_far + z_near) / (z_far - z_near);
     res.m44 = 1;
     return res;
 }
