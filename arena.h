@@ -35,6 +35,7 @@ void arena_reset(Arena* a) {
 // TODO(cogno): test memory alignment at 0, 4 and 8 bytes
 
 ArenaHeader* arena_get_header_before_data(void* arena_data) {
+    if(arena_data == NULL) return NULL; // no header before no block duh
     int header_size = sizeof(ArenaHeader) + DEFAULT_ALIGNMENT % sizeof(ArenaHeader);
     u8* header_start = (u8*)arena_data - header_size;
     return (ArenaHeader*)header_start;
