@@ -20,12 +20,13 @@ ENUM(AllocOp,
 
 // if you want to create your custom allocator compatible with gyoutils simply implement the handle_function (look at other allocator files for more info)
 struct Allocator {
-    void* data;
-    void* (*handle)(AllocOp op, void* allocator_data, s32 size_requested, void* alloc_to_free);
+    void* data = NULL;
+    void* (*handle)(AllocOp op, void* allocator_data, s32 old_size, s32 size_requested, void* ptr_request) = NULL;
 };
 
 void printsl_custom(Allocator alloc) {
-    printsl((const char*)alloc.handle(AllocOp::GET_NAME, &alloc, 0, NULL));
+    if(alloc.handle == NULL) printsl("Null Allocator");
+    else printsl((const char*)alloc.handle(AllocOp::GET_NAME, &alloc, 0, 0, NULL));
 }
 
 Allocator make_allocator(Bump* allocator) {

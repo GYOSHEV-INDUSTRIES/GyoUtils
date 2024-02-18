@@ -1,6 +1,6 @@
 
 struct Bump {
-    void* data;
+    void* data = NULL;
     int size_available = 0;
     int prev_offset = 0;
     int curr_offset = 0;
@@ -47,7 +47,7 @@ void bump_reset(Bump* a) {
 // TODO(cogno): test memory alignment at 0, 4 and 8 bytes
 
 // generic functionality used by Allocator in allocators.h, you can use the functions below for ease of use
-void* bump_handle(AllocOp op, void* alloc, s32 size_requested, void* to_free) {
+void* bump_handle(AllocOp op, void* alloc, s32 old_size, s32 size_requested, void* to_free) {
     Bump* allocator = (Bump*)alloc;
     switch(op) {
         case AllocOp::GET_NAME: return (void*)"Bump Allocator";
@@ -97,7 +97,7 @@ Bump make_bump_allocator(void* buffer, int buffer_length) {
 // will allocate its memory automatically
 Bump make_bump_allocator(int min_size) {
     Bump b = {};
-    bump_handle(AllocOp::INIT, &b, min_size, NULL);
+    bump_handle(AllocOp::INIT, &b, 0, min_size, NULL);
     return b;
 }
 
@@ -115,5 +115,5 @@ Bump* make_bump_allocator_floating(int min_size) {
     return allocator;
 }
 
-void bump_free_all(Bump* a) { bump_handle(AllocOp::FREE_ALL, a, 0, NULL); }
-void* bump_alloc(Bump* a, int size) { return bump_handle(AllocOp::ALLOC, a, size, NULL); }
+void bump_free_all(Bump* a) { bump_handle(AllocOp::FREE_ALL, a, 0, 0, NULL); }
+void* bump_alloc(Bump* a, int size) { return bump_handle(AllocOp::ALLOC, a, 0, size, NULL); }

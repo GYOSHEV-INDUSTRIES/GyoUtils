@@ -38,20 +38,13 @@ Array<T> array_new(s32 size, Allocator alloc) {
     array.reserved_size = size;
     array.size = 0;
     array.alloc = alloc;
-    array.ptr = (T*)array.alloc.handle(AllocOp::ALLOC, array.alloc.data, size, NULL);
+    array.ptr = (T*)array.alloc.handle(AllocOp::ALLOC, array.alloc.data, 0, size, NULL);
     return array;
 }
 
-// defaults to using the temporary allocator
+// defaults to using the default allocator
 template<typename T>
-Array<T> array_new(s32 size) {
-    ASSERT(size >= 0, "cannot create array with negative size %", size);
-    Array<T> array;
-    array.reserved_size = size;
-    array.size = 0;
-    array.ptr = (T*)calloc(size, sizeof(T)); // TODO(cogno): replace with temporary allocator
-    return array;
-}
+Array<T> array_new(s32 size) { return array_new<T>(size, default_allocator); }
 
 // quicker way to make a fixed-size array
 template<typename T>
@@ -95,7 +88,7 @@ void array_free_all(Array<T>* array) {
 // will free from the allocator only the space used by the array
 template<typename T>
 void array_free(Array<T>* array) {
-    array->ptr = (T*)array->alloc.handle(AllocOp::FREE, array->alloc.data, 0, array->ptr);
+    array->ptr = (T*)array->alloc.handle(AllocOp::FREE, array->alloc.data, 0, 0, array->ptr);
     array->size = 0;
     array->reserved_size = 0;
 }
@@ -109,7 +102,8 @@ void array_clear(Array<T>* array) {
 
 template<typename T>
 void array_resize(Array<T>* array, s32 new_size) {
-    array->ptr = (T*)array->alloc.handle(AllocOp::REALLOC, array->alloc.data, new_size, NULL);
+    if(array->alloc.handle == NULL) array->alloc = default_allocator;
+    array->ptr = (T*)array->alloc.handle(AllocOp::REALLOC, array->alloc.data, array->reserved_size * sizeof(T), new_size * sizeof(T), array->ptr);
     ASSERT(array->ptr != NULL, "couldn't allocate new memory (array is full!)");
     array->reserved_size = new_size;
 }

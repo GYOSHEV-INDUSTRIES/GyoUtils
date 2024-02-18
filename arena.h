@@ -1,6 +1,6 @@
 
 struct Arena {
-    void* data;
+    void* data = NULL;
     int size_available = 0;
     int prev_offset = 0;
     int curr_offset = 0;
@@ -53,7 +53,7 @@ void* arena_prepare_new_memory_block(Arena* arena, s32 size_requested, ArenaHead
 }
 
 // generic functionality used by Allocator in allocators.h, you can use the functions below for ease of use
-void* arena_handle(AllocOp op, void* alloc, s32 size_requested, void* ptr_request) {
+void* arena_handle(AllocOp op, void* alloc, s32 old_size, s32 size_requested, void* ptr_request) {
     Arena* allocator = (Arena*)alloc;
     switch(op) {
         case AllocOp::GET_NAME: return (void*)"Arena Allocator";
@@ -64,6 +64,7 @@ void* arena_handle(AllocOp op, void* alloc, s32 size_requested, void* ptr_reques
             return allocator->data;
         } break;
         case AllocOp::REALLOC: {
+            // TODO(cogno): you can now use old_size to simplify this code (I think)
             if((u8*)allocator->data + allocator->prev_offset == ptr_request) {
                 // if the alloc to resize is the last one we have then we can do it very easily!
                 auto size_the_alloc_has = allocator->curr_offset - allocator->prev_offset;
@@ -91,8 +92,10 @@ void* arena_handle(AllocOp op, void* alloc, s32 size_requested, void* ptr_reques
                 arena_reset(allocator);
                 auto* old_header = arena_get_header_before_data(allocator->data);
                 void* new_space = arena_prepare_new_memory_block(allocator, size_requested, old_header);
-                if(op == AllocOp::REALLOC) {
-                    memcpy(new_space, ptr_request, size_requested);
+                if(op == AllocOp::REALLOC && ptr_request != NULL) {
+                    // API(cogno): min is in math, maybe it's better to have it *everywhere* since it's so common ?
+                    int amount_to_copy = size_requested < old_size ? size_requested : old_size;
+                    memcpy(new_space, ptr_request, amount_to_copy);
                 }
                 allocator->data = new_space;
                 allocator->size_available = size_requested;
@@ -124,10 +127,11 @@ void* arena_handle(AllocOp op, void* alloc, s32 size_requested, void* ptr_reques
 // will allocate its memory automatically
 Arena make_arena_allocator(int min_size) {
     Arena a = {};
-    arena_handle(AllocOp::INIT, &a, min_size, NULL);
+    arena_handle(AllocOp::INIT, &a, 0, min_size, NULL);
     return a;
 }
 
-void arena_free_all(Arena* a) { arena_handle(AllocOp::FREE_ALL, a, 0, NULL); }
-void* arena_alloc(Arena* a, int size) { return arena_handle(AllocOp::ALLOC, a, size, NULL); }
-void* arena_realloc(Arena* a, void* to_resize, int new_size) { return arena_handle(AllocOp::ALLOC, a, new_size, to_resize); }
+void arena_free_all(Arena* a) { arena_handle(AllocOp::FREE_ALL, a, 0, 0, NULL); }
+void* arena_alloc(Arena* a, int size) { return arena_handle(AllocOp::ALLOC, a, 0, size, NULL); }
+void* arena_realloc(Arena* a, void* to_resize, int new_size) { return arena_handle(AllocOp::ALLOC, a, 0, new_size, to_resize); }
+void* arena_realloc(Arena* a, void* to_resize, int new_size, int old_size) { return arena_handle(AllocOp::ALLOC, a, old_size, new_size, to_resize); }
