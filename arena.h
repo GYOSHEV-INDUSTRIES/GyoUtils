@@ -34,6 +34,23 @@ void arena_reset(Arena* a) {
 
 // TODO(cogno): test memory alignment at 0, 4 and 8 bytes
 
+ArenaHeader* arena_get_header_before_data(void* arena_data) {
+    int header_size = sizeof(ArenaHeader) + DEFAULT_ALIGNMENT % sizeof(ArenaHeader);
+    u8* header_start = (u8*)arena_data - header_size;
+    return (ArenaHeader*)header_start;
+}
+
+void* arena_prepare_new_memory_block(Arena* arena, s32 size_requested, ArenaHeader* old_block) {
+    int header_size = sizeof(ArenaHeader) + DEFAULT_ALIGNMENT % sizeof(ArenaHeader);
+    int alloc_size = size_requested + header_size; // TODO(cogno): default min size
+    void* memory = calloc(alloc_size, sizeof(u8)); // TAG: MaybeWeShouldDoThisBetter
+    
+    auto* head = (ArenaHeader*)memory;
+    head->previous_block = old_block;
+    
+    return (void*)((u8*)memory + header_size);
+}
+
 // generic functionality used by Allocator in allocators.h, you can use the functions below for ease of use
 void* arena_handle(AllocOp op, void* alloc, s32 size_requested, void* ptr_request) {
     Arena* allocator = (Arena*)alloc;
@@ -41,56 +58,23 @@ void* arena_handle(AllocOp op, void* alloc, s32 size_requested, void* ptr_reques
         case AllocOp::GET_NAME: return (void*)"Arena Allocator";
         case AllocOp::INIT: {
             arena_reset(allocator);
-            int header_size = sizeof(ArenaHeader) + DEFAULT_ALIGNMENT % sizeof(ArenaHeader);
-            int alloc_size = size_requested + header_size; // TODO(cogno): default min size
-            void* memory = calloc(alloc_size, sizeof(u8)); // TAG: MaybeWeShouldDoThisBetter
-            
-            // hide and initialize the header
-            auto* head = (ArenaHeader*)memory;
-            *head = {}; // maybe we don't have to do this because we memset to 0 anyway...
-            
-            allocator->data = (void*)((u8*)memory + header_size);
+            allocator->data = arena_prepare_new_memory_block(allocator, size_requested, NULL);
             allocator->size_available = size_requested; // because we don't give the user the header, it's for us
             return allocator->data;
         } break;
         case AllocOp::REALLOC: {
-            
             if((u8*)allocator->data + allocator->prev_offset == ptr_request) {
                 // if the alloc to resize is the last one we have then we can do it very easily!
                 auto size_the_alloc_has = allocator->curr_offset - allocator->prev_offset;
-
-                if(size_requested <= size_the_alloc_has) {
-                    // user wants to shrink, an arena should only grow but we can allow it without loss of generality
-                    allocator->curr_offset = allocator->prev_offset + size_requested;
-                    return ptr_request;
-                }
-                
-                // user wants to grow, we must be careful
                 auto free_space_left = allocator->size_available - allocator->curr_offset;
-                if(size_requested <= free_space_left) {
-                    // we have enough space, no need to realloc!
+
+                // user wants to shrink or resize (and we have space)
+                if(size_requested <= size_the_alloc_has || size_requested <= free_space_left) {
                     allocator->curr_offset = allocator->prev_offset + size_requested;
                     return ptr_request;
                 }
-                
-                // not enough space, resize necessary
-                // 1. make enough space for the whole allocator
-                // BUG(cogno): this is MEGA wrong! if the memory gets moved EVERY pointer this allocator has ever returned is FUCKED!!!
-                allocator->data = realloc(allocator->data, allocator->size_available * 2); // TAG: MaybeWeShouldDoThisBetter
-                allocator->size_available *= 2;
-                
-                // 2. tell him that we did it
-                allocator->curr_offset = allocator->prev_offset + size_requested;
-                return ptr_request;
             }
-            
-            
-            
-            // there's not enough space
-            // 2. prepare the new space
-            
-            // 3. copy from the old 
-        } break;
+        } // there's not enough space, intentionally fall into alloc
         case AllocOp::ALLOC: {
             char* top = (char*)allocator->data + allocator->curr_offset;
             // TODO(cogno): this assumes the initial pointer is aligned, is it so? should we better align this?
@@ -102,7 +86,15 @@ void* arena_handle(AllocOp op, void* alloc, s32 size_requested, void* ptr_reques
             
             if(allocator->curr_offset + size_requested > allocator->size_available) {
                 // resize necessary
-                // TODO(cogno): this
+                // COPYPASTE(cogno): this is basically equal to AllocOp::INIT, except for the pointer to the old block, easily compressible
+                arena_reset(allocator);
+                auto* old_header = arena_get_header_before_data(allocator->data);
+                void* new_space = arena_prepare_new_memory_block(allocator, size_requested, old_header);
+                if(op == AllocOp::REALLOC) {
+                    memcpy(new_space, ptr_request, size_requested);
+                }
+                allocator->data = new_space;
+                allocator->size_available = size_requested;
             }
             
             auto* alloc_start = (char*)allocator->data + allocator->curr_offset;
@@ -113,7 +105,13 @@ void* arena_handle(AllocOp op, void* alloc, s32 size_requested, void* ptr_reques
         case AllocOp::FREE_ALL: {
             arena_reset(allocator);
             allocator->size_available = 0;
-            free(allocator->data); // TAG: MaybeWeShouldDoThisBetter
+            // we need to go back every block until no more are left
+            ArenaHeader* header_of_this_block = arena_get_header_before_data(allocator->data);
+            while(header_of_this_block != NULL) {
+                ArenaHeader* header_of_prev_block = header_of_this_block->previous_block;
+                free((void*)header_of_this_block); // TAG: MaybeWeShouldDoThisBetter
+                header_of_this_block = header_of_prev_block;
+            }
             return NULL;
         }; break;
         default: return NULL; // not implemented

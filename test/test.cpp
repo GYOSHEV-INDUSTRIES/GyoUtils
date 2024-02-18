@@ -173,24 +173,57 @@ int main() {
     // print("works 2: allocated: %, moved: %", allocated, moved);
     
     
-    auto arr = make_fixed_array<int>(10);
-    array_append(&arr, 1);
-    array_append(&arr, 2);
-    array_append(&arr, 3);
-    array_append(&arr, 4);
-    array_append(&arr, 5);
-    array_append(&arr, 6);
-    array_append(&arr, 7);
-    array_append(&arr, 8);
-    array_append(&arr, 9);
-    array_append(&arr, 10);
-    For(arr) {
-        print("arr[%]=%", it_index, it);
-    }
-    array_free_all(&arr);
+    Arena ar = make_arena_allocator(4);
+    auto* a1 = (int*)arena_alloc(&ar, sizeof(int));
+    *a1 = 0x12345678;
+    print(a1);
+    auto* a2 = (char*)arena_alloc(&ar, sizeof(char));
+    *a2 = 186;
+    print(a2);
+    
+    int header_size = sizeof(ArenaHeader) + DEFAULT_ALIGNMENT % sizeof(ArenaHeader);
+    u8* a2_middle = (u8*)a2;
+    u8* a2_start = a2_middle - header_size;
+    ArenaHeader* h2 = (ArenaHeader*)a2_start;
+    print("block 2:");
+    print("---------------");
+    print(h2->previous_block);
+    print("---------------");
+    print(*a2_middle);
+    
+    auto* h1_expected = h2->previous_block;
+    u8* a1_middle = (u8*)a1;
+    u8* a1_start = a1_middle - header_size;
+    ArenaHeader* h1 = (ArenaHeader*)a1_start;
+    auto* h1_actual = h1;
+    print("block 1:");
+    print("---------------");
+    print("% (at %, expected %)", h1->previous_block, h1_actual, h1_expected);
+    print("---------------");
+    print(*(int*)a1_middle);
+    
+    arena_free_all(&ar);
+    
+    print("worked");
+    
+    // auto arr = make_fixed_array<int>(10);
+    // array_append(&arr, 1);
+    // array_append(&arr, 2);
+    // array_append(&arr, 3);
+    // array_append(&arr, 4);
+    // array_append(&arr, 5);
+    // array_append(&arr, 6);
+    // array_append(&arr, 7);
+    // array_append(&arr, 8);
+    // array_append(&arr, 9);
+    // array_append(&arr, 10);
+    // For(arr) {
+    //     print("arr[%]=%", it_index, it);
+    // }
+    // array_free_all(&arr);
     // array_append(&arr, 11);
     
-    print("works");
+    // print("works");
     
     
     
