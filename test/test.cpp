@@ -173,7 +173,7 @@ int main() {
     // print("works 2: allocated: %, moved: %", allocated, moved);
     
     
-    Arena ar = make_arena_allocator(4);
+    Arena ar;
     auto* a1 = (int*)arena_alloc(&ar, sizeof(int));
     *a1 = 0x12345678;
     print(a1);
