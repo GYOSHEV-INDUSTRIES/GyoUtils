@@ -58,6 +58,7 @@ template<typename T>
 Array<T> make_fixed_array(s32 size, Bump* alloc) { return array_new<T>(size, make_allocator(alloc)); }
 
 
+// TODO(cogno): we can use this! We just have to store the allocators data somewhere. But that's it! Just make a global allocator storage for these allocators. Call it allocator_storage!
 #if 0
 API(cogno): UNSAFE EXPERIMENTAL API, DO NOT USE IF YOU DON'T KNOW WHAT YOU'RE DOING!
 // these 2 functions are used to make in a much more convenient way a fixed-size array,

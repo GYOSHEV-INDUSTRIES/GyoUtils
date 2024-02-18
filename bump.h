@@ -1,7 +1,7 @@
 
 struct Bump {
     void* data;
-    int size_available;
+    int size_available = 0;
     int prev_offset = 0;
     int curr_offset = 0;
     
@@ -21,14 +21,14 @@ struct Bump {
 
 void printsl_custom(Bump b) {
     if (b.size_available == 0) {
-        printsl("Uninitialized bump allocator");
+        printsl("Uninitialized Aump Allocator");
         return;
     }
     
     float fill_percentage = 100.0f * b.curr_offset / b.size_available;
     int last_alloc_size = b.curr_offset - b.prev_offset;
     float last_alloc_percentage = 100.0f * last_alloc_size / b.size_available;
-    printsl("Bump allocator of % bytes (%\\% full), last allocation of % bytes (%\\%)", b.size_available, fill_percentage, last_alloc_size, last_alloc_percentage);
+    printsl("Bump Allocator of % bytes (%\\% full), last allocation of % bytes (%\\%)", b.size_available, fill_percentage, last_alloc_size, last_alloc_percentage);
 }
 
 #define DEFAULT_ALIGNMENT (sizeof(char*))
@@ -53,10 +53,11 @@ void* bump_handle(AllocOp op, void* alloc, s32 size_requested, void* to_free) {
         case AllocOp::GET_NAME: return (void*)"Bump Allocator";
         case AllocOp::INIT: {
             bump_reset(allocator);
-            allocator->data = calloc(size_requested, sizeof(u8));
+            allocator->data = calloc(size_requested, sizeof(u8)); // TAG: MaybeWeShouldDoThisBetter
             allocator->size_available = size_requested;
             return allocator->data;
         } break;
+        // NOTE(cogno): we can make REALLOC work only in 1 case: if the last allocation wants more memory (and we have it available) then we can simply increase the size. Even though this might seem like a good idea, it's actually a BAD idea. Bump allocators are used to make arrays of FIXED size. If the fixed size array silently grows it's a problem...
         case AllocOp::ALLOC: {
             char* top = (char*)allocator->data + allocator->curr_offset;
             // TODO(cogno): this assumes the initial pointer is aligned, is it so? should we better align this?

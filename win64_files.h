@@ -8,20 +8,9 @@ functions to simplify working with windows' file system.
 - get_drive_names(...) to know which drives you have in your pc
 */
 
-#ifndef DISABLE_INCLUDES
-    #include <windows.h>
-#endif
-
 #ifndef GYOFIRST
     #include "first.h"
 #endif
-
-void win64_print_error() {
-    char buf[255]; // hope this is enough
-    DWORD dwError = GetLastError();
-    FormatMessage(FORMAT_MESSAGE_FROM_SYSTEM, 0, dwError, 0, buf, sizeof(buf), 0);
-    print(buf);
-}
 
 bool get_only_files_in_dir(str folder_path, Array<str>* filenames) {
     StrBuilder builder = make_str_builder();

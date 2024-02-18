@@ -34,6 +34,12 @@ BREAKING CHANGES:
 - in print, char* are now printed as pointers instead of strings (you have to cast them to const char* to print them as strings).
 - in str, str_to_c_string returns a const char* instead of a char*.
 
+NEW: win64_basic.h:
+    created this file to hold basic and common windows functions.
+    moved win64_print_error from win64_files.h into this file.
+    created win64_alloc to allocate memory.
+    created win64_free to free memory.
+
 first.h:
     fixed print incorrectly printing percentages if they're the last thing to be print.
         print("%\\%", 20); would print "20\%" instead of "20%".
