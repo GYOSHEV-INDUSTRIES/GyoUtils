@@ -149,7 +149,7 @@ inline void printsl_custom() { }
 
 // default behaviour, unknown types prints "(unknown type)", while pointers are printed as such
 template<typename T> void printsl_custom(T v)  { printsl_custom("(unknown type)"); }
-template<typename T> void printsl_custom(T* v) { buffer_append("0x%p", v); } // NOTE(cogno): leave this before const char* s so strings are printed as such (and not as pointers)
+template<typename T> void printsl_custom(T* v) { buffer_append("0x%04X_%04X_%04X", ((u64)v >> 32) & 0xffff, ((u64)v >> 16) & 0xffff, (u64)v & 0xffff); } // NOTE(cogno): leave this before const char* s so strings are printed as such (and not as pointers)
 
 
 // first we recursively accumulate into a buffer, then we flush it
