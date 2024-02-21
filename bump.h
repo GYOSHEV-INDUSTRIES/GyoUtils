@@ -18,6 +18,9 @@ struct Bump {
     bool is_floating = false;
     u8 padding[3];
 };
+// TODO(cogno): pass to s64/u64, a bump of 4gb of data is kind of bad...
+// TODO(cogno): remove floating bump allocators
+// TODO(cogno): make bump work when initialized to zero
 
 void printsl_custom(Bump b) {
     if (b.size_available == 0) {

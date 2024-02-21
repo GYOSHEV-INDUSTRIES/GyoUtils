@@ -7,6 +7,7 @@ struct Arena {
     
     u8 padding[4];
 };
+// TODO(cogno): pass to s64/u64, an arena of 4gb of data is kind of bad...
 
 struct ArenaHeader {
     ArenaHeader* previous_block = NULL;

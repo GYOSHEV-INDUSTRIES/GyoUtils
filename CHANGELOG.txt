@@ -23,11 +23,7 @@ TODO: give an example of how to use allocators
 TODO: give an example of how to make new custom allocators
 TODO: give an example of how to use temporary allocator
 TODO: remove fixed array
-TODO: make the array use allocators
-TODO: make_array where you give an arena as input
-TODO: make_array where you give an allocator as input
 TODO: make_array where it creates an arena automatically given the initial size
-TODO: make_array_fixed where you give a bump as input
 TODO: make_array_fixed where it creates automatically a bump given the size of the array
 
 BREAKING CHANGES:

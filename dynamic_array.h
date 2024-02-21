@@ -20,6 +20,8 @@ struct Array {
     T& operator[](s32 i) { ASSERT_BOUNDS(i, 0, size); return ptr[i]; }
 };
 
+// TODO(cogno): pass to s64/u64, an array of 4gb of data is kind of bad...
+
 template <typename T>
 void printsl_custom(Array<T> arr) {
     printsl("[");
@@ -45,6 +47,10 @@ Array<T> array_new(s32 size, Allocator alloc) {
 // defaults to using the default allocator
 template<typename T>
 Array<T> array_new(s32 size) { return array_new<T>(size, default_allocator); }
+
+// makes an array which uses the given arena
+template<typename T>
+Array<T> array_new(s32 size, Arena* alloc) { return array_new<T>(size, make_allocator(alloc)); }
 
 // quicker way to make a fixed-size array
 template<typename T>

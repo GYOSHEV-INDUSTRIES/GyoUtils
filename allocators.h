@@ -23,6 +23,7 @@ struct Allocator {
     void* data = NULL;
     void* (*handle)(AllocOp op, void* allocator_data, s32 old_size, s32 size_requested, void* ptr_request) = NULL;
 };
+// TODO(cogno): pass to s64/u64, an allocator of 4gb of data is kind of bad...
 
 void printsl_custom(Allocator alloc) {
     if(alloc.handle == NULL) printsl("Null Allocator");

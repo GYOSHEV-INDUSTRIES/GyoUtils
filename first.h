@@ -125,7 +125,7 @@ inline void flush_to_stdout() {
     __buffer_index = 0;
 }
 
-// TODO(cogno): temp, will be replaced with our custom implementations
+// API(cogno): we might be able to replace this with our custom implementations
 #define buffer_append(fmt, ...) __buffer_index += snprintf(__print_buff + __buffer_index, __BUFF_SIZE - __buffer_index, fmt, __VA_ARGS__)
 
 
