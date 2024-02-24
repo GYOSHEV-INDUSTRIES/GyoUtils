@@ -10,6 +10,7 @@ In this file:
 - ASSERT macro which can be deactivated, prints a custom (optional) formatted message and returns the expression value
 - ASSERT_BOUNDS to make out of bounds checks easier
 - defer macro, like golang's defer
+- For macro to provide a more convenient way to iterate over Array and similar structs
 */
 
 #ifndef DISABLE_INCLUDES
@@ -273,6 +274,7 @@ inline bool assert_func(bool expr, const char* expression_as_string, const char*
 template <typename... Types>
 inline bool assert_func(bool expr, const char* expression_as_string, const char* filename, int line_count, const char* function_name, const char* optional_message, Types... message_inputs) {
     if(!expr) {
+        // printf("assertion failed\n");
         printsl("### Assertion failed: ");
         print(optional_message, message_inputs...);
         print("    Code: '%'", expression_as_string);
@@ -453,3 +455,40 @@ void printsl_custom(EnumName to_print) { \
     printsl("%::%", #EnumName, to_string(to_print)); \
 }
 
+// 
+// macros for improved for cycle. 
+// Works with any structs with 'size' and 'ptr' values. 
+// The 4 alternatives can iterate over elements by values, by pointer, by values in reverse order and
+// by pointer in reverse order
+// Example:
+// For(array) {
+//     print("index % = %", it_index, it);    
+// }
+// Which is much less stuff to write than:
+// for(int i = 0; i < array.size; i++) {
+//     auto value = array.ptr[i];
+//     print("index % = %", i, value);
+// }
+//
+#define For(arr) \
+for(int it_index = 0, _=1;_;_=0) \
+    for(auto it = (arr).ptr[it_index]; it_index < (arr).size; it = (arr).ptr[++it_index])
+
+#define For_ptr(arr) \
+for(int it_index = 0, _=1;_;_=0) \
+    for(auto* it = &((arr).ptr[it_index]); it_index < (arr).size; it = &((arr).ptr[++it_index]))
+
+#define For_rev(arr) \
+for(int it_index = (arr).size - 1, _=1;_;_=0) \
+    for(auto it = (arr).ptr[it_index]; it_index >= 0; it = (arr).ptr[--it_index])
+
+#define For_ptr_rev(arr) \
+for(int it_index = (arr).size - 1, _=1;_;_=0) \
+    for(auto* it = &((arr).ptr[it_index]); it_index >= 0; it = &((arr).ptr[--it_index]))
+
+#define For_rev_ptr(arr) For_ptr_rev((arr))
+
+// A simple macro to write for(Range(10, 30)) instead of for(int it = 10; it < 30; it++), just for brevity
+// TODO(cogno): what if you put an array inside another? "it" name conflict?
+#define FOR_RANGE(min, max) s32 it = min; it < max; it++
+#define Range(min, max) FOR_RANGE(min, max)

@@ -3,7 +3,6 @@
 /*
 In this file:
 - Array, a simple replacement to std::vector
-- For macro to provide a more convenient way to iterate over Array
 - Range macro to also simplify basic for cycle syntax
 */
 
@@ -198,40 +197,3 @@ T* array_get_ptr(Array<T>* array, s32 index) {
     return &array->ptr[index];
 }
 
-// 
-// macros for improved for cycle. 
-// Works with any structs with 'size' and 'ptr' values. 
-// The 4 alternatives can iterate over elements by values, by pointer, by values in reverse order and
-// by pointer in reverse order
-// Example:
-// For(array) {
-//     print("index % = %", it_index, it);    
-// }
-// Which is much less stuff to write than:
-// for(int i = 0; i < array.size; i++) {
-//     auto value = array.ptr[i];
-//     print("index % = %", i, value);
-// }
-//
-#define For(arr) \
-for(int it_index = 0, _=1;_;_=0) \
-    for(auto it = (arr).ptr[it_index]; it_index < (arr).size; it = (arr).ptr[++it_index])
-
-#define For_ptr(arr) \
-for(int it_index = 0, _=1;_;_=0) \
-    for(auto* it = &((arr).ptr[it_index]); it_index < (arr).size; it = &((arr).ptr[++it_index]))
-
-#define For_rev(arr) \
-for(int it_index = (arr).size - 1, _=1;_;_=0) \
-    for(auto it = (arr).ptr[it_index]; it_index >= 0; it = (arr).ptr[--it_index])
-
-#define For_ptr_rev(arr) \
-for(int it_index = (arr).size - 1, _=1;_;_=0) \
-    for(auto* it = &((arr).ptr[it_index]); it_index >= 0; it = &((arr).ptr[--it_index]))
-
-#define For_rev_ptr(arr) For_ptr_rev((arr))
-
-// A simple macro to write for(Range(10, 30)) instead of for(int it = 10; it < 30; it++), just for brevity
-// TODO(cogno): what if you put an array inside another? "it" name conflict?
-#define FOR_RANGE(min, max) s32 it = min; it < max; it++
-#define Range(min, max) FOR_RANGE(min, max)
