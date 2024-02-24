@@ -87,25 +87,27 @@ void* arena_handle(AllocOp op, void* alloc, s32 old_size, s32 size_requested, vo
             // NOTE(cogno): since the processor retrives data in chunks, if an allocation crosses a word boundary, you will require 1 extra access, which is slow! If we can fit the new allocation in the space remaining we do so, else we align to avoid being slow.
             if(unaligned_by != 0 && space_left_in_block < size_requested) allocator->curr_offset += space_left_in_block;
             
+            void* new_memory = (char*)allocator->data + allocator->curr_offset;
             if(allocator->curr_offset + size_requested > allocator->size_available) {
                 // resize necessary
                 // COPYPASTE(cogno): this is basically equal to AllocOp::INIT, except for the pointer to the old block, easily compressible
                 arena_reset(allocator);
                 auto* old_header = arena_get_header_before_data(allocator->data);
-                void* new_space = arena_prepare_new_memory_block(allocator, size_requested, old_header);
-                if(op == AllocOp::REALLOC && ptr_request != NULL) {
-                    // API(cogno): min is in math, maybe it's better to have it *everywhere* since it's so common ?
-                    int amount_to_copy = size_requested < old_size ? size_requested : old_size;
-                    memcpy(new_space, ptr_request, amount_to_copy);
-                }
-                allocator->data = new_space;
+                new_memory = arena_prepare_new_memory_block(allocator, size_requested, old_header);
+                allocator->data = new_memory;
                 allocator->size_available = size_requested;
             }
             
-            auto* alloc_start = (char*)allocator->data + allocator->curr_offset;
+            if(op == AllocOp::REALLOC && ptr_request != NULL) {
+                // we need to realloc and we have enough space in THIS block
+                // API(cogno): min is in math, maybe it's better to have it *everywhere* since it's so common ?
+                int amount_to_copy = size_requested < old_size ? size_requested : old_size;
+                memcpy(new_memory, ptr_request, amount_to_copy);
+            }
+            
             allocator->prev_offset = allocator->curr_offset;
             allocator->curr_offset += size_requested;
-            return (void*)alloc_start;
+            return (void*)new_memory;
         } break;
         case AllocOp::FREE_ALL: {
             arena_reset(allocator);

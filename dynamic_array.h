@@ -39,7 +39,7 @@ Array<T> array_new(s32 size, Allocator alloc) {
     array.reserved_size = size;
     array.size = 0;
     array.alloc = alloc;
-    array.ptr = (T*)array.alloc.handle(AllocOp::ALLOC, array.alloc.data, 0, size, NULL);
+    array.ptr = (T*)array.alloc.handle(AllocOp::ALLOC, array.alloc.data, 0, size * sizeof(T), NULL);
     return array;
 }
 
