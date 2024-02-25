@@ -50,6 +50,7 @@ first.h:
 
 math.h:
     Fixed wrong calculations for matrix functions perspective(...) and ortho(...).
+    Fixed wrong calculations for mat4_determinant(...) and mat4_inverse(...).
 
 Version: 0.2.0 2024/02/15
 ---------------------------------

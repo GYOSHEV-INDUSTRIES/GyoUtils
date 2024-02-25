@@ -435,7 +435,8 @@ inline mat4 ortho(float left, float right, float bottom, float top) {
     mat4 res = ortho(left, right, bottom, top, -2, 0);
     return res;
 }
-inline float determinant(mat4 m){
+
+inline float determinant(mat4 m) {
     vec3 col1 = {m.m11, m.m21, m.m31};
     vec3 col2 = {m.m12, m.m22, m.m32};
     vec3 col3 = {m.m13, m.m23, m.m33};
@@ -444,11 +445,12 @@ inline float determinant(mat4 m){
     vec3 C01 = vec3_cross(col1, col2);
     vec3 C23 = vec3_cross(col3, col4);
     vec3 B10 = col1 * m.m42 - col2 * m.m41;
-    vec3 B32 = col2 * m.m44 - col4 * m.m43;
+    vec3 B32 = col3 * m.m44 - col4 * m.m43;
     
     return vec3_dot(C01, B32) + vec3_dot(C23, B10);
 }
-inline mat4 mat4_inverse(mat4 m){
+
+inline mat4 mat4_inverse(mat4 m) {
     vec3 col1 = {m.m11, m.m21, m.m31};
     vec3 col2 = {m.m12, m.m22, m.m32};
     vec3 col3 = {m.m13, m.m23, m.m33};
@@ -457,7 +459,7 @@ inline mat4 mat4_inverse(mat4 m){
     vec3 C01 = vec3_cross(col1, col2);
     vec3 C23 = vec3_cross(col3, col4);
     vec3 B10 = col1 * m.m42 - col2 * m.m41;
-    vec3 B32 = col2 * m.m44 - col4 * m.m43;
+    vec3 B32 = col3 * m.m44 - col4 * m.m43;
     
     float inv_det = 1.0f / (vec3_dot(C01, B32) + vec3_dot(C23, B10));
     C01 = C01 * inv_det;
@@ -465,19 +467,19 @@ inline mat4 mat4_inverse(mat4 m){
     B10 = B10 * inv_det;
     B32 = B32 * inv_det;
 
-    mat4 res;
     vec3 i1 = (vec3_cross(col2, B32) + (C23 * m.m42));
     vec3 i2 = (vec3_cross(B32, col1) - (C23 * m.m41));
     vec3 i3 = (vec3_cross(col4, B10) + (C01 * m.m44));
     vec3 i4 = (vec3_cross(B10, col3) - (C01 * m.m43));
     
+    mat4 res;
     res.r1 = _mm_setr_ps(i1.x, i1.y, i1.z, -vec3_dot(col2, C23));
     res.r2 = _mm_setr_ps(i2.x, i2.y, i2.z, +vec3_dot(col1, C23));
     res.r3 = _mm_setr_ps(i3.x, i3.y, i3.z, -vec3_dot(col4, C01));
     res.r4 = _mm_setr_ps(i4.x, i4.y, i4.z, +vec3_dot(col3, C01));
-
     return res;
 }
+
 inline mat4 mat4_translation_mat(vec3 v){
     mat4 res = mat4_new(1);
     res.m14 = v.x;
