@@ -222,7 +222,6 @@ int main() {
         print("arr[%]=%", it_index, it);
     }
     array_free(&arr);
-    array_append(&arr, 11);
     
     print("works");
     

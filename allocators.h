@@ -1,7 +1,8 @@
 /*
 In this file:
 - The start of all allocators we made, with easy ways to use and expand them to fit your needs
-- default and temporary arena allocators, useful for generic operations
+- default allocator, useful for generic operations
+- temporary arena allocator, useful for temporary quick operations to be done and forget about
 */
 
 ENUM(AllocOp,
@@ -44,8 +45,22 @@ Allocator make_allocator(Arena* allocator) {
     return out;
 }
 
+void* default_handle(AllocOp op, void* allocator_data, s32 old_size, s32 size_requested, void* ptr_request) {
+    print("default allocator: %", op);
+    switch (op) {
+        case AllocOp::GET_NAME: return (void*)"Default Allocator";
+        case AllocOp::ALLOC: return calloc(size_requested, sizeof(u8));
+        case AllocOp::REALLOC: return realloc(ptr_request, size_requested);
+        case AllocOp::FREE: free(ptr_request); return NULL;
+        // API(cogno): maybe we can make a FREE_ALL if we track each allocation (we can make each block have a header or we can make a list of each allocation on the side..., I would go with the headers...)
+        default: return NULL;
+    }
+}
 
-Arena default_arena;   // even though they are empty they auto setup themselves when used
-Arena temporary_arena; // even though they are empty they auto setup themselves when used
-Allocator default_allocator   = {(void*)&default_arena,   arena_handle}; // points to default arena
+// TODO(cogno): Stack Allocator
+
+// API(cogno): what if instead of a single arena as default we make a stack of allocators so you can push/pop temporary allocators of different kinds for different functions? This seems interesting...
+
+Arena temporary_arena; // even though it's empty it auto setups itself when used
+Allocator default_allocator   = {NULL, default_handle}; // points to default handle
 Allocator temporary_allocator = {(void*)&temporary_arena, arena_handle}; // points to temporary_arena
