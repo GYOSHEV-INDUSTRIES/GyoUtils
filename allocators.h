@@ -46,7 +46,6 @@ Allocator make_allocator(Arena* allocator) {
 }
 
 void* default_handle(AllocOp op, void* allocator_data, s32 old_size, s32 size_requested, void* ptr_request) {
-    print("default allocator: %", op);
     switch (op) {
         case AllocOp::GET_NAME: return (void*)"Default Allocator";
         case AllocOp::ALLOC: return calloc(size_requested, sizeof(u8));

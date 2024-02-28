@@ -24,7 +24,7 @@ struct Bump {
 
 void printsl_custom(Bump b) {
     if (b.size_available == 0) {
-        printsl("Uninitialized Aump Allocator");
+        printsl("Uninitialized Bump Allocator");
         return;
     }
     
