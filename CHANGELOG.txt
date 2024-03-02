@@ -52,6 +52,9 @@ math.h:
     Fixed wrong calculations for matrix functions perspective(...) and ortho(...).
     Fixed wrong calculations for mat4_determinant(...) and mat4_inverse(...).
 
+str.h:
+    Added str_count(...) to count how many times a character is inside a string
+
 Version: 0.2.0 2024/02/15
 ---------------------------------
 

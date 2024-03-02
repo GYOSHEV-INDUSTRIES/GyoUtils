@@ -332,6 +332,15 @@ bool str_ends_with(str to_check, str checker) {
     return true;
 }
 
+// counts occurrencies of a character in the given string
+int str_count(str to_check, char to_count) {
+    int the_count = 0;
+    For(to_check) {
+        if(it == to_count) the_count++;
+    }
+    return the_count;
+}
+
 // supports unicode utf8
 u32 str_length_in_char(str string) {
     u32 char_count = 0;
