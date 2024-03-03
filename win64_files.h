@@ -48,7 +48,7 @@ bool get_only_files_in_dir(str folder_path, Array<str>* filenames) {
         }
         
         if(result & FILE_ATTRIBUTE_ARCHIVE) {
-            str file_name = str_new_alloc(win_file_data.cFileName); // else it doesn't live outside this function
+            str file_name = str_copy((const char*)win_file_data.cFileName); // else it doesn't live outside this function
             array_append(filenames, file_name);
         }
         
@@ -97,7 +97,7 @@ bool get_only_folders_in_dir(str folder_path, Array<str>* folders) {
         
         if(result & FILE_ATTRIBUTE_DIRECTORY) {
             // NOTE(cogno): windows is so fucking stupid it adds '.' and '..' as folders, we need to filter them out
-            str folder_name = str_new_alloc(win_file_data.cFileName); // else it doesn't live outside this function
+            str folder_name = str_copy(win_file_data.cFileName); // else it doesn't live outside this function
             if(str_matches(folder_name, "."))  continue;
             if(str_matches(folder_name, "..")) continue;
             array_append(folders, folder_name);
@@ -128,7 +128,7 @@ bool get_drive_names(Array<str>* drive_names) {
         char ch = *start;
         if(ch == 0) break;
         
-        str drive_name = str_new_alloc(start);
+        str drive_name = str_copy(start);
         drive_name.size--; //remove the '\'
         array_append(drive_names, drive_name);
         start += drive_name.size + 2;

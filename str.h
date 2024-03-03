@@ -100,29 +100,23 @@ struct str{
     u8& operator[](s32 i) { ASSERT_BOUNDS(i, 0, size); return ptr[i]; }
 };
 
-// makes a new string from a c_str allocating a new buffer for it
-str str_new_alloc(const char* c_str) {
-    str new_str = {};
-    new_str.size = c_string_length(c_str);
-    new_str.ptr = (u8*)malloc(new_str.size * sizeof(u8));
-    memcpy(new_str.ptr, c_str, sizeof(u8) * new_str.size);
-    return new_str;
-}
+// NOTE(cogno): you can directly cast a const char* to a str (so you can do str name = "YourName"; and it will work)
 
 inline void printsl_custom(str v) { for(int i = 0; i < v.size; i++) printsl_custom((char)v.ptr[i]); }
 
-const char* str_to_c_string(str to_convert) {
+const char* str_to_c_string(str to_convert, Allocator alloc) {
     ASSERT(to_convert.size != MAX_U32, "str is full, cannot convert to c str");
     u32 c_size = to_convert.size + 1;
-    char* ptr = (char*)malloc(c_size);
+    char* ptr = (char*)mem_alloc(alloc, c_size);
     memcpy(ptr, to_convert.ptr, to_convert.size);
     ptr[to_convert.size] = 0;
     return (const char*)ptr;
 }
+const char* str_to_c_string(str to_convert) { return str_to_c_string(to_convert, default_allocator); }
 
-str str_concat(str s1, str s2) {
+str str_concat(str s1, str s2, Allocator alloc) {
     str total;
-    total.ptr = (u8*)malloc(s1.size + s2.size);
+    total.ptr = (u8*)mem_alloc(alloc, s1.size + s2.size);
     total.size = s1.size + s2.size;
     
     memcpy(total.ptr, s1.ptr, s1.size);
@@ -130,17 +124,17 @@ str str_concat(str s1, str s2) {
     
     return total;
 }
-str str_concat(const char* s1, const char* s2) { return str_concat((str)s1, (str)s2); }
-str str_concat(str s1, const char* s2) { return str_concat(s1, (str)s2); }
-str str_concat(const char* s1, str s2) { return str_concat((str)s1, s2); }
+str str_concat(str s1, str s2) { return str_concat(s1, s2, default_allocator); }
 
-str str_copy(str to_copy) {
+// copies a string allocating into a given allocator
+str str_copy(str to_copy, Allocator alloc) {
     str copy;
-    copy.ptr = (u8*)malloc(to_copy.size);
+    copy.ptr = (u8*)mem_alloc(alloc, to_copy.size);
     copy.size = to_copy.size;
     memcpy(copy.ptr, to_copy.ptr, to_copy.size);
     return copy;
 }
+str str_copy(str to_copy) { return str_copy(to_copy, default_allocator); }
 
 // splits a single str in 2 parts on the first occurrence of a char, no allocations necessary.
 // the character split is NOT included in the final strings, 
@@ -374,10 +368,6 @@ bool str_matches(str a, str b) {
     return true;
 }
 
-bool str_matches(const char* a, const char* b) {return str_matches((str)a, (str)b); }
-bool str_matches(str a, const char* b) {return str_matches(a, (str)b); }
-bool str_matches(const char* a, str b) {return str_matches((str)a, b); }
-
 
 /*
 StrBuilder, used to dinamically construct str.
@@ -393,6 +383,8 @@ struct StrBuilder {
     u8& operator[](s32 i) { ASSERT_BOUNDS(i, 0, size); return ptr[i]; }
 };
 
+// TODO(cogno): make StrBuilder usable when zero initialized
+// TODO(cogno): make StrParser usable when zero initialized
 inline void printsl_custom(StrBuilder b) { for(int i = 0; i < b.size; i++) printsl_custom((char)b.ptr[i]); }
 
 StrBuilder make_str_builder(u8* ptr, s32 size) {

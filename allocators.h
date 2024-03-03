@@ -56,6 +56,18 @@ void* default_handle(AllocOp op, void* allocator_data, s32 old_size, s32 size_re
     }
 }
 
+void* mem_alloc(Allocator alloc, s32 size) {
+    return alloc.handle(AllocOp::ALLOC, alloc.data, 0, size, NULL);
+}
+
+void* mem_realloc(Allocator alloc, s32 old_size, s32 new_size, void* to_realloc) {
+    return alloc.handle(AllocOp::REALLOC, alloc.data, old_size, new_size, to_realloc);
+}
+
+void* mem_free(Allocator alloc, void* to_free) {
+    return alloc.handle(AllocOp::FREE, alloc.data, 0, 0, to_free);
+}
+
 // TODO(cogno): Stack Allocator
 
 // API(cogno): what if instead of a single arena as default we make a stack of allocators so you can push/pop temporary allocators of different kinds for different functions? This seems interesting...

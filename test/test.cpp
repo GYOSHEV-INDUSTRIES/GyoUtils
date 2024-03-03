@@ -139,11 +139,39 @@ int func_to_test(int thing) {
     return sum;
 }
 
-#define TESTS_ACTIVE 0
+#define TESTS_ACTIVE 1
 
+#define RADBUG 0
+#define MSVC_S_BUG 0
+
+#if RADBUG
+// compile this is /Od
+int infinite_recursion(int a, int b) {
+    return a + b;
+}
+
+int infinite_recursion(int a) {
+    return infinite_recursion(a);
+}
+#endif
+
+#if MSVC_S_BUG
+// compile this with /O2
+int infinite_recursion(int a) {
+    return infinite_recursion(a);
+}
+#endif
 
 int main() {
+    #if RADBUG
+    int result = infinite_recursion(0);
+    print(result);
+    #endif
     
+    #if MSVC_S_BUG
+    int result = infinite_recursion(0);
+    print("skipped");
+    #endif
     // print("% % %", 20);
     // print("%", 20, 30, 40);
     // print("%\\%", 20);
@@ -206,24 +234,24 @@ int main() {
     
     // print("worked");
     
-    Array<int> arr; // = make_fixed_array<int>(10);
-    print("initial allocator: %", arr.alloc);
-    array_append(&arr, 1);
-    array_append(&arr, 2);
-    array_append(&arr, 3);
-    array_append(&arr, 4);
-    array_append(&arr, 5);
-    array_append(&arr, 6);
-    array_append(&arr, 7);
-    array_append(&arr, 8);
-    array_append(&arr, 9);
-    array_append(&arr, 10);
-    For(arr) {
-        print("arr[%]=%", it_index, it);
-    }
-    array_free(&arr);
+    // Array<int> arr; // = make_fixed_array<int>(10);
+    // print("initial allocator: %", arr.alloc);
+    // array_append(&arr, 1);
+    // array_append(&arr, 2);
+    // array_append(&arr, 3);
+    // array_append(&arr, 4);
+    // array_append(&arr, 5);
+    // array_append(&arr, 6);
+    // array_append(&arr, 7);
+    // array_append(&arr, 8);
+    // array_append(&arr, 9);
+    // array_append(&arr, 10);
+    // For(arr) {
+    //     print("arr[%]=%", it_index, it);
+    // }
+    // array_free(&arr);
     
-    print("works");
+    // print("works");
     
     
     
@@ -428,12 +456,12 @@ int main() {
     
     // BENCHMARK_COMPARE_VOID(1, printf_unbuffered, printf_buffered);
     
-    #if 0    
+    #if 1
     Array<str> arr = array_new<str>(20);
     get_only_files_in_dir(".\\src", &arr);
     
-    Array<str> arr2 = array_new<str>(20);
-    get_only_files_in_dir(".\\src\\math", &arr2);
+    // Array<str> arr2 = array_new<str>(20);
+    // get_only_files_in_dir(".\\src\\math", &arr2);
     
     print("CLASSIC FOR:");
     for(int i = 0; i < arr.size; i++) {
@@ -482,17 +510,7 @@ int main() {
 
     print("\nNEW FOR OF STR:");
     For(arr[0]) {
-        print("file %=%", it_index, (char)it);
-    }
-
-    print("\nOLD FOR:");
-    OLDFor(arr) {
-        print("file %=%", it.index, it.value);
-    }
-    
-    print("\nOLD FOR AGAIN:");
-    OLDFor(arr) {
-        print("file %=%", it.index, it.value);
+        print("char %=%", it_index, (char)it);
     }
     #endif
     
