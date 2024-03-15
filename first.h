@@ -150,8 +150,14 @@ inline void printsl_custom() { }
 
 // default behaviour, unknown types prints "(unknown type)", while pointers are printed as such
 template<typename T> void printsl_custom(T v)  { printsl_custom("(unknown type)"); }
-template<typename T> void printsl_custom(T* v) { buffer_append("0x%04X_%04X_%04X", ((u64)v >> 32) & 0xffff, ((u64)v >> 16) & 0xffff, (u64)v & 0xffff); } // NOTE(cogno): leave this before const char* s so strings are printed as such (and not as pointers)
-
+template<typename T> void printsl_custom(T* to_print) {
+    union Temp {
+        T* ptr;
+        u64 u64;
+    } t; // NOTE(cogno): if we cast T* to u64/u32 we might get a warning (which some projects turn into an error), so we use an union
+    t.ptr = to_print;
+    buffer_append("0x%04X_%04X_%04X", (u32)(t.u64 >> 32) & 0xffff, (u32)(t.u64 >> 16) & 0xffff, (u32)t.u64 & 0xffff);
+}
 
 // first we recursively accumulate into a buffer, then we flush it
 inline void accumulate_into_buffer(const char* s) {

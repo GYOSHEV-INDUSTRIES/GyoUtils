@@ -1,3 +1,4 @@
+#include <cstring> // for memcpy used below
 
 struct Arena {
     void* data = NULL;
