@@ -10,6 +10,12 @@ In this file:
     #include "first.h"
 #endif
 
+#ifndef GYO_ALLOCATORS
+    #include "allocators.h"
+#endif
+
+#define GYO_ARRAY
+
 template <typename T>
 struct Array {
     s32 size = 0;

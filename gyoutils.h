@@ -20,6 +20,7 @@ Configuration macros
 #include "dynamic_array.h"
 #include "fixed_array.h"
 #include "str.h"
+#include "hashmap.h"
 
 #include "performance_counter.h"
 #include "simple_profiling.h"

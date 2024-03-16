@@ -1,3 +1,4 @@
+#pragma once
 /*
 In this file:
 - The start of all allocators we made, with easy ways to use and expand them to fit your needs
@@ -15,6 +16,7 @@ ENUM(AllocOp,
     GET_NAME
 );
 
+#define GYO_ALLOCATORS
 
 #include "bump.h"
 #include "arena.h"

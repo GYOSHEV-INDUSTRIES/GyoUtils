@@ -8,6 +8,24 @@
 #undef cos
 #undef tan
 
+#define ceil __CEIL
+#define cos __COS
+#define floor __FLOOR
+#define round __ROUND
+#define sin __SIN
+#define sqrt __SQRT
+#define tan __TAN
+#define trunc __TRUNC
+#include <unordered_map>
+#undef ceil
+#undef cos
+#undef floor
+#undef round
+#undef sin
+#undef sqrt
+#undef tan
+#undef trunc
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -139,7 +157,7 @@ int func_to_test(int thing) {
     return sum;
 }
 
-#define TESTS_ACTIVE 1
+#define TESTS_ACTIVE 0
 
 #define RADBUG 0
 #define MSVC_S_BUG 0
@@ -162,6 +180,54 @@ int infinite_recursion(int a) {
 }
 #endif
 
+const char* keys[] = {
+    "test",
+    "example",
+    "this string is really really long",
+    "practice",
+    "contribute",
+    "GLEDIAHBOEfibaoeif",
+    "GhTuUmNMVfdERy",
+    "01923754",
+    "CVER/&BT(N)",
+    "u64 min_cycles_f1 = MAX_U64;",
+    "u64 min_cycles_f2 = MAX_U64;",
+    "u64 max_cycles_f1 = 0;",
+    "u64 max_cycles_f2 = 0;",
+    "u64 total_cycles_f1 = 0;",
+    "u64 total_cycles_f2 = 0;",
+    "BENCHMARK_FUNC(func_name, ",
+    "BENCHMARK_WITH_COUNT(count",
+    "BENCHMARK_VOID_FUNC(func_n",
+    "BENCHMARK_VOID_WITH_COUNT(",
+    "BENCHMARK_COMPARE_VOID(cou",
+    "BENCHMARK_COMPARE(count, f",
+    "BENCHMARK_VOID_MANY_INPUTS",
+    "- DISABLE_INCLUDES",
+    "    used to disable all the internal includes for a custom implementation",
+    "- PROFILING_V1",
+    "    if you want to deactivate profiling v1, simply add '#define PROFILING_V1 0`",
+    "- SIMPLE_PROFILE",
+    "    if you want to deactivate simple profiling, simply add '#define SIMPLE_PROFILE 0`",
+    "- SIMPLE_B"
+};
+
+#define ARR_COUNT 29
+
+void gyo_hashmap() {
+    HashMap<const char*, int> m = make_hashmap<const char*, int>(8);
+    for(int i = 0; i < 29; i++) {
+        map_insert(&m, keys[i], i*3);
+    }
+}
+
+void unordered_map() {
+    std::unordered_map<const char*, int> umap;
+    for(int i = 0; i < 29; i++) {
+        umap[keys[i]] = i*3;
+    }
+}
+
 int main() {
     #if RADBUG
     int result = infinite_recursion(0);
@@ -172,6 +238,42 @@ int main() {
     int result = infinite_recursion(0);
     print("skipped");
     #endif
+    
+    #if 0
+    str found;
+    HashMap<int, str> m = make_hashmap<int, str>(10);
+    // populate
+    map_insert(&m, 10, (str)"hello");
+    map_insert(&m, 2, (str)"world");
+    print("elements normal: %", m.elements);
+    
+    // find
+    bool ok = map_find(&m, 2, &found);
+    print("found value '%'", found);
+    ASSERT(ok);
+    
+    // edit previous
+    map_insert(&m, 10, (str)"modified");
+    print("elements with modified: %", m.elements);
+    
+    // find modified
+    ok = map_find(&m, 10, &found);
+    print("found value modified '%'", found);
+    ASSERT(ok);
+    
+    // collisions
+    map_insert(&m, 20, (str)"collision");
+    print("elements with modified: %", m.elements);
+    
+    // find collision
+    ok = map_find(&m, 20, &found);
+    print("found value collided '%'", found);
+    ASSERT(ok);
+    #endif
+    
+    BENCHMARK_COMPARE_VOID(100, unordered_map, gyo_hashmap);
+    
+    
     // print("% % %", 20);
     // print("%", 20, 30, 40);
     // print("%\\%", 20);
@@ -456,7 +558,7 @@ int main() {
     
     // BENCHMARK_COMPARE_VOID(1, printf_unbuffered, printf_buffered);
     
-    #if 1
+    #if 0
     Array<str> arr = array_new<str>(20);
     get_only_files_in_dir(".\\src", &arr);
     
