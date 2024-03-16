@@ -214,18 +214,30 @@ const char* keys[] = {
 
 #define ARR_COUNT 29
 
+HashMap<const char*, int> m;
+std::unordered_map<const char*, int> umap;
+
 void gyo_hashmap() {
-    HashMap<const char*, int> m = make_hashmap<const char*, int>(8);
-    for(int i = 0; i < 29; i++) {
+    m = make_hashmap<const char*, int>(50);
+    for(int i = 0; i < ARR_COUNT; i++) {
         map_insert(&m, keys[i], i*3);
     }
 }
 
 void unordered_map() {
-    std::unordered_map<const char*, int> umap;
-    for(int i = 0; i < 29; i++) {
+    for(int i = 0; i < ARR_COUNT; i++) {
         umap[keys[i]] = i*3;
     }
+}
+
+int gyo_hashmap_search() {
+    int out;
+    map_find(&m, keys[12], &out);
+    return out;
+}
+
+int unordered_map_search() {
+    return umap[keys[12]];
 }
 
 int main() {
@@ -271,7 +283,11 @@ int main() {
     ASSERT(ok);
     #endif
     
-    BENCHMARK_COMPARE_VOID(100, unordered_map, gyo_hashmap);
+    // BENCHMARK_COMPARE_VOID(100, unordered_map, gyo_hashmap);
+    gyo_hashmap();
+    unordered_map();
+    
+    BENCHMARK_COMPARE_VOID(1000, unordered_map_search, gyo_hashmap_search);
     
     
     // print("% % %", 20);

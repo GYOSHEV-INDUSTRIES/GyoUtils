@@ -27,6 +27,22 @@ Basic benchmarking functionality
     #include "performance_counter.h"
 #endif
 
+void print_benchmark_time(u64 cycles) {
+    u64 cpu_frequency = estimate_cpu_frequency();
+    
+    f64 time = cycles * 1000000000.0f / cpu_frequency;
+    if(time < 1000) { print("% ns", time); return; }
+    
+    time /= 1000;
+    if(time < 1000) { print("% us", time); return; }
+    
+    time /= 1000;
+    if(time < 1000) { print("% ms", time); return; }
+    
+    time /= 1000;
+    print("% s", time);
+}
+
 void print_benchmark_times(u64 min_cycles, u64 avg_cycles, u64 max_cycles) {
     u64 cpu_frequency = estimate_cpu_frequency();
     
@@ -56,6 +72,7 @@ Runs a given function a given number of times with the given inputs.
 If you function returns void you should use BENCHMARK_VOID_WITH_COUNT.
 Usage: BENCHMARK_WITH_COUNT(10000, func_to_run, input1, input2);
 */
+// TODO(cogno): avg and max are useless, remove
 #define BENCHMARK_WITH_COUNT(count, func_name, ...) \
 do { \
     u64 min_cycles = MAX_U64; \
@@ -77,6 +94,7 @@ do { \
 
 // alternative to BENCHMARK_WITH_COUNT for functions returning void,
 // if your function returns something you should use BENCHMARK_WITH_COUNT
+// TODO(cogno): avg and max are useless, remove
 #define BENCHMARK_VOID_WITH_COUNT(count, func_name, ...) \
 do { \
     u64 min_cycles = MAX_U64; \
@@ -112,6 +130,7 @@ BENCHMARK_VOID_MANY_INPUTS(10000, func_to_test, "a", "a string", "a longer strin
 #define GET_FIRST(PAR, ...) PAR
 #define HAS_PARAMETER(...) GET_FIRST(placeholder, ##__VA_ARGS__, 0)
 
+// TODO(cogno): avg and max are useless, remove
 #define BENCHMARK_VOID_MANY_INPUTS(count, func_name, ...) \
 do { \
     decltype(MSVC_BUG(GET_FIRST, (__VA_ARGS__))) tests_inputs[] = {__VA_ARGS__}; \
@@ -139,6 +158,7 @@ do { \
 
 // alternative to BENCHMARK_VOID_MANY_INPUTS for functions that return something,
 // we use volatile so the code doesn't get optimized away
+// TODO(cogno): avg and max are useless, remove
 #define BENCHMARK_MANY_INPUTS(count, func_name, ...) \
 do { \
     decltype(MSVC_BUG(GET_FIRST, (__VA_ARGS__))) tests_inputs[] = {__VA_ARGS__}; \
@@ -171,6 +191,7 @@ If your function returns void you should use BENCHMARK_VOID_FUNC.
 
 Usage: BENCHMARK_FUNC(func_to_test, input_to_func);
 */
+// TODO(cogno): avg and max are useless, remove
 #define BENCHMARK_FUNC(func_name, ...) \
 { \
     u64 freq = estimate_cpu_frequency(); \
@@ -204,6 +225,7 @@ Usage: BENCHMARK_FUNC(func_to_test, input_to_func);
 
 // Alternative to BENCHMARK_FUNC for functions returning void,
 // if your function returns something you should use BENCHMARK_FUNC
+// TODO(cogno): avg and max are useless, remove
 #define BENCHMARK_VOID_FUNC(func_name, ...) \
 { \
     u64 freq = estimate_cpu_frequency(); \
@@ -235,6 +257,7 @@ Usage: BENCHMARK_FUNC(func_to_test, input_to_func);
     print("    max: % cycles", max_time); \
 }
 
+// TODO(cogno): change BENCHMARK_COMPARE_VOID and BENCHMARK_COMPARE to continue running until they have 10 seconds of the same best time
 /*
 Compares 2 different functions against the same inputs n times to know if the second one is faster or slower.
 You can use this when you're developing a new alternative to an old function and you'd like to know if
@@ -248,43 +271,40 @@ BENCHMARK_COMPARE_VOID(1000, old_func, new_func, optional_input_to_both_function
 do { \
     u64 min_cycles_f1 = MAX_U64; \
     u64 min_cycles_f2 = MAX_U64; \
-    u64 max_cycles_f1 = 0; \
-    u64 max_cycles_f2 = 0; \
-    u64 total_cycles_f1 = 0; \
-    u64 total_cycles_f2 = 0; \
     for(int i = 0; i < count; i++) { \
-        u64 start_f1 = read_cpu_timer(); \
-        func1(__VA_ARGS__); \
-        u64 current_cycles_f1 = read_cpu_timer() - start_f1; \
-        u64 start_f2 = read_cpu_timer(); \
-        func2(__VA_ARGS__); \
-        u64 current_cycles_f2 = read_cpu_timer() - start_f2; \
+        bool switchup = random_bool(); \
+        u64 current_cycles_f1, current_cycles_f2; \
+        if (switchup) { \
+            u64 start_f1 = read_cpu_timer(); \
+            func1(__VA_ARGS__); \
+            current_cycles_f1 = read_cpu_timer() - start_f1; \
+            u64 start_f2 = read_cpu_timer(); \
+            func2(__VA_ARGS__); \
+            current_cycles_f2 = read_cpu_timer() - start_f2; \
+        } else { \
+            u64 start_f2 = read_cpu_timer(); \
+            func2(__VA_ARGS__); \
+            current_cycles_f2 = read_cpu_timer() - start_f2; \
+            u64 start_f1 = read_cpu_timer(); \
+            func1(__VA_ARGS__); \
+            current_cycles_f1 = read_cpu_timer() - start_f1; \
+        } \
         if(current_cycles_f1 < min_cycles_f1) min_cycles_f1 = current_cycles_f1; \
         if(current_cycles_f2 < min_cycles_f2) min_cycles_f2 = current_cycles_f2; \
-        if(current_cycles_f1 > max_cycles_f1) max_cycles_f1 = current_cycles_f1; \
-        if(current_cycles_f2 > max_cycles_f2) max_cycles_f2 = current_cycles_f2; \
-        total_cycles_f1 += current_cycles_f1; \
-        total_cycles_f2 += current_cycles_f2; \
     } \
-    u64 avg_cycles_f1 = total_cycles_f1 / count; \
-    u64 avg_cycles_f2 = total_cycles_f2 / count; \
     auto f1_name = STRING_JOIN( STRING_JOIN( STRING_JOIN(#func1, "("), #__VA_ARGS__  ) , ")" ); \
     auto f2_name = STRING_JOIN( STRING_JOIN( STRING_JOIN(#func2, "("), #__VA_ARGS__  ) , ")" ); \
-    printsl("\nfunction '%' x% ", f1_name, count); \
-    printsl("|> cycles (min, avg, max): %, %, %", min_cycles_f1, avg_cycles_f1, max_cycles_f1 ); \
-    printsl(" | time (min, avg, max): "); \
-    print_benchmark_times(min_cycles_f1, avg_cycles_f1, max_cycles_f1); \
+    printsl("function '%' x% ", f1_name, count); \
+    printsl("|> cycles: %", min_cycles_f1); \
+    printsl(" | time: "); \
+    print_benchmark_time(min_cycles_f1); \
     printsl("function '%' x% ", f2_name, count); \
-    printsl("|> cycles (min, avg, max): %, %, %", min_cycles_f2, avg_cycles_f2, max_cycles_f2 ); \
-    printsl(" | time (min, avg, max): "); \
-    print_benchmark_times(min_cycles_f2, avg_cycles_f2, max_cycles_f2); \
+    printsl("|> cycles: %", min_cycles_f2); \
+    printsl(" | time: "); \
+    print_benchmark_time(min_cycles_f2); \
     print("final result when comparing '%' againts '%':", f2_name, f1_name); \
-    if(min_cycles_f1 < min_cycles_f2) print("    min: % more cycles (x% slowdown)", min_cycles_f2 - min_cycles_f1, (f64)min_cycles_f2 / min_cycles_f1); \
-    else                              print("    min: % less cycles (x% speedup)", min_cycles_f1 - min_cycles_f2, (f64)min_cycles_f1 / min_cycles_f2); \
-    if(avg_cycles_f1 < avg_cycles_f2) print("    avg: % more cycles (x% slowdown)", avg_cycles_f2 - avg_cycles_f1, (f64)avg_cycles_f2 / avg_cycles_f1); \
-    else                              print("    avg: % less cycles (x% speedup)", avg_cycles_f1 - avg_cycles_f2, (f64)avg_cycles_f1 / avg_cycles_f2); \
-    if(max_cycles_f1 < max_cycles_f2) print("    max: % more cycles (x% slowdown)", max_cycles_f2 - max_cycles_f1, (f64)max_cycles_f2 / max_cycles_f1); \
-    else                              print("    max: % less cycles (x% speedup)", max_cycles_f1 - max_cycles_f2, (f64)max_cycles_f1 / max_cycles_f2); \
+    if(min_cycles_f1 < min_cycles_f2) print("    % more cycles (x% slowdown)", min_cycles_f2 - min_cycles_f1, (f64)min_cycles_f2 / min_cycles_f1); \
+    else                              print("    % less cycles (x% speedup)", min_cycles_f1 - min_cycles_f2, (f64)min_cycles_f1 / min_cycles_f2); \
 } while(0)
 
 // Alternative to BENCHMARK_COMPARE_VOID where the input functions return some values.
@@ -294,43 +314,40 @@ do { \
 do { \
     u64 min_cycles_f1 = MAX_U64; \
     u64 min_cycles_f2 = MAX_U64; \
-    u64 max_cycles_f1 = 0; \
-    u64 max_cycles_f2 = 0; \
-    u64 total_cycles_f1 = 0; \
-    u64 total_cycles_f2 = 0; \
     for(int i = 0; i < count; i++) { \
-        u64 start_f1 = read_cpu_timer(); \
-        volatile auto temp1 = func1(__VA_ARGS__); \
-        u64 current_cycles_f1 = read_cpu_timer() - start_f1; \
-        u64 start_f2 = read_cpu_timer(); \
-        volatile auto temp2 = func2(__VA_ARGS__); \
-        u64 current_cycles_f2 = read_cpu_timer() - start_f2; \
+        bool switchup = random_bool(); \
+        u64 current_cycles_f1, current_cycles_f2; \
+        if (switchup) { \
+            u64 start_f1 = read_cpu_timer(); \
+            volatile auto temp1 = func1(__VA_ARGS__); \
+            current_cycles_f1 = read_cpu_timer() - start_f1; \
+            u64 start_f2 = read_cpu_timer(); \
+            volatile auto temp2 = func2(__VA_ARGS__); \
+            current_cycles_f2 = read_cpu_timer() - start_f2; \
+        } else { \
+            u64 start_f2 = read_cpu_timer(); \
+            volatile auto temp2 = func2(__VA_ARGS__); \
+            current_cycles_f2 = read_cpu_timer() - start_f2; \
+            u64 start_f1 = read_cpu_timer(); \
+            volatile auto temp1 = func1(__VA_ARGS__); \
+            current_cycles_f1 = read_cpu_timer() - start_f1; \
+        } \
         if(current_cycles_f1 < min_cycles_f1) min_cycles_f1 = current_cycles_f1; \
         if(current_cycles_f2 < min_cycles_f2) min_cycles_f2 = current_cycles_f2; \
-        if(current_cycles_f1 > max_cycles_f1) max_cycles_f1 = current_cycles_f1; \
-        if(current_cycles_f2 > max_cycles_f2) max_cycles_f2 = current_cycles_f2; \
-        total_cycles_f1 += current_cycles_f1; \
-        total_cycles_f2 += current_cycles_f2; \
     } \
-    u64 avg_cycles_f1 = total_cycles_f1 / count; \
-    u64 avg_cycles_f2 = total_cycles_f2 / count; \
     auto f1_name = STRING_JOIN( STRING_JOIN( STRING_JOIN(#func1, "("), #__VA_ARGS__  ) , ")" ); \
     auto f2_name = STRING_JOIN( STRING_JOIN( STRING_JOIN(#func2, "("), #__VA_ARGS__  ) , ")" ); \
     printsl("function '%' x% ", f1_name, count); \
-    printsl("|> cycles (min, avg, max): %, %, %", min_cycles_f1, avg_cycles_f1, max_cycles_f1 ); \
-    printsl(" | time (min, avg, max): "); \
-    print_benchmark_times(min_cycles_f1, avg_cycles_f1, max_cycles_f1); \
+    printsl("|> cycles: %", min_cycles_f1); \
+    printsl(" | time: "); \
+    print_benchmark_time(min_cycles_f1); \
     printsl("function '%' x% ", f2_name, count); \
-    printsl("|> cycles (min, avg, max): %, %, %", min_cycles_f2, avg_cycles_f2, max_cycles_f2 ); \
-    printsl(" | time (min, avg, max): "); \
-    print_benchmark_times(min_cycles_f2, avg_cycles_f2, max_cycles_f2); \
+    printsl("|> cycles: %", min_cycles_f2); \
+    printsl(" | time: "); \
+    print_benchmark_time(min_cycles_f2); \
     print("final result when comparing '%' againts '%':", f2_name, f1_name); \
-    if(min_cycles_f1 < min_cycles_f2) print("    min: % more cycles (x% slowdown)", min_cycles_f2 - min_cycles_f1, (f64)min_cycles_f2 / min_cycles_f1); \
-    else                              print("    min: % less cycles (x% speedup)", min_cycles_f1 - min_cycles_f2, (f64)min_cycles_f1 / min_cycles_f2); \
-    if(avg_cycles_f1 < avg_cycles_f2) print("    avg: % more cycles (x% slowdown)", avg_cycles_f2 - avg_cycles_f1, (f64)avg_cycles_f2 / avg_cycles_f1); \
-    else                              print("    avg: % less cycles (x% speedup)", avg_cycles_f1 - avg_cycles_f2, (f64)avg_cycles_f1 / avg_cycles_f2); \
-    if(max_cycles_f1 < max_cycles_f2) print("    max: % more cycles (x% slowdown)", max_cycles_f2 - max_cycles_f1, (f64)max_cycles_f2 / max_cycles_f1); \
-    else                              print("    max: % less cycles (x% speedup)", max_cycles_f1 - max_cycles_f2, (f64)max_cycles_f1 / max_cycles_f2); \
+    if(min_cycles_f1 < min_cycles_f2) print("    % more cycles (x% slowdown)", min_cycles_f2 - min_cycles_f1, (f64)min_cycles_f2 / min_cycles_f1); \
+    else                              print("    % less cycles (x% speedup)", min_cycles_f1 - min_cycles_f2, (f64)min_cycles_f1 / min_cycles_f2); \
 } while(0)
 
 #else

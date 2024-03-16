@@ -32,7 +32,7 @@ BREAKING CHANGES:
 - in str.h, removed str_new_alloc (you can use str_copy instead)
 - in str.h, removed str functions that take a const char* as input (since you can implicitly cast a const char* to str)
 
-NEW: win64_basic.h:
+NEW FILE: win64_basic.h:
     created this file to hold basic and common windows functions.
     moved win64_print_error from win64_files.h into this file.
     created win64_alloc to allocate memory.
@@ -51,16 +51,22 @@ first.h:
     pointers are now written like "0x0232_40C0_D8D8" (previously it would be printed like "0x0000023240C0D8D8")
 
 math.h:
+    Added random_bool() and random_float(...) functions
     Fixed wrong calculations for matrix functions perspective(...) and ortho(...).
     Fixed wrong calculations for mat4_determinant(...) and mat4_inverse(...).
-
+    
 str.h:
     Added str_count(...) to count how many times a character is inside a string.
     Each str function that allocs memory now goes through the default allocator (or a given input allocator).
     Removed str_new_alloc, you can use str_copy instead (since it copies the underlying characters too) (remember that const char* can be implicitly cast to str, so you should be good with just renaming str_new_alloc into str_copy).
     Changed str_copy, str_concat and str_to_c_string to use a given allocator (or the default allocator if nothing is specified).
     Removed each function that takes a const char* as input (since const char* can be cast to str anyway). Your code shouldn't change at all (because instead of calling the function with const char* your code should automatically cast into str and call the real function).
-    
+
+simple_benchmark.h:
+    Restructured BENCHMARK_COMPARE and BENCHMARK_COMPARE_VOID in 2 ways:
+        1. they're now function call order independent. If you had 2 functions, the order in which you would be calling them might affect the result. Now some randomization is included so order wouldn't matter.
+        2. Removed avg and max statistics. These were previously included but they would always get ignored by advanced users. Most of the times you don't want to know in how much time a function goes, because there are MANY factors you can't control that might affect the result (like the OS). Most of the times you want to know how much fast a function *can* go, to see if what you made is as fast as what you expect it to go.
+
 Version: 0.2.0 2024/02/15
 ---------------------------------
 

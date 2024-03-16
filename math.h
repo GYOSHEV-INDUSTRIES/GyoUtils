@@ -65,6 +65,14 @@ inline float remap(float in, float old_from, float old_to, float new_from, float
 #define TURNS2DEG (360.0f)
 #define TURNS2RAD (TAU)
 
+// PERF(Jason): this random may be slow check this: https://thompsonsed.co.uk/random-number-generators-for-c-performance-tested
+// Cogno: also this https://www.corsix.org/content/higher-quality-random-floats
+inline float random_float() { return (float)rand() / (float)RAND_MAX; }
+inline float random_float(float max) { return (float)rand() / ((float)RAND_MAX / max); }
+inline float random_float(float min, float max) { return random_float(max - min) + min; }
+
+inline bool random_bool() { return rand() % 2 == 0; }
+
 inline float _sin_internal(float x) {
     float q = 8 * x - 16 * x * x;
     return 0.225 * (q * q - q) + q;
