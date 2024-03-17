@@ -1,3 +1,5 @@
+#pragma once
+#define GYO_BUMP
 
 struct Bump {
     void* data = NULL;

@@ -1,3 +1,5 @@
+#pragma once
+#define GYO_ARENA
 #include <cstring> // for memcpy used below
 
 struct Arena {

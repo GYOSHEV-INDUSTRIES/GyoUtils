@@ -1,10 +1,16 @@
 #pragma once
+#define GYO_ALLOCATORS
 /*
 In this file:
 - The start of all allocators we made, with easy ways to use and expand them to fit your needs
 - default allocator, useful for generic operations
 - temporary arena allocator, useful for temporary quick operations to be done and forget about
 */
+
+
+#ifndef GYOFIRST
+    #include "first.h"
+#endif
 
 ENUM(AllocOp,
     ALLOC,
@@ -16,10 +22,13 @@ ENUM(AllocOp,
     GET_NAME
 );
 
-#define GYO_ALLOCATORS
 
-#include "bump.h"
-#include "arena.h"
+#ifndef GYO_BUMP
+    #include "bump.h"
+#endif
+#ifndef GYO_ARENA
+    #include "arena.h"
+#endif
 
 // if you want to create your custom allocator compatible with gyoutils simply implement the handle_function (look at other allocator files for more info)
 struct Allocator {
