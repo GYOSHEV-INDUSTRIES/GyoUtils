@@ -17,8 +17,7 @@ Configuration macros
 #include "allocators.h"
 
 #include "math.h"
-#include "dynamic_array.h"
-#include "fixed_array.h"
+#include "array.h"
 #include "str.h"
 #include "hashmap.h"
 

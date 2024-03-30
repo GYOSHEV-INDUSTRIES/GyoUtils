@@ -4,8 +4,9 @@ The Allocators Revolution
 
 Created some allocators that you can use to control memory as needed.
 These include:
-- A Bump allocator (control a fixed memory region, doesn't expand)
 - An Arena allocator (linearly increase it's memory used, can only free the entire region, automatically expands when full)
+- A Bump allocator (like the arena but without memory expansion, basically a view into a fixed buffer)
+- Default allocator (a wrapper around malloc/realloc/free)
 
 Moreover you can use the generic Allocator version both to hold these allocators, but also implement your own!
 
@@ -13,24 +14,26 @@ Created a globally accessible arena allocator (called "temporary_arena"), used f
 You can learn more how it works and how to use it inside allocators.h
 
 Since allocators control memory we've integrated them into Array.
-By default Array will use the temporary arena. 
-If you want your arrays to keep memory for longer periods of time you can creat them with different allocators.
-You'll see an usage example inside allocators.h
-Because of this **we've removed FixedArray**, because you can simply create an array with a Bump Allocator to have an equivalent Fixed array.
-We've obviously made this simple to do with new methods, more on that later.
+By default Array will use the default allocator (working identical to the old version of Array).
+By instead giving it a different allocator you can control how arrays access and use memory.
+For example by creating an array with a Bump allocator you can have an array which will *not* realloc, effectively making it a fixed array.
+Because of this **we've removed FixedArray**.
+You'll see usage examples of arrays and allocators inside allocators.h/array.h
 
-TODO: give an example of how to use allocators
-TODO: give an example of how to make new custom allocators
-TODO: give an example of how to use temporary allocator
-TODO: remove fixed array
-TODO: make_array where it creates an arena automatically given the initial size
-TODO: make_array_fixed where it creates automatically a bump given the size of the array
+TODO(cogno): give an example of how to use allocators
+TODO(cogno): give an example of how to make new custom allocators
+TODO(cogno): give an example of how to use temporary allocator
+TODO(cogno): make_array where it creates an arena automatically given the initial size
+TODO(cogno): make_array_fixed where it creates automatically a bump given the size of the array
+TODO(cogno): remove floating bump allocators
 
 BREAKING CHANGES:
 - in print, char* are now printed as pointers instead of strings (you have to cast them to const char* to print them as strings).
 - in str.h, str_to_c_string returns a const char* instead of a char*.
 - in str.h, removed str_new_alloc (you can use str_copy instead)
 - in str.h, removed str functions that take a const char* as input (since you can implicitly cast a const char* to str)
+- renamed dynamic_array.h into array.h
+- removed fixed_array.h (you can still use array.h to have fixed-size arrays, )
 
 NEW FILE: win64_basic.h:
     created this file to hold basic and common windows functions.
