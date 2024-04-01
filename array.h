@@ -90,7 +90,7 @@ Array<T> make_fixed_array(s32 size) {
 // will free the complete allocator (with everything inside it, including the array)
 template<typename T>
 void array_free_all(Array<T>* array) {
-    array->ptr = (T*)array->alloc.handle(AllocOp::FREE_ALL, array->alloc.data, 0, array->ptr);
+    if(array->alloc.handle != NULL) array->ptr = (T*)array->alloc.handle(AllocOp::FREE_ALL, array->alloc.data, 0, array->ptr);
     array->size = 0;
     array->reserved_size = 0;
 }
@@ -99,7 +99,7 @@ void array_free_all(Array<T>* array) {
 // will free from the allocator only the space used by the array
 template<typename T>
 void array_free(Array<T>* array) {
-    array->ptr = (T*)array->alloc.handle(AllocOp::FREE, array->alloc.data, 0, 0, array->ptr);
+    if(array->alloc.handle != NULL) array->ptr = (T*)array->alloc.handle(AllocOp::FREE, array->alloc.data, 0, 0, array->ptr);
     array->size = 0;
     array->reserved_size = 0;
 }
