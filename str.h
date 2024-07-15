@@ -101,7 +101,6 @@ struct str{
 };
 
 // NOTE(cogno): you can directly cast a const char* to a str (so you can do str name = "YourName"; and it will work)
-
 inline void printsl_custom(str v) { for(int i = 0; i < v.size; i++) printsl_custom((char)v.ptr[i]); }
 
 const char* str_to_c_string(str to_convert, Allocator alloc) {
@@ -376,10 +375,12 @@ Since str is an array of bytes you can also use this to construct binary data (l
 
 #define STR_BUILDER_DEFAULT_SIZE 100
 
+// API(cogno): make this work automatically if make_str_builder is not called.
 struct StrBuilder {
     u8* ptr;
     s32 size;
     s32 reserved_size;
+    Allocator alloc;
     u8& operator[](s32 i) { ASSERT_BOUNDS(i, 0, size); return ptr[i]; }
 };
 
@@ -387,25 +388,21 @@ struct StrBuilder {
 // TODO(cogno): make StrParser usable when zero initialized
 inline void printsl_custom(StrBuilder b) { for(int i = 0; i < b.size; i++) printsl_custom((char)b.ptr[i]); }
 
-StrBuilder make_str_builder(u8* ptr, s32 size) {
+StrBuilder make_str_builder(s32 size, Allocator alloc) {
     StrBuilder s = {};
-    s.ptr = ptr;
+    s.alloc = alloc;
+    s.size = 0;
     s.reserved_size = size;
+    s.ptr = (u8*)s.alloc.handle(AllocOp::ALLOC, s.alloc.data, 0, size * sizeof(u8), NULL);
     return s;
 }
 
-StrBuilder make_str_builder() {
-    auto* ptr = (u8*)malloc(STR_BUILDER_DEFAULT_SIZE); // default at 100 bytes
-    return make_str_builder(ptr, STR_BUILDER_DEFAULT_SIZE);
-}
-
-StrBuilder make_str_builder(s32 size) {
-    auto* ptr = (u8*)malloc(size);
-    return make_str_builder(ptr, size);
-}
+StrBuilder make_str_builder() { return make_str_builder(STR_BUILDER_DEFAULT_SIZE, default_allocator); }
+StrBuilder make_str_builder(s32 size) { return make_str_builder(size, default_allocator); }
 
 void str_builder_free(StrBuilder* b) {
-    free(b->ptr);
+    b->alloc.handle(AllocOp::FREE, b->alloc.data, 0, 0, b->ptr);
+    b->size = b->reserved_size = 0;
 }
 
 void str_builder_clear(StrBuilder* b) {
@@ -413,6 +410,7 @@ void str_builder_clear(StrBuilder* b) {
 }
 
 StrBuilder str_builder_copy(StrBuilder* b) {
+    // TODO(cogno): use b->alloc
     StrBuilder copy;
     copy.ptr = (u8*)malloc(b->reserved_size);
     copy.size = b->size;
@@ -428,20 +426,12 @@ str str_builder_get_str(StrBuilder* b) {
     return s;
 }
 
-void str_builder_resize(StrBuilder* b) {
-    u8 old_start = b->ptr[0];
-    s32 new_size = b->reserved_size * 2;
-    new_size = new_size >= STR_BUILDER_DEFAULT_SIZE ? new_size : STR_BUILDER_DEFAULT_SIZE; // API(cogno): 'max' identifier not found error
-    b->ptr = (u8*)realloc(b->ptr, new_size);
-    ASSERT(b->ptr[0] == old_start, "ERROR ON REALLOC, initial byte unexpectedly changed, this is not supposed to happen...");
-}
-
 void str_builder_resize(StrBuilder* b, s32 min_size) {
     u8 old_start = b->ptr[0];
     s32 new_size = b->reserved_size * 2;
     new_size = new_size >= STR_BUILDER_DEFAULT_SIZE ? new_size : STR_BUILDER_DEFAULT_SIZE; // API(cogno): 'max' identifier not found error
     new_size = new_size >= min_size ? new_size : min_size; // API(cogno): 'max' identifier not found error
-    b->ptr = (u8*)realloc(b->ptr, new_size);
+    b->ptr = (u8*)b->alloc.handle(AllocOp::REALLOC, b->alloc.data, b->reserved_size * sizeof(u8), new_size * sizeof(u8), b->ptr);
     b->reserved_size = new_size;
     ASSERT(b->ptr[0] == old_start, "ERROR ON REALLOC, initial byte unexpectedly changed, this is not supposed to happen...");
 }
@@ -550,6 +540,13 @@ void str_builder_append(StrBuilder* b, f32 to_append) {
 void str_builder_append(StrBuilder* b, f64 to_append) {
     char buff[50];
     snprintf(buff, 50, "%.5f", to_append);
+    str converted = buff;
+    str_builder_append(b, converted);
+}
+
+void str_builder_append_hex(StrBuilder* b, u32 to_append) {
+    char buff[6];
+    snprintf(buff, 6, "%04X", to_append);
     str converted = buff;
     str_builder_append(b, converted);
 }

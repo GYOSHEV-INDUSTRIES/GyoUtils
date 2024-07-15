@@ -137,7 +137,7 @@ Arena make_arena_allocator(int min_size) {
     return a;
 }
 
-void arena_free_all(Arena* a) { arena_handle(AllocOp::FREE_ALL, a, 0, 0, NULL); }
-void* arena_alloc(Arena* a, int size) { return arena_handle(AllocOp::ALLOC, a, 0, size, NULL); }
-void* arena_realloc(Arena* a, void* to_resize, int new_size) { return arena_handle(AllocOp::ALLOC, a, 0, new_size, to_resize); }
-void* arena_realloc(Arena* a, void* to_resize, int new_size, int old_size) { return arena_handle(AllocOp::ALLOC, a, old_size, new_size, to_resize); }
+void  mem_free_all(Arena* a) { arena_handle(AllocOp::FREE_ALL, a, 0, 0, NULL); }
+void* mem_alloc(Arena* a, int size) { return arena_handle(AllocOp::ALLOC, a, 0, size, NULL); }
+void* mem_realloc(Arena* a, void* to_resize, int new_size) { return arena_handle(AllocOp::ALLOC, a, 0, new_size, to_resize); }
+void* mem_realloc(Arena* a, void* to_resize, int new_size, int old_size) { return arena_handle(AllocOp::ALLOC, a, old_size, new_size, to_resize); }

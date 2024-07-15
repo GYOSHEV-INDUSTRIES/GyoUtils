@@ -14,9 +14,9 @@ Configuration macros
 */
 
 #include "first.h"
+#include "math.h"
 #include "allocators.h"
 
-#include "math.h"
 #include "array.h"
 #include "str.h"
 #include "hashmap.h"

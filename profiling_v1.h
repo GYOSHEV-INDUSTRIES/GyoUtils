@@ -77,7 +77,7 @@ struct time_block {
     u64 _start = 0;
     int _current = 0; //save them so we can keep them (inner blocks edit global ones)
     int _parent = 0;  //save them so we can keep them (inner blocks edit global ones)
-    int _old_elapsed_at_root = 0;
+    u64 _old_elapsed_at_root = 0;
 };
 
 #define TIME_FUNC time_block STRING_JOIN(t_, __LINE__)(__COUNTER__ + 1, __FUNCTION__)

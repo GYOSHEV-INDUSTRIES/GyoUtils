@@ -83,14 +83,14 @@ int u64_to_char_ptr(u64 value, char* dest) {
     u64 v = value;
     
     // put each digit into temp (smallest to highest units)
-    int i;
+    char i;
     while(v || temp_ptr == temp) {
         i = v % 10;
         v /= 10;
         *temp_ptr++ = i + '0';
     }
     
-    int digits_count = temp_ptr - temp;
+    int digits_count = (int)(temp_ptr - temp);
     
     // copy digits into final buffer in the correct order
     while(temp_ptr > temp) *dest++ = *--temp_ptr;

@@ -18,14 +18,13 @@ By default Array will use the default allocator (working identical to the old ve
 By instead giving it a different allocator you can control how arrays access and use memory.
 For example by creating an array with a Bump allocator you can have an array which will *not* realloc, effectively making it a fixed array.
 Because of this **we've removed FixedArray**.
-You'll see usage examples of arrays and allocators inside allocators.h/array.h
+You'll see usage examples of arrays and allocators inside allocators.h/array.h/str.h
 
 TODO(cogno): give an example of how to use allocators
 TODO(cogno): give an example of how to make new custom allocators
 TODO(cogno): give an example of how to use temporary allocator
 TODO(cogno): make_array where it creates an arena automatically given the initial size
 TODO(cogno): make_array_fixed where it creates automatically a bump given the size of the array
-TODO(cogno): remove floating bump allocators
 
 BREAKING CHANGES:
 - in print, char* are now printed as pointers instead of strings (you have to cast them to const char* to print them as strings).
@@ -33,7 +32,11 @@ BREAKING CHANGES:
 - in str.h, removed str_new_alloc (you can use str_copy instead)
 - in str.h, removed str functions that take a const char* as input (since you can implicitly cast a const char* to str)
 - renamed dynamic_array.h into array.h
-- removed fixed_array.h (you can still use array.h to have fixed-size arrays, )
+- removed fixed_array.h (you can still use array.h to have fixed-size arrays)
+- renamed array_new into make_array.
+- renamed sin, cos and tan into sin_turns, cos_turns and tan_turns for clarity.
+- changed inputs to functions vec2_length, vec3_length, vec2_normalize, vec3_normalize, vec4_normalize.
+- renamed determinant to mat4_determinant.
 
 NEW FILE: win64_basic.h:
     created this file to hold basic and common windows functions.
@@ -53,11 +56,26 @@ first.h:
 
     pointers are now written like "0x0232_40C0_D8D8" (previously it would be printed like "0x0000023240C0D8D8")
 
+array.h:
+    renamed array_new into make_array for consistency across the library
+    fixed crash when printing an empty/null array
+
 math.h:
     Added random_bool() and random_float(...) functions
     Fixed wrong calculations for matrix functions perspective(...) and ortho(...).
     Fixed wrong calculations for mat4_determinant(...) and mat4_inverse(...).
-    
+    Added auto detection of math functions and constants
+        These are: floor, ceilf, round, trunc, sqrt, PI, TAU, E, SQRT2, SQRT3, DEG2RAD, DEG2TURNS, RAD2DEG, RAD2TURNS, TURNS2DEG, TURNS2RAD.
+        This might not be a good idea and we might delete this in the future.
+    Renamed sin, cos and tan into sin_turns, cos_turns and tan_turns for clarity.
+    Added support for hsv colors.
+    Added vec2/3/4_length_squared functions.
+    Changed inputs to functions vec2_length, vec3_length, vec2_normalize, vec3_normalize, vec4_normalize:
+        They will now take as input a default value to return if the vector cannot be normalized, forcing you to think about it, which reduces problem when writing code.
+    Added vec2_random, vec3_random and vec4_random.
+    Renamed determinant to mat4_determinant.
+    Added many geometric algebra functions.
+
 str.h:
     Added str_count(...) to count how many times a character is inside a string.
     Each str function that allocs memory now goes through the default allocator (or a given input allocator).

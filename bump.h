@@ -6,23 +6,14 @@ struct Bump {
     int size_available = 0;
     int prev_offset = 0;
     int curr_offset = 0;
-    
-    // API(cogno): I don't like this very much.
-    // basically: if we want the bump to be used in the array without being annoying
-    //  we need to store allocator data inside the allocation itself 
-    // (as in, first put the allocator with its data and then the array storage).
-    // but when you free an allocator you don't know if it's an allocator that points to a
-    // block that can be free or if the allocator itself is the start of the block to free,
-    // so we use this flag.
-    // to avoid this as of now I see 2 solutions: 
-    // 1. every bump allocator is floating.
-    // 2. every bump is non floating, and we find another way to make fixed array convenient.
-    bool is_floating = false;
-    u8 padding[3];
+    u8 padding[4];
 };
 // TODO(cogno): pass to s64/u64, a bump of 4gb of data is kind of bad...
-// TODO(cogno): remove floating bump allocators
 // TODO(cogno): make bump work when initialized to zero
+
+TrackingInfo* tracking_infos = NULL;
+int* current_tracking_index = NULL;
+const int MAX_TRACKING_INFOS = 200000;
 
 void printsl_custom(Bump b) {
     if (b.size_available == 0) {
@@ -47,6 +38,24 @@ void printsl_custom(Bump b) {
 void bump_reset(Bump* a) {
     a->curr_offset = 0;
     a->prev_offset = 0;
+    
+    if (tracking_infos != NULL) {
+        // remove all useless allocations data from the array
+        // API(cogno): maybe we can do this better instead of literally loosing them?
+        // API(cogno): actually it might be a good idea to loose them, this array becomes a tracker of memory leaks!
+        for(int i = *current_tracking_index - 1; i >= 0; i--) {
+            auto data = tracking_infos[i];
+            if (data.alloc_block != a->data) continue; // keep data on other allocators
+            
+            // this data is from this allocator, but we just reset it, so we should clear it off!
+            // aka move everything from where we are to the end of the array back 1
+            for(s32 j = i; j < *current_tracking_index - 1; j++) {
+                tracking_infos[j] = tracking_infos[j + 1];
+            }
+            
+            *current_tracking_index = *current_tracking_index - 1; // new free spot!
+        }
+    }
 }
 
 // TODO(cogno): test memory alignment at 0, 4 and 8 bytes
@@ -75,6 +84,17 @@ void* bump_handle(AllocOp op, void* alloc, s32 old_size, s32 size_requested, voi
             // bump allocators do NOT resize
             ASSERT(allocator->curr_offset + size_requested <= allocator->size_available, "arena out of memory (currently at %, requested %, available %)", allocator->curr_offset, size_requested, allocator->size_available);
             
+            if (tracking_infos != NULL) {
+                ASSERT(*current_tracking_index + 1 < MAX_TRACKING_INFOS, "OUT OF MEMORY");
+                TrackingInfo t = {};
+                t.alloc_block = allocator->data;
+                t.start_offset = allocator->curr_offset;
+                t.allocation_size = size_requested;
+                t.color = color_lerp_hsv(BLUE, RED, (float)size_requested / 100000000);
+                tracking_infos[*current_tracking_index] = t;
+                *current_tracking_index = *current_tracking_index + 1;
+            }
+            
             auto* alloc_start = (char*)allocator->data + allocator->curr_offset;
             allocator->prev_offset = allocator->curr_offset;
             allocator->curr_offset += size_requested;
@@ -83,8 +103,7 @@ void* bump_handle(AllocOp op, void* alloc, s32 old_size, s32 size_requested, voi
         case AllocOp::FREE_ALL: {
             bump_reset(allocator);
             allocator->size_available = 0;
-            if(allocator->is_floating) free(alloc);
-            else                       free(allocator->data); // TAG: MaybeWeShouldDoThisBetter
+            free(allocator->data); // TAG: MaybeWeShouldDoThisBetter
             return NULL;
         }; break;
         default: return NULL; // not implemented
@@ -106,19 +125,5 @@ Bump make_bump_allocator(int min_size) {
     return b;
 }
 
-// makes a bump allocator and stores it's memory inside the allocation (so you don't have to hold it yourself).
-// the entire allocation is AT LEAST min_size + sizeof(Bump), 
-Bump* make_bump_allocator_floating(int min_size) {
-    void* memory = calloc(min_size + sizeof(Bump), sizeof(u8));
-    print("made memory of size % at %", min_size + sizeof(Bump), memory);
-    Bump* allocator = (Bump*)memory;
-    allocator->curr_offset = 0;
-    allocator->prev_offset = 0;
-    allocator->size_available = min_size;
-    allocator->data = (u8*)(allocator + 1);
-    allocator->is_floating = true;
-    return allocator;
-}
-
-void bump_free_all(Bump* a) { bump_handle(AllocOp::FREE_ALL, a, 0, 0, NULL); }
-void* bump_alloc(Bump* a, int size) { return bump_handle(AllocOp::ALLOC, a, 0, size, NULL); }
+void  mem_free_all(Bump* a) { bump_handle(AllocOp::FREE_ALL, a, 0, 0, NULL); }
+void* mem_alloc(Bump* a, int size) { return bump_handle(AllocOp::ALLOC, a, 0, size, NULL); }

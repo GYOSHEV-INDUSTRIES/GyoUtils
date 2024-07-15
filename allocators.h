@@ -22,6 +22,14 @@ ENUM(AllocOp,
     GET_NAME
 );
 
+struct TrackingInfo {
+    void* alloc_block;
+    int start_offset;
+    int allocation_size;
+    col color;
+};
+
+
 
 #ifndef GYO_BUMP
     #include "bump.h"

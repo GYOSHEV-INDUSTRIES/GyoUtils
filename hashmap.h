@@ -37,7 +37,8 @@ template<typename T, typename U>
 struct HashMap {
     // since we want to iterate over elements using our For macro we hold them in a stack and use a second special array for hashes.
     Array<HashPair<T, U>> elements; // API(cogno): if we inline the array into ptr + size + reserved_size we can directly iterate over elements with our For macro which might be cooler
-    
+    // TODO(cogno): this ^ is a bad idea because removing elements is TERRIBLE. Instead on focusing on having ALL elements quickly, focus on removing them, then having all of them can take as much as we want, it doesn't matter. Alternatively have the whole list with a flag that tells you if it's valid and when you iterate over them skip useless ones.
+
     // API(cogno): a fixed size allocator would be good too but where do you hold the Bump allocator data?
     Finder* matrix_ptr; // if you don't have conflicts this fills up (and does NOT resize)
     int matrix_size;
@@ -67,11 +68,10 @@ HashMap<T, U> make_hashmap(int size, Allocator alloc) {
     for(int i = 0; i < size; i++) map.matrix_ptr[i] = {}; // PERF(cogno): if we can have MAP_INVALID_INDEX == 0 then this becomes useless (but we also need to force the array with zeros...)
     
     // make space to hold the actual key-value pairs
-    map.elements = array_new<HashPair<T, U>>(size, alloc);
+    map.elements = make_array<HashPair<T, U>>(size, alloc);
     
     // and finally make space to solve hashing conflicts
-    map.solver = array_new<Finder>(size, alloc);
-    // API(cogno): we should rename array_new into make_array
+    map.solver = make_array<Finder>(size, alloc);
     // API(cogno): we should rename size for array/hashmap to say element count and for mem_alloc/allocator to say byte count
     return map;
 }
