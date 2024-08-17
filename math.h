@@ -37,30 +37,7 @@ inline float npow(float x, u32 n){
     return res;
 }
 
-// API(cogno): I don't know if these guards are a good idea. I think we risk that other libraries use OUR functions instead of theirs, if we have a bug here we are breaking stuff KILOMETERS away...
-// API(cogno): can these functions be done branchless? is it faster if it's branchless?
-#ifndef floor
-    #define floor __floor
-    inline float floor(float x) { return (float)(x >= 0 ? int(x) : int(x - 0.9999999999f)); }
-#endif
-#ifndef ceil
-    #define ceil __ceil
-    inline float ceil(float x) { return (float)(x < 0 ? int(x) : int(x + 1)); }
-#endif
-#ifndef round
-    #define round __round
-    inline float round(float x) { return (float)(x >= 0 ? floor(x + 0.5) : ceil(x - 0.5)); }
-#endif
-#ifndef trunc
-    #define trunc __trunc
-    inline float trunc(float x) { return float(int(x)); }
-#endif
-#ifndef sqrt
-    #define sqrt __sqrt
-    inline float sqrt(float x)  { return _mm_cvtss_f32(_mm_sqrt_ss(_mm_set_ss(x))); }
-#endif
-
-inline float roundn(float x, u32 n) { return round(x * npow(10, n)) / npow(10, n); }
+inline float roundn(float x, u32 n) { return roundf(x * npow(10, n)) / npow(10, n); }
 
 inline float remap(float in, float old_from, float old_to, float new_from, float new_to) {
     return (in - old_from) / (old_to - old_from) * (new_to - new_from) + new_from;
@@ -347,8 +324,8 @@ inline float vec4_length_squared(vec4 v) {
     return _mm_cvtss_f32(_mm_dp_ps(v.v, v.v, 0b11110001));
 }
 
-inline float vec2_length(vec2 v) { return sqrt(vec2_length_squared(v)); }
-inline float vec3_length(vec3 v) { return sqrt(vec3_length_squared(v)); }
+inline float vec2_length(vec2 v) { return sqrtf(vec2_length_squared(v)); }
+inline float vec3_length(vec3 v) { return sqrtf(vec3_length_squared(v)); }
 inline float vec4_length(vec4 v) {
     vec4 res;
     res.v = _mm_dp_ps(v.v, v.v, 0b11110001);

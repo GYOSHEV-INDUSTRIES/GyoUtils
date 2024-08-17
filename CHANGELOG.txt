@@ -37,6 +37,7 @@ BREAKING CHANGES:
 - renamed sin, cos and tan into sin_turns, cos_turns and tan_turns for clarity.
 - changed inputs to functions vec2_length, vec3_length, vec2_normalize, vec3_normalize, vec4_normalize.
 - renamed determinant to mat4_determinant.
+- removed some basic functions in math.h (floor, ceil, round, trunc, sqrt).
 
 NEW FILE: win64_basic.h:
     created this file to hold basic and common windows functions.
@@ -64,17 +65,18 @@ math.h:
     Added random_bool() and random_float(...) functions
     Fixed wrong calculations for matrix functions perspective(...) and ortho(...).
     Fixed wrong calculations for mat4_determinant(...) and mat4_inverse(...).
-    Added auto detection of math functions and constants
-        These are: floor, ceilf, round, trunc, sqrt, PI, TAU, E, SQRT2, SQRT3, DEG2RAD, DEG2TURNS, RAD2DEG, RAD2TURNS, TURNS2DEG, TURNS2RAD.
-        This might not be a good idea and we might delete this in the future.
-    Renamed sin, cos and tan into sin_turns, cos_turns and tan_turns for clarity.
+    Removed functions already available in other better made standard modules,
+        These are: floor, ceil, round, trunc, sqrt
+    Added auto detection of math constants, so we don't inadvertently replace them,
+        These are: PI, TAU, E, SQRT2, SQRT3, DEG2RAD, DEG2TURNS, RAD2DEG, RAD2TURNS, TURNS2DEG, TURNS2RAD.
+    Renamed sin, cos and tan into sin_turns, cos_turns and tan_turns for clarity and to avoid conflicts with other modules.
     Added support for hsv colors.
     Added vec2/3/4_length_squared functions.
     Changed inputs to functions vec2_length, vec3_length, vec2_normalize, vec3_normalize, vec4_normalize:
         They will now take as input a default value to return if the vector cannot be normalized, forcing you to think about it, which reduces problem when writing code.
     Added vec2_random, vec3_random and vec4_random.
     Renamed determinant to mat4_determinant.
-    Added many geometric algebra functions.
+    Added many basic geometric algebra functions.
 
 str.h:
     Added str_count(...) to count how many times a character is inside a string.
