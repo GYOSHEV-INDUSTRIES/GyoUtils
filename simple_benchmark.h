@@ -43,75 +43,42 @@ void print_benchmark_time(u64 cycles) {
     print("% s", time);
 }
 
-void print_benchmark_times(u64 min_cycles, u64 avg_cycles, u64 max_cycles) {
-    u64 cpu_frequency = estimate_cpu_frequency();
-    
-    f64 min_time = min_cycles * 1000000000.0f / cpu_frequency;
-    f64 avg_time = avg_cycles * 1000000000.0f / cpu_frequency;
-    f64 max_time = max_cycles * 1000000000.0f / cpu_frequency;
-    if(min_time < 1000) { print("%, %, % (ns)", min_time, avg_time, max_time); return; }
-    
-    min_time /= 1000;
-    avg_time /= 1000;
-    max_time /= 1000;
-    if(min_time < 1000) { print("%, %, % (us)", min_time, avg_time, max_time); return; }
-    
-    min_time /= 1000;
-    avg_time /= 1000;
-    max_time /= 1000;
-    if(min_time < 1000) { print("%, %, % (ms)", min_time, avg_time, max_time); return; }
-    
-    min_time /= 1000;
-    avg_time /= 1000;
-    max_time /= 1000;
-    print("%, %, % (s)", min_time, avg_time, max_time);
-}
 
 /*
 Runs a given function a given number of times with the given inputs.
 If you function returns void you should use BENCHMARK_VOID_WITH_COUNT.
 Usage: BENCHMARK_WITH_COUNT(10000, func_to_run, input1, input2);
 */
-// TODO(cogno): avg and max are useless, remove
 #define BENCHMARK_WITH_COUNT(count, func_name, ...) \
 do { \
     u64 min_cycles = MAX_U64; \
-    u64 max_cycles = 0; \
-    u64 total_cycles = 0; \
     for(int i = 0; i < count; i++) { \
         u64 start = read_cpu_timer(); \
         volatile auto temp = func_name(__VA_ARGS__); \
         u64 current_cycles = read_cpu_timer() - start; \
         if(current_cycles < min_cycles) min_cycles = current_cycles; \
-        if(current_cycles > max_cycles) max_cycles = current_cycles; \
-        total_cycles += current_cycles; \
     } \
     printf("function '%s' x%-10d ", STRING_JOIN( STRING_JOIN( STRING_JOIN(#func_name, "("), #__VA_ARGS__  ) , ")" ), count); \
-    printsl("|> cycles (min, avg, max): %, %, %", min_cycles, total_cycles / count, max_cycles ); \
-    printsl(" | time (min, avg, max): "); \
-    print_benchmark_times(min_cycles, total_cycles / count, max_cycles); \
+    printsl("|> min cycles: %", min_cycles); \
+    printsl(" | min time: "); \
+    print_benchmark_time(min_cycles); \
 } while(0)
 
 // alternative to BENCHMARK_WITH_COUNT for functions returning void,
 // if your function returns something you should use BENCHMARK_WITH_COUNT
-// TODO(cogno): avg and max are useless, remove
 #define BENCHMARK_VOID_WITH_COUNT(count, func_name, ...) \
 do { \
     u64 min_cycles = MAX_U64; \
-    u64 max_cycles = 0; \
-    u64 total_cycles = 0; \
     for(int i = 0; i < count; i++) { \
         u64 start = read_cpu_timer(); \
         func_name(__VA_ARGS__); \
         u64 current_cycles = read_cpu_timer() - start; \
         if(current_cycles < min_cycles) min_cycles = current_cycles; \
-        if(current_cycles > max_cycles) max_cycles = current_cycles; \
-        total_cycles += current_cycles; \
     } \
     printf("function '%s' x%-10d ", STRING_JOIN( STRING_JOIN( STRING_JOIN(#func_name, "("), #__VA_ARGS__  ) , ")" ), count); \
-    printsl("|> cycles (min, avg, max): %, %, %", min_cycles, total_cycles / count, max_cycles ); \
-    printsl(" | time (min, avg, max): "); \
-    print_benchmark_times(min_cycles, total_cycles / count, max_cycles); \
+    printsl("|> min cycles: %", min_cycles); \
+    printsl(" | min time: "); \
+    print_benchmark_time(min_cycles); \
 } while(0)
 
 /*
@@ -130,57 +97,47 @@ BENCHMARK_VOID_MANY_INPUTS(10000, func_to_test, "a", "a string", "a longer strin
 #define GET_FIRST(PAR, ...) PAR
 #define HAS_PARAMETER(...) GET_FIRST(placeholder, ##__VA_ARGS__, 0)
 
-// TODO(cogno): avg and max are useless, remove
 #define BENCHMARK_VOID_MANY_INPUTS(count, func_name, ...) \
 do { \
     decltype(MSVC_BUG(GET_FIRST, (__VA_ARGS__))) tests_inputs[] = {__VA_ARGS__}; \
     const char* tests_inputs_names[] = {STRINGIFY(__VA_ARGS__)}; \
     const int TESTS_INPUTS_COUNT = NUM_ARGS(__VA_ARGS__); \
     u64 tests_mins[TESTS_INPUTS_COUNT] = {}; \
-    u64 tests_maxs[TESTS_INPUTS_COUNT] = {}; \
-    u64 tests_sums[TESTS_INPUTS_COUNT] = {}; \
     for(int test_index = 0; test_index < TESTS_INPUTS_COUNT; test_index++) { \
         for(int rep = 0; rep < count; rep++) { \
             u64 start = read_cpu_timer(); \
             func_name(tests_inputs[test_index]); \
             u64 current_cycles = read_cpu_timer() - start; \
             if(rep == 0 || current_cycles < tests_mins[test_index]) tests_mins[test_index] = current_cycles; \
-            if(current_cycles > tests_maxs[test_index]) tests_maxs[test_index] = current_cycles; \
-            tests_sums[test_index] += current_cycles; \
         } \
         print("completed testing with input %", tests_inputs_names[test_index]); \
     } \
     print("function '%' tested x% times", STRING_JOIN( STRING_JOIN( STRING_JOIN(#func_name, "("), #__VA_ARGS__  ) , ")" ), count); \
     for(int i = 0; i < TESTS_INPUTS_COUNT; i++) { \
-        print("input '%': min=%, avg=%, max=% cycles", tests_inputs_names[i], tests_mins[i], tests_sums[i] / count, tests_maxs[i]); \
+        print("input '%': min=% cycles", tests_inputs_names[i], tests_mins[i]); \
     } \
 } while (0)
 
 // alternative to BENCHMARK_VOID_MANY_INPUTS for functions that return something,
 // we use volatile so the code doesn't get optimized away
-// TODO(cogno): avg and max are useless, remove
 #define BENCHMARK_MANY_INPUTS(count, func_name, ...) \
 do { \
     decltype(MSVC_BUG(GET_FIRST, (__VA_ARGS__))) tests_inputs[] = {__VA_ARGS__}; \
     const char* tests_inputs_names[] = {STRINGIFY(__VA_ARGS__)}; \
     const int TESTS_INPUTS_COUNT = NUM_ARGS(__VA_ARGS__); \
     u64 tests_mins[TESTS_INPUTS_COUNT] = {}; \
-    u64 tests_maxs[TESTS_INPUTS_COUNT] = {}; \
-    u64 tests_sums[TESTS_INPUTS_COUNT] = {}; \
     for(int test_index = 0; test_index < TESTS_INPUTS_COUNT; test_index++) { \
         for(int rep = 0; rep < count; rep++) { \
             u64 start = read_cpu_timer(); \
             volatile auto temp = func_name(tests_inputs[test_index]); \
             u64 current_cycles = read_cpu_timer() - start; \
             if(rep == 0 || current_cycles < tests_mins[test_index]) tests_mins[test_index] = current_cycles; \
-            if(current_cycles > tests_maxs[test_index]) tests_maxs[test_index] = current_cycles; \
-            tests_sums[test_index] += current_cycles; \
         } \
         print("completed testing with input %", tests_inputs_names[test_index]); \
     } \
     print("function '%' tested x% times", STRING_JOIN( STRING_JOIN( STRING_JOIN(#func_name, "("), #__VA_ARGS__  ) , ")" ), count); \
     for(int i = 0; i < TESTS_INPUTS_COUNT; i++) { \
-        print("input '%': min=%, avg=%, max=% cycles", tests_inputs_names[i], tests_mins[i], tests_sums[i] / count, tests_maxs[i]); \
+        print("input '%': min=% cycles", tests_inputs_names[i], tests_mins[i]); \
     } \
 } while (0)
 
@@ -191,14 +148,11 @@ If your function returns void you should use BENCHMARK_VOID_FUNC.
 
 Usage: BENCHMARK_FUNC(func_to_test, input_to_func);
 */
-// TODO(cogno): avg and max are useless, remove
 #define BENCHMARK_FUNC(func_name, ...) \
 { \
     u64 freq = estimate_cpu_frequency(); \
     u64 timer_start = read_cpu_timer(); \
     u64 min_time = MAX_U64; \
-    u64 max_time = 0; \
-    u64 total_time = 0; \
     u64 count = 0; \
     while(true) { \
         u64 current_time = read_cpu_timer(); \
@@ -213,26 +167,19 @@ Usage: BENCHMARK_FUNC(func_to_test, input_to_func);
             timer_start = read_cpu_timer(); \
             print("new min time: %", min_time); \
         } \
-        if(elapsed_time > max_time) max_time = elapsed_time; \
-        total_time += elapsed_time; \
         count++; \
     } \
     print("function '%' tested x% times", STRING_JOIN( STRING_JOIN( STRING_JOIN(#func_name, "("), #__VA_ARGS__  ) , ")" ), count); \
     print("    min: % cycles", min_time); \
-    print("    avg: % cycles", total_time / count); \
-    print("    max: % cycles", max_time); \
 }
 
 // Alternative to BENCHMARK_FUNC for functions returning void,
 // if your function returns something you should use BENCHMARK_FUNC
-// TODO(cogno): avg and max are useless, remove
 #define BENCHMARK_VOID_FUNC(func_name, ...) \
 { \
     u64 freq = estimate_cpu_frequency(); \
     u64 timer_start = read_cpu_timer(); \
     u64 min_time = MAX_U64; \
-    u64 max_time = 0; \
-    u64 total_time = 0; \
     u64 count = 0; \
     while(true) { \
         u64 current_time = read_cpu_timer(); \
@@ -247,14 +194,10 @@ Usage: BENCHMARK_FUNC(func_to_test, input_to_func);
             timer_start = read_cpu_timer(); \
             print("new min time: %", min_time); \
         } \
-        if(elapsed_time > max_time) max_time = elapsed_time; \
-        total_time += elapsed_time; \
         count++; \
     } \
     print("function '%' tested x% times", STRING_JOIN( STRING_JOIN( STRING_JOIN(#func_name, "("), #__VA_ARGS__  ) , ")" ), count); \
     print("    min: % cycles", min_time); \
-    print("    avg: % cycles", total_time / count); \
-    print("    max: % cycles", max_time); \
 }
 
 // TODO(cogno): change BENCHMARK_COMPARE_VOID and BENCHMARK_COMPARE to continue running until they have 10 seconds of the same best time
