@@ -9,8 +9,7 @@ In this file:
 */
 
 #ifndef DISABLE_INCLUDES
-    // Todo(Quattro) create our memcpy implementation
-    #include <string.h>
+    #include <string.h> // for memcpy
 #endif
 
 #ifndef GYOFIRST
@@ -64,16 +63,15 @@ int c_string_length(const char* s) {
     return len - 1;
 }
 
-//TODO(cogno): test all of this file
-
-//TODO(cogno): more unicode support (currently str kind of does not support it, I mean utf8 is just an array of bytes but these functions don't take it into account so they might be wrong, alternatively we can make 2 different strings, one with unicode and one without, it might make stuff a lot simpler, I'd say str and unicode_str)
-//TODO(cogno): str substring
-//TODO(cogno): str split all
-//TODO(cogno): str parse to s32
-//TODO(cogno): str parse to float/double
-//TODO(cogno): str is s32, float, maybe even variants like s8, u8, s16, u16 ?
-//TODO(cogno): str is alphanumeric (?)
-//TODO(cogno): str is whitespace (?)
+// nice things to have but which we haven't used yet, we'll do these when we need. If you want these you can implement them and send the code to us!
+//API(cogno): more unicode support (currently str kind of does not support it, I mean utf8 is just an array of bytes but these functions don't take it into account so they might be wrong, alternatively we can make 2 different strings, one with unicode and one without, it might make stuff a lot simpler, I'd say str and unicode_str)
+//API(cogno): str substring
+//API(cogno): str split all
+//API(cogno): str parse to s32
+//API(cogno): str parse to float/double
+//API(cogno): str is s32, float, maybe even variants like s8, u8, s16, u16 ?
+//API(cogno): str is alphanumeric (?)
+//API(cogno): str is whitespace (?)
 
 struct str{
     u8* ptr;
@@ -583,7 +581,7 @@ void str_builder_append(StrBuilder* b, vec4 to_append) {
     str_builder_append(b, ')');
 }
 
-//TODO(cogno): str_builder append mat4, col, etc.
+//API(cogno): str_builder append mat4, col, etc.
 #endif
 
 // NOTE(cogno): all append_raw are little-endian
@@ -633,11 +631,11 @@ void str_builder_append_raw(StrBuilder* b, vec4 to_add) {
     str_builder_append_raw(b, to_add.z);
     str_builder_append_raw(b, to_add.w);
 }
-// TODO(cogno): str builder append raw mat4, col etc.
+// API(cogno): str builder append raw mat4, col etc.
 #endif
 
-// TODO(cogno): string builder insert at index
-// TODO(cogno): string builder replace
+// API(cogno): string builder insert at index
+// API(cogno): string builder replace
 
 void str_builder_remove_last_bytes(StrBuilder* b, s32 bytes_to_remove) { b->size -= bytes_to_remove; }
 
@@ -796,11 +794,11 @@ bool str_parser_parse_u64(StrParser* p, u64* out) {
 }
 
 // parse functions convert str to types and return them
-// TODO(cogno): parse s8
-// TODO(cogno): parse s16
-// TODO(cogno): parse s32
-// TODO(cogno): parse s64
-// TODO(cogno): parse f32
-// TODO(cogno): parse f64
+// API(cogno): parse s8
+// API(cogno): parse s16
+// API(cogno): parse s32
+// API(cogno): parse s64
+// API(cogno): parse f32
+// API(cogno): parse f64
 
 

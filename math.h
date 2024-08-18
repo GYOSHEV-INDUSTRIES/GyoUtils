@@ -43,7 +43,7 @@ inline float remap(float in, float old_from, float old_to, float new_from, float
     return (in - old_from) / (old_to - old_from) * (new_to - new_from) + new_from;
 }
 
-// API(cogno): if already defined don't create them (or undef them?)
+// API(cogno): do we really need to implement these?
 #define min(a, b) (((a) < (b)) ? (a) : (b))
 #define max(a, b) (((a) < (b)) ? (b) : (a))
 #define abs(a) (((a) >= 0) ? (a) : (-(a)))
@@ -106,8 +106,7 @@ inline float sin_turns(float angle) {
     return _sin_internal(angle);
 }
 
-// Todo(Quattro): implement other trigonometric functions
-// API(cogno): if already defined don't create them (or undef them?)
+// API(cogno): implement other trigonometric functions as needed
 inline float cos_turns(float angle)  { return sin_turns(angle + 0.25f); }
 inline float tan_turns(float angle)  { return sin_turns(angle) / cos_turns(angle); }
 inline float cot_turns(float angle)  { return cos_turns(angle) / sin_turns(angle); }
@@ -703,7 +702,7 @@ float vec2_wedge(vec2 a, vec2 b) { return a.x * b.y - a.y * b.x; }
 inline float vec2_signed_angle_between(vec2 a, vec2 b) {
     float dot = vec2_dot(a, b);
     float det = vec2_wedge(a, b);
-    float angle = atan2f(det, dot) * RAD2DEG; //API(cogno): maybe atan2 is better?
+    float angle = atan2f(det, dot) * RAD2DEG;
     return angle;
 }
 
@@ -774,7 +773,7 @@ void printsl_custom(trivec t) {
     printsl("%", t.xyz);
 }
 
-// TODO(cogno): bivec + bivec, bivec * scalar and the rest
+// API(cogno): add bivec + bivec, bivec * scalar and the rest as needed
 inline bivec operator+(bivec a, bivec b) { return {a.xy + b.xy, a.yz + b.yz, a.xz + b.xz}; }
 inline bivec operator-(bivec a, bivec b) { return {a.xy - b.xy, a.yz - b.yz, a.xz - b.xz}; }
 inline bivec operator-(bivec a)          { return {-a.xy, -a.yz, -a.xz}; }

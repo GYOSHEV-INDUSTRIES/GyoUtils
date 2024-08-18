@@ -76,7 +76,7 @@ typedef double   f64;
 // print("values a=%, b=%", a, b);
 //
 
-// TODO(cogno): also convert, f32, f64
+// API(cogno): also convert, f32, f64
 int u64_to_char_ptr(u64 value, char* dest) {
     char temp[22];
     char* temp_ptr = temp;
