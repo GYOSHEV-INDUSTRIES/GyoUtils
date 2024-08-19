@@ -82,11 +82,30 @@ HashMap<T, U> make_hashmap(int size) { return make_hashmap<T, U>(size, default_a
 
 // djb2 hashing taken from http://www.cse.yorku.ca/~oz/hash.html
 // API(cogno): we need to find a way to have more than one hashing algorithm, maybe let the user choose his own? either that or have a universal hashing algorithm
-u64 hash_default(u8* str, int size) {
+
+
+
+template<class T>
+u64 hash_default(T* str, int size){
     u64 hash = 5381;
 
     while (size-- > 0) {
-        u8 c = *str++;
+        u8 c = (u8)*str++;
+        hash = ((hash << 5) + hash) + c; /* hash * 33 + c */
+    }
+
+    return hash;
+}
+
+
+template<>
+u64 hash_default<str>(str* string, int size) {
+    u64 hash = 5381;
+
+    str string_cp = *string;
+
+    while (string_cp.size-- > 0) {
+        u8 c = *string_cp.ptr++;
         hash = ((hash << 5) + hash) + c; /* hash * 33 + c */
     }
 
@@ -97,7 +116,7 @@ template<typename T, typename U>
 void map_insert(HashMap<T, U>* map, T key, U value) {
     HashPair<T, U> p = {key, value};
     
-    u64 hash = hash_default((u8*)&key, sizeof(key));
+    u64 hash = hash_default(&key, sizeof(key));
     
     int matrix_index = hash % map->matrix_size;
     ASSERT_BOUNDS(matrix_index, 0, map->matrix_size);
@@ -136,7 +155,7 @@ void map_insert(HashMap<T, U>* map, T key, U value) {
 // API(cogno): I wish we could U map_find(T key); but we can't return null or something like that because if that's the value it was added then we have no way to know if we couldn't find it or if we could find it and it was null...
 template<typename T, typename U>
 bool map_find(HashMap<T, U>* map, T key, U* out_value) {
-    u64 hash = hash_default((u8*)&key, sizeof(key));
+    u64 hash = hash_default(&key, sizeof(key));
     int index = hash % map->matrix_size;
     ASSERT_BOUNDS(index, 0, map->matrix_size);
     Finder* current_finder = &map->matrix_ptr[index];

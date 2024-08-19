@@ -367,7 +367,6 @@ bool str_matches(str a, str b) {
     return true;
 }
 
-
 /*
 StrBuilder, used to dinamically construct str.
 Since str is an array of bytes you can also use this to construct binary data (like files)
@@ -794,6 +793,9 @@ bool str_parser_parse_u64(StrParser* p, u64* out) {
     }
     return true;
 }
+
+inline bool operator ==(str a, str b) {return str_matches(a,b);}
+
 
 // parse functions convert str to types and return them
 // TODO(cogno): parse s8
