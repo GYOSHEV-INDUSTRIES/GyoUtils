@@ -5,7 +5,7 @@
 In this file:
 - Many math functions! saying all of them would be too much. Here's the more unique/important ones:
 - sin and cos use turns instead of radians/degrees (1 turn = 360 degrees)
-- vec2, vec3, vec4 and mat4, vec4 and mat4 use sse SIMD to speed them up substantially
+- vec2, vec3, vec4 and mat4, vec4 and mat4 use sse SIMD to speed them up substantially.
 - Rotor, a replacement to Quaternion from a branch of math called Geometric Algebra.
   Can be used in the same way as Quaternions, but often provide faster code, and they're easier to understand!
 */

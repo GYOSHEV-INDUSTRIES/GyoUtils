@@ -3,7 +3,6 @@
 /*
 In this file:
 - Array, a simple replacement to std::vector
-- Range macro to also simplify basic for cycle syntax
 */
 
 #ifndef GYOFIRST
