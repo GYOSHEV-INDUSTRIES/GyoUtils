@@ -82,9 +82,6 @@ HashMap<T, U> make_hashmap(int size) { return make_hashmap<T, U>(size, default_a
 
 // djb2 hashing taken from http://www.cse.yorku.ca/~oz/hash.html
 // API(cogno): we need to find a way to have more than one hashing algorithm, maybe let the user choose his own? either that or have a universal hashing algorithm
-
-
-
 template<class T>
 u64 hash_default(T* str, int size){
     u64 hash = 5381;
@@ -96,7 +93,6 @@ u64 hash_default(T* str, int size){
 
     return hash;
 }
-
 
 template<>
 u64 hash_default<str>(str* string, int size) {
@@ -111,6 +107,15 @@ u64 hash_default<str>(str* string, int size) {
 
     return hash;
 }
+
+// API(cogno): Is it a good idea to have str == str operator? I don't think so.
+// I would prefer to have to explicitly tell map_insert to use str_equals
+// and then have a template which defaults to that, something like this:
+// template<typename U> void map_insert(HashMap<str, U>* map, str key, U value) {
+//   map_insert(map, key, value, str_hash, str_equals);
+//}
+// this way the user can also implement both his own hashing and his own equals for his own types
+//               - Cogno 2024/08/28
 
 template<typename T, typename U>
 void map_insert(HashMap<T, U>* map, T key, U value) {
