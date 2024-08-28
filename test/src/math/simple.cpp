@@ -115,7 +115,6 @@ void test_simple_math(){
         REQUIRE(1.0f / 2  * TURNS2RAD, PI);
         REQUIRE(1.0f      * TURNS2RAD, 2 * PI);
     )
-    // Todo(Quattro) lerp
     SECTION("sin",
         REQUIRE(sin(-1.25), -1);
         REQUIRE(sin(-1), 0);
@@ -155,7 +154,6 @@ void test_simple_math(){
         REQUIRE(roundn(tan(60 * DEG2TURNS), 2), roundn(SQRT3, 2));
         REQUIRE(roundn(tan(30 * DEG2TURNS), 2), roundn(SQRT3 / 3, 2));
     )
-    // Todo(Quattro) cot
     SECTION("sqrt",
         REQUIRE(sqrt(4), 2);
         REQUIRE(sqrt(9), 3);
