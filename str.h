@@ -407,9 +407,8 @@ void str_builder_clear(StrBuilder* b) {
 }
 
 StrBuilder str_builder_copy(StrBuilder* b) {
-    // TODO(cogno): use b->alloc
     StrBuilder copy;
-    copy.ptr = (u8*)malloc(b->reserved_size);
+    copy.ptr = (u8*)b->alloc.handle(AllocOp::ALLOC, b->alloc.data, 0, b->reserved_size * sizeof(u8), NULL);
     copy.size = b->size;
     copy.reserved_size = b->reserved_size;
     memcpy(copy.ptr, b->ptr, b->size);
