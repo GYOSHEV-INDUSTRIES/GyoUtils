@@ -85,6 +85,7 @@ str.h:
     Removed str_new_alloc, you can use str_copy instead (since it copies the underlying characters too) (remember that const char* can be implicitly cast to str, so you should be good with just renaming str_new_alloc into str_copy).
     Changed str_copy, str_concat and str_to_c_string to use a given allocator (or the default allocator if nothing is specified).
     Removed each function that takes a const char* as input (since const char* can be cast to str anyway). Your code shouldn't change at all (because instead of calling the function with const char* your code should automatically cast into str and call the real function).
+    Added str_builder_count_right(...) to count how many chars are to the right of a given one to find.
 
 simple_benchmark.h:
     In all benchmarking functions removed avg and max statistics.

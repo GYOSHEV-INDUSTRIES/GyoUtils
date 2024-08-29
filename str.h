@@ -638,6 +638,14 @@ void str_builder_append_raw(StrBuilder* b, vec4 to_add) {
 
 void str_builder_remove_last_bytes(StrBuilder* b, s32 bytes_to_remove) { b->size -= bytes_to_remove; }
 
+// counts how many bytes are right of the last <to_find> character in the string,
+// returns -1 if <to_find> is not found
+int str_builder_count_right(StrBuilder* b, u8 to_find) {
+    for(int i = b->size - 1; i >= 0; i--) {
+        if(b->ptr[i] == to_find) return b->size - i - 1;
+    }
+    return -1;
+}
 
 /*
 StrParser, used to dinamically deconstruct str.
