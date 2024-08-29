@@ -647,6 +647,11 @@ int str_builder_count_right(StrBuilder* b, u8 to_find) {
     return -1;
 }
 
+void str_builder_remove_right(StrBuilder* b, u8 to_find) {
+    auto size_found = str_builder_count_right(b, to_find);
+    if (size_found > 0) str_builder_remove_last_bytes(b, size_found);
+}
+
 /*
 StrParser, used to dinamically deconstruct str.
 Since str is an array of bytes you can also use this to parse binary data (like files)
