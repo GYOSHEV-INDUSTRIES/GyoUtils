@@ -88,6 +88,7 @@ void* bump_handle(AllocOp op, void* alloc, s32 old_size, s32 size_requested, voi
                 ASSERT(*current_tracking_index + 1 < MAX_TRACKING_INFOS, "OUT OF MEMORY");
                 TrackingInfo t = {};
                 t.alloc_block = allocator->data;
+                t.block_size = allocator->size_available;
                 t.start_offset = allocator->curr_offset;
                 t.allocation_size = size_requested;
                 t.color = color_lerp_hsv(BLUE, RED, (float)size_requested / 100000000);

@@ -24,6 +24,7 @@ ENUM(AllocOp,
 
 struct TrackingInfo {
     void* alloc_block;
+    int block_size; // size of the whole memory block
     int start_offset;
     int allocation_size;
     col color;
