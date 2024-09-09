@@ -22,6 +22,8 @@ ENUM(AllocOp,
     GET_NAME
 );
 
+// API(cogno): can we have an allocator type so it's easier to find it?
+// API(cogno): can we have an allocator name so it's easier to find it? maybe a name per allocator?
 struct TrackingInfo {
     void* alloc_block;
     int block_size; // size of the whole memory block
