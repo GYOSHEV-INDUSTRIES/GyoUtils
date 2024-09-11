@@ -46,7 +46,7 @@ inline float remap(float in, float old_from, float old_to, float new_from, float
 // API(cogno): do we really need to implement these?
 #define min(a, b) (((a) < (b)) ? (a) : (b))
 #define max(a, b) (((a) < (b)) ? (b) : (a))
-#define abs(a) (((a) >= 0) ? (a) : (-(a)))
+// #define abs(a) (((a) >= 0) ? (a) : (-(a)))
 #define sgn(a) (((a) == 0) ? (0) : (((a) > 0) ? 1 : -1)) // API(cogno): maybe have sgn(0)==1 and sgn_with_zero(0)==0? check how this is used!
 #define clamp(val, min_, max_) (max(min((val), (max_)), (min_)))
 #define fmod(x, y) ((x) - trunc((x) / (y)) * (y))
