@@ -91,7 +91,9 @@ void* bump_handle(AllocOp op, void* alloc, s32 old_size, s32 size_requested, voi
                 t.block_size = allocator->size_available;
                 t.start_offset = allocator->curr_offset;
                 t.allocation_size = size_requested;
+                #ifdef GYOMATH
                 t.color = color_lerp_hsv(BLUE, RED, (float)size_requested / 100000000);
+                #endif
                 tracking_infos[*current_tracking_index] = t;
                 *current_tracking_index = *current_tracking_index + 1;
             }

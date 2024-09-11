@@ -29,7 +29,9 @@ struct TrackingInfo {
     int block_size; // size of the whole memory block
     int start_offset;
     int allocation_size;
+    #ifdef GYOMATH
     col color;
+    #endif
 };
 
 
