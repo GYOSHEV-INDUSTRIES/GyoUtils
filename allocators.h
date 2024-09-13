@@ -29,12 +29,71 @@ struct TrackingInfo {
     int block_size; // size of the whole memory block
     int start_offset;
     int allocation_size;
-    #ifdef GYOMATH
-    col color;
-    #endif
 };
 
+#define TRACKING_INFO_ENABLED true // set to false to disable tracking info
+TrackingInfo* tracking_infos = NULL;
+int* current_tracking_index = NULL;
+const int MAX_TRACKING_INFOS = 200000;
 
+
+inline void maybe_add_tracking_info(void* block_start, int block_size, int alloc_start, int alloc_size) {
+    #if TRACKING_INFO_ENABLED
+    if (tracking_infos != NULL) {
+        ASSERT(*current_tracking_index + 1 < MAX_TRACKING_INFOS, "OUT OF TRACKING INFO MEMORY");
+        TrackingInfo t = {};
+        t.alloc_block = block_start;
+        t.block_size = block_size;
+        t.start_offset = alloc_start;
+        t.allocation_size = alloc_size;
+        tracking_infos[*current_tracking_index] = t;
+        *current_tracking_index = *current_tracking_index + 1;
+    }
+    #endif
+}
+
+inline void maybe_remove_tracking_info(void* alloc_to_remove) {
+    #if TRACKING_INFO_ENABLED
+    if (tracking_infos != NULL) {
+        for(int i = *current_tracking_index - 1; i >= 0; i--) {
+            auto data = tracking_infos[i];
+            void* previous_allocation = (void*)((u8*)data.alloc_block + data.start_offset);
+            if (previous_allocation != alloc_to_remove) continue; // keep data on other allocations
+            
+            // we have found the allocations to remove, do so!
+            // aka move everything from where we are to the end of the array back 1
+            for(s32 j = i; j < *current_tracking_index - 1; j++) {
+                tracking_infos[j] = tracking_infos[j + 1];
+            }
+            
+            *current_tracking_index = *current_tracking_index - 1; // new free spot!
+            break; // there cannot be 2 allocations on the same spot, so we're done.
+        }
+    }
+    #endif
+}
+
+inline void maybe_remove_all_allocations(void* alloc_block_to_remove) {
+    #if TRACKING_INFO_ENABLED
+    if (tracking_infos != NULL) {
+        // remove all useless allocations data from the array
+        // PERF(cogno): I wonder if we can make this faster...
+        for(int i = *current_tracking_index - 1; i >= 0; i--) {
+            auto data = tracking_infos[i];
+            if (data.alloc_block != alloc_block_to_remove) continue; // keep data on other allocators
+            
+            // this data is from this allocator, but we just reset it, so we should clear it off!
+            // aka move everything from where we are to the end of the array back 1
+            for(s32 j = i; j < *current_tracking_index - 1; j++) {
+                tracking_infos[j] = tracking_infos[j + 1];
+            }
+            
+            *current_tracking_index = *current_tracking_index - 1; // new free spot!
+            // we can have multiple allocations in the same block, check if we need to remove others.
+        }
+    }
+    #endif
+}
 
 #ifndef GYO_BUMP
     #include "bump.h"
@@ -72,9 +131,21 @@ Allocator make_allocator(Arena* allocator) {
 void* default_handle(AllocOp op, void* allocator_data, s32 old_size, s32 size_requested, void* ptr_request) {
     switch (op) {
         case AllocOp::GET_NAME: return (void*)"Default Allocator";
-        case AllocOp::ALLOC: return calloc(size_requested, sizeof(u8));
-        case AllocOp::REALLOC: return realloc(ptr_request, size_requested);
-        case AllocOp::FREE: free(ptr_request); return NULL;
+        case AllocOp::ALLOC: {
+            auto* allocated = calloc(size_requested, sizeof(u8));
+            maybe_add_tracking_info(allocated, size_requested, 0, size_requested);
+            return allocated;
+        }
+        case AllocOp::REALLOC: {
+            auto* reallocated = realloc(ptr_request, size_requested);
+            // TODO(cogno): handle tracking of reallocs, how should we do it?
+            return reallocated;
+        }
+        case AllocOp::FREE: {
+            free(ptr_request);
+            maybe_remove_tracking_info(ptr_request);
+            return NULL;
+        }
         // API(cogno): maybe we can make a FREE_ALL if we track each allocation (we can make each block have a header or we can make a list of each allocation on the side..., I would go with the headers...)
         default: return NULL;
     }

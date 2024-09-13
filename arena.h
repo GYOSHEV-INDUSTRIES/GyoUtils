@@ -108,6 +108,8 @@ void* arena_handle(AllocOp op, void* alloc, s32 old_size, s32 size_requested, vo
                 memcpy(new_memory, ptr_request, amount_to_copy);
             }
             
+            maybe_add_tracking_info(allocator->data, allocator->size_available, allocator->curr_offset, size_requested);
+
             allocator->prev_offset = allocator->curr_offset;
             allocator->curr_offset += size_requested;
             return (void*)new_memory;
@@ -120,6 +122,8 @@ void* arena_handle(AllocOp op, void* alloc, s32 old_size, s32 size_requested, vo
             while(header_of_this_block != NULL) {
                 ArenaHeader* header_of_prev_block = header_of_this_block->previous_block;
                 free((void*)header_of_this_block); // TAG: MaybeWeShouldDoThisBetter
+                int header_size = sizeof(ArenaHeader) + DEFAULT_ALIGNMENT % sizeof(ArenaHeader);
+                maybe_remove_all_allocations((void*)(header_of_this_block + header_size));
                 header_of_this_block = header_of_prev_block;
             }
             return NULL;
