@@ -65,13 +65,6 @@ void test_simple_math(){
         REQUIRE(clamp(3, -2, 2), 2);
         REQUIRE(clamp(-4, -2, 2), -2);
     )
-    SECTION("fmod",
-        REQUIRE(fmod(1.0f, 3.0f), 1.0f);
-        REQUIRE(fmod(1.23f, 2.34f), 1.23f);
-        REQUIRE(roundn(fmod(5.24f, 1.0f), 2), 0.24f);
-        REQUIRE(fmod(-0.1f, 0.5f), -0.1f);
-        REQUIRE(roundn(fmod(-2.53f, 0.5f), 2), -0.03f);
-    )
     SECTION("constants",
         REQUIRE(30  * DEG2RAD, PI / 6);
         REQUIRE(45  * DEG2RAD, PI / 4);

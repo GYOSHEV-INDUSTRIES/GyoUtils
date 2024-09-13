@@ -37,7 +37,7 @@ BREAKING CHANGES:
 - renamed sin, cos and tan into sin_turns, cos_turns and tan_turns for clarity.
 - changed inputs to functions vec2_length, vec3_length, vec2_normalize, vec3_normalize, vec4_normalize.
 - renamed determinant to mat4_determinant.
-- removed some basic functions in math.h (floor, ceil, round, trunc, sqrt).
+- removed some basic functions in math.h (floor, ceil, round, trunc, sqrt, abs, fmod).
 - in benchmarks removed avg and max cycle counts/timings, since that information is practically useless, more info below.
 
 NEW FILE: win64_basic.h:
@@ -67,7 +67,7 @@ math.h:
     Fixed wrong calculations for matrix functions perspective(...) and ortho(...).
     Fixed wrong calculations for mat4_determinant(...) and mat4_inverse(...).
     Removed functions already available in other better made standard modules,
-        These are: floor, ceil, round, trunc, sqrt
+        These are: floor, ceil, round, trunc, sqrt, max, fmod
     Added auto detection of math constants, so we don't inadvertently replace them,
         These are: PI, TAU, E, SQRT2, SQRT3, DEG2RAD, DEG2TURNS, RAD2DEG, RAD2TURNS, TURNS2DEG, TURNS2RAD.
     Renamed sin, cos and tan into sin_turns, cos_turns and tan_turns for clarity and to avoid conflicts with other modules.

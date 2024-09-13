@@ -12,6 +12,7 @@ In this file:
 
 #ifndef DISABLE_INCLUDES
     #include <smmintrin.h>
+    #include <cmath>
 #endif
 
 #ifndef GYOFIRST
@@ -26,10 +27,8 @@ inline u8 count_digits(u64 x){
     return n;
 }
 
-// TODO(cogno): count_digits for s64
-// TODO(cogno): count_digits for f64
-
 inline float npow(float x, u32 n){
+    // API(cogno): can't we use powf? and if we can't, can't we just return x**n?
     float res = x;
     for(u32 i = 1; i < n; i++){
         res *= x;
@@ -39,17 +38,15 @@ inline float npow(float x, u32 n){
 
 inline float roundn(float x, u32 n) { return roundf(x * npow(10, n)) / npow(10, n); }
 
+// API(cogno): remap macro?
 inline float remap(float in, float old_from, float old_to, float new_from, float new_to) {
     return (in - old_from) / (old_to - old_from) * (new_to - new_from) + new_from;
 }
 
-// API(cogno): do we really need to implement these?
 #define min(a, b) (((a) < (b)) ? (a) : (b))
 #define max(a, b) (((a) < (b)) ? (b) : (a))
-// #define abs(a) (((a) >= 0) ? (a) : (-(a)))
-#define sgn(a) (((a) == 0) ? (0) : (((a) > 0) ? 1 : -1)) // API(cogno): maybe have sgn(0)==1 and sgn_with_zero(0)==0? check how this is used!
+#define sgn(a) (((a) == 0) ? (0) : (((a) > 0) ? 1 : -1))
 #define clamp(val, min_, max_) (max(min((val), (max_)), (min_)))
-#define fmod(x, y) ((x) - trunc((x) / (y)) * (y))
 #define lerp(start, dest, t) (((dest) - (start)) * (t) + (start))
 #ifndef PI
     #define PI        (3.1415926535f)
@@ -319,9 +316,7 @@ inline vec4 remap(vec4 in, vec4 old_from, vec4 old_to, vec4 new_from, vec4 new_t
 
 inline float vec2_length_squared(vec2 v) { return v.x * v.x + v.y * v.y; }
 inline float vec3_length_squared(vec3 v) { return v.x * v.x + v.y * v.y + v.z * v.z; }
-inline float vec4_length_squared(vec4 v) {
-    return _mm_cvtss_f32(_mm_dp_ps(v.v, v.v, 0b11110001));
-}
+inline float vec4_length_squared(vec4 v) { return _mm_cvtss_f32(_mm_dp_ps(v.v, v.v, 0b11110001)); }
 
 inline float vec2_length(vec2 v) { return sqrtf(vec2_length_squared(v)); }
 inline float vec3_length(vec3 v) { return sqrtf(vec3_length_squared(v)); }
@@ -762,7 +757,8 @@ inline vec3 vec3_project_on_plane(vec3 to_project, vec3 plane_norm) {
 // 3D Geometric Algebra
 //
 
-struct bivec { float xy, yz, xz; }; // API(cogno): wouldn't it be better if we use vec3 so we don't have to convert back and forth?
+// API(cogno): wouldn't it be better if we use vec3 so we don't have to convert back and forth?
+struct bivec { float yz, xz, xy; }; // NOTE(cogno): order of elements is important for conversion (x becomes yz, since both are first elements don't have to be moved in memory, which is faster)
 struct trivec { float xyz; }; // API(cogno): wouldn't it be better to just use float so we don't have to convert back and forth?
 
 void printsl_custom(bivec b) {
@@ -795,6 +791,7 @@ bivec vec3_wedge(vec3 a, vec3 b) {
 }
 
 vec3 bivec_dual(bivec in) {
+    // API(cogno): if bivec is a union of vec3 we don't need this
     vec3 out = {};
     out.x = in.yz;
     out.y = in.xz;
@@ -803,6 +800,7 @@ vec3 bivec_dual(bivec in) {
 }
 
 bivec bivec_dual(vec3 in) {
+    // API(cogno): if bivec is a union of vec3 we don't need this
     bivec out = {};
     out.xy = in.z;
     out.yz = in.x;
