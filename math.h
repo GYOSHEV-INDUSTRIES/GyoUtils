@@ -214,11 +214,11 @@ struct mat4{
 };
 
 
-inline void printsl_custom(vec2 v) {buffer_append("(%.5f, %.5f)", v.x, v.y);}
-inline void printsl_custom(vec3 v) {buffer_append("(%.5f, %.5f, %.5f)", v.x, v.y, v.z);}
-inline void printsl_custom(vec4 v) {buffer_append("(%.5f, %.5f, %.5f, %.5f)", v.x, v.y, v.z, v.w);}
-inline void printsl_custom(col v)  {buffer_append("(%.2f, %.2f, %.2f, %.2f)", v.r, v.g, v.b, v.a);}
-inline void printsl_custom(mat4 m) {buffer_append("|%.5f %.5f %.5f %.5f|\n|%.5f %.5f %.5f %.5f|\n|%.5f %.5f %.5f %.5f|\n|%.5f %.5f %.5f %.5f|\n", m.m11, m.m12, m.m13, m.m14, m.m21, m.m22, m.m23, m.m24, m.m31, m.m32, m.m33, m.m34, m.m41, m.m42, m.m43, m.m44);}
+inline void printsl_custom(vec2 v) {_buffer_append("(%.5f, %.5f)", v.x, v.y);}
+inline void printsl_custom(vec3 v) {_buffer_append("(%.5f, %.5f, %.5f)", v.x, v.y, v.z);}
+inline void printsl_custom(vec4 v) {_buffer_append("(%.5f, %.5f, %.5f, %.5f)", v.x, v.y, v.z, v.w);}
+inline void printsl_custom(col v)  {_buffer_append("(%.2f, %.2f, %.2f, %.2f)", v.r, v.g, v.b, v.a);}
+inline void printsl_custom(mat4 m) {_buffer_append("|%.5f %.5f %.5f %.5f|\n|%.5f %.5f %.5f %.5f|\n|%.5f %.5f %.5f %.5f|\n|%.5f %.5f %.5f %.5f|\n", m.m11, m.m12, m.m13, m.m14, m.m21, m.m22, m.m23, m.m24, m.m31, m.m32, m.m33, m.m34, m.m41, m.m42, m.m43, m.m44);}
 
 
 inline vec2 operator +(vec2 a, vec2 b)  {return {a.x + b.x, a.y + b.y};}
