@@ -232,7 +232,6 @@ inline bool assert_func(bool expr, const char* expression_as_string, const char*
         print("    File: %", filename);
         print("    Line: %", line_count);
         print("    Function: %", function_name);
-        print("Stack Trace:"); // TODO(cogno): can we display it only when needed/when it actually works?
         DEBUG_BREAK;
         abort(); // so the stack trace works (exit(-1) or exit(0) don't)
     }
@@ -249,7 +248,6 @@ inline bool assert_func(bool expr, const char* expression_as_string, const char*
         print("    File: %", filename);
         print("    Line: %", line_count);
         print("    Function: %", function_name);
-        print("Stack Trace:"); // TODO(cogno): can we display it only when needed/when it actually works?
         DEBUG_BREAK;
         abort(); // so the stack trace works (exit(-1) or exit(0) don't)
     }

@@ -540,9 +540,30 @@ void str_builder_append(StrBuilder* b, f64 to_append) {
     str_builder_append(b, converted);
 }
 
+void str_builder_append_hex(StrBuilder* b, u64 to_append) {
+    char buff[20];
+    snprintf(buff, 20, "%04X_%04X_%04X_%04X", (u32)(to_append >> 48) & 0xffff, (u32)(to_append >> 32) & 0xffff, (u32)(to_append >> 16) & 0xffff, (u32)to_append & 0xffff);
+    str converted = buff;
+    str_builder_append(b, converted);
+}
+
 void str_builder_append_hex(StrBuilder* b, u32 to_append) {
-    char buff[6];
-    snprintf(buff, 6, "%04X", to_append);
+    char buff[12];
+    snprintf(buff, 12, "%04X_%04X", (to_append >> 16) & 0xffff, to_append & 0xffff);
+    str converted = buff;
+    str_builder_append(b, converted);
+}
+
+// converts the ptr to hex text, it will NOT read the contents of the ptr itself
+template<typename T> 
+void str_builder_append_ptr(StrBuilder* b, T* to_append) {
+    union Temp {
+        T* ptr;
+        u64 u64;
+    } t; // NOTE(cogno): if we cast T* to u64/u32 we might get a warning (which some projects turn into an error), so we use an union
+    t.ptr = to_append;
+    char buff[20];
+    snprintf(buff, 20, "%04X_%04X_%04X", (u32)(t.u64 >> 32) & 0xffff, (u32)(t.u64 >> 16) & 0xffff, (u32)t.u64 & 0xffff);
     str converted = buff;
     str_builder_append(b, converted);
 }

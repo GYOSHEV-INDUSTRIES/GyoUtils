@@ -87,6 +87,9 @@ str.h:
     Removed each function that takes a const char* as input (since const char* can be cast to str anyway). Your code shouldn't change at all (because instead of calling the function with const char* your code should automatically cast into str and call the real function).
     Added str_builder_count_right(...) to count how many chars are to the right of a given one to find.
     Added str_builder_remove_right(...) to remove from the last character to find to the right of it.
+    Added str_builder_append_ptr(..., T*) which will convert the pointer to text in the string.
+    Added str_builder_append_hex(..., u64)
+    Fixed str_builder_append_hex(..., u32) printing only a u16
 
 simple_benchmark.h:
     In all benchmarking functions removed avg and max statistics.
