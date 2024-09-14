@@ -4,8 +4,8 @@
 In this file:
 - unicode utility functions
 - str, a simple replacement to std::string, simply told, a ptr to char array + size, making them more useful in many situations.
-- str_builder, a simple way to dynamically construct str (since str is an array of bytes you can use str_builder to also build binary files and many other things!)
-- str_parser, a simple way to dynamically DEconstruct a str (since str is an array of bytes you can use str_parser to also parse binary files and many other things!)
+- StrBuilder, a simple way to dynamically construct str (since str is an array of bytes you can use str_builder to also build binary files and many other things!)
+- StrParser, a simple way to dynamically DEconstruct a str (since str is an array of bytes you can use str_parser to also parse binary files and many other things!)
 */
 
 #ifndef DISABLE_INCLUDES

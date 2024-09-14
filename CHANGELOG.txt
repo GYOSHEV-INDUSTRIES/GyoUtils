@@ -27,12 +27,13 @@ BREAKING CHANGES:
 - in str.h, removed str functions that take a const char* as input (since you can implicitly cast a const char* to str)
 - renamed dynamic_array.h into array.h
 - removed fixed_array.h (you can still use array.h to have fixed-size arrays)
-- renamed array_new into make_array.
-- renamed sin, cos and tan into sin_turns, cos_turns and tan_turns for clarity.
-- changed inputs to functions vec2_length, vec3_length, vec2_normalize, vec3_normalize, vec4_normalize.
-- renamed determinant to mat4_determinant.
-- removed some basic functions in math.h (floor, ceil, round, trunc, sqrt, abs, fmod).
+- in array.h renamed array_new into make_array.
+- in math.h renamed sin, cos and tan into sin_turns, cos_turns and tan_turns for clarity.
+- in math.h changed inputs to functions vec2_length, vec3_length, vec2_normalize, vec3_normalize, vec4_normalize.
+- in math.h renamed determinant to mat4_determinant.
+- in math.h removed some basic functions (floor, ceil, round, trunc, sqrt, abs, fmod).
 - in benchmarks removed avg and max cycle counts/timings, since that information is practically useless, more info below.
+- in win64_files.h renamed some functions.
 
 NEW FILE: win64_basic.h:
     created this file to hold basic and common windows functions.
@@ -90,6 +91,15 @@ simple_benchmark.h:
         These were previously included but they would always get ignored by advanced users. Most of the times you don't want to know how much time a function takes on average or in the worst case, because there are MANY factors you can't control that might affect the result (like the OS). Most of the times you don't want to know how fast a function is. What you actually want to know is how fast a function *can* go, to see if what you made is as fast as what you expected. If a function takes 1ms to execute you might consider that function pretty fast, but if a function that should take 10us takes 1ms to execute, then you made your function 100x slower than it should. Proper benchmarking is thus made by comparison, not by absolute values.
     Restructured BENCHMARK_COMPARE and BENCHMARK_COMPARE_VOID to improve consistency:
         The macros are now function call order independent. If you had 2 functions to benchmark, the order in which you would be calling them might affect the result. Now some randomization is included so order does not matter as much, leading to more accurate results.
+
+win64_files.h:
+    Renamed the following functions:
+        get_only_files_in_dir -> win64_get_only_files_in_dir
+        get_only_folders_in_dir -> win64_get_only_folders_in_dir
+        get_drive_names -> win64_get_drive_names
+    Added win64_get_last_write_time.
+    Added win64_read_entire_file.
+    Added win64_write_file.
 
 Version: 0.2.0 2024/02/15
 ---------------------------------

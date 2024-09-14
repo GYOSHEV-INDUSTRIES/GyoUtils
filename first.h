@@ -81,6 +81,7 @@ typedef double   f64;
 // print("values a=%, b=%", a, b);         // prints 'values a=15, b=12.50000'
 // print("input forgotten: %, %", a);      // prints 'input forgotten: 15, (missing input)'
 // print("too many inputs: %", a, b);      // prints 'too many inputs: 15(extra inputs given)'
+// print("input broken: %");               // prints 'input broken: %' instead of having '(missing input)' because it was instructed with printing directly the input as a string, since no other inputs were given.
 //
 
 #define _buffer_append(fmt, ...) __buffer_index += snprintf(__print_buff + __buffer_index, __BUFF_SIZE - __buffer_index, fmt, __VA_ARGS__)

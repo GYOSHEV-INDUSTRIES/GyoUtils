@@ -167,6 +167,4 @@ void* mem_free(Allocator alloc, void* to_free) {
 
 // API(cogno): what if instead of a single arena as default we make a stack of allocators so you can push/pop temporary allocators of different kinds for different functions? This seems interesting...
 
-Arena temporary_arena; // even though it's empty it auto setups itself when used
-Allocator default_allocator   = {NULL, default_handle}; // points to default handle
-Allocator temporary_allocator = {(void*)&temporary_arena, arena_handle}; // points to temporary_arena
+Allocator default_allocator = {NULL, default_handle}; // points to default handle
