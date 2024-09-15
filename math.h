@@ -3,10 +3,11 @@
 
 /*
 In this file:
-- Many math functions! saying all of them would be too much. Here's the more unique/important ones:
-- sin and cos use turns instead of radians/degrees (1 turn = 360 degrees)
-- vec2, vec3, vec4 and mat4, vec4 and mat4 use sse SIMD to speed them up substantially.
-- Rotor, a replacement to Quaternion from a branch of math called Geometric Algebra.
+Many math functions, constructs and concepts! saying all of them would be too much. Here's the more unique/important ones:
+- Typical use case functions and macros, like min, max, remap, npow, lerp, random_float, random_bool, etc.
+- sin_turns and cos_turns that use turns instead of radians/degrees (1 turn = 360 degrees), making them faster.
+- The very common vec2, vec3, vec4 and mat4. These last 2 use sse SIMD to speed them up substantially.
+- rotor, a replacement to Quaternion from a branch of math called Geometric Algebra.
   Can be used in the same way as Quaternions, but often provide faster code, and they're easier to understand!
 */
 
@@ -103,52 +104,42 @@ inline float sin_turns(float angle) {
     return _sin_internal(angle);
 }
 
-// API(cogno): implement other trigonometric functions as needed
 inline float cos_turns(float angle)  { return sin_turns(angle + 0.25f); }
 inline float tan_turns(float angle)  { return sin_turns(angle) / cos_turns(angle); }
 inline float cot_turns(float angle)  { return cos_turns(angle) / sin_turns(angle); }
+// API(cogno): implement other trigonometric functions as needed
 
-struct vec2{
-    union{
-        float ptr[2];
+struct vec2; // forward decl to avoid circular reference
+struct vec3; // forward decl to avoid circular reference
+struct vec4; // forward decl to avoid circular reference
+
+struct vec2 {
+    union {
         struct {float x, y;};
+        float ptr[2];
     };
-    vec2() = default;
-    template <typename A, typename B> vec2(A a, B b){
-        x = (float)a;
-        y = (float)b;
-    }
 };
 
-struct vec3{
-    union{
-        float ptr[3];
+struct vec3 {
+    union {
         struct {float x, y, z;};
+        float ptr[3];
     };
-    vec3() = default;
-    template <typename A, typename B, typename C> vec3(A a, B b, C c){
-        x = (float)a;
-        y = (float)b;
-        z = (float)c;
-    }
 };
 
-struct vec4{
-    union{
-        float ptr[4];
+struct vec4 {
+    union {
         struct {float x, y, z, w;};
+        float ptr[4];
         __m128 v;
     };
-    vec4() = default;
-    template <typename A, typename B, typename C, typename D> vec4(A a, B b, C c, D d){
-        this->x = (float)a;
-        this->y = (float)b;
-        this->z = (float)c;
-        this->w = (float)d;
-    }
 };
 
+// NOTE(cogno): In the past I had constructors to "simplify" creations of vec2/vec3/vec4 (like auto casting to float or auto making vec3 -> vec2 without vec3.z). I now find them basically useless. Most of the times you can just use vec2{...}, and the code is clearer. For example automatic conversion to float was used only in 3 occasions out of 290 (3/189 for vec2, 0/100 for vec3, 0/1 for vec4). Maybe we'll add back vec3->vec2 if usage increases, but most of the times people just forgets you can use vec2(...) so most stuff never gets used anyway.
+
 struct col{
+    // API(cogno): maybe we should make rgb{} with 4 u8 and hsv{} with whatever and then col just combines them into 4 floats (by converting hsv to rgb and normalizing rgb)
+    // API(cogno): or even better, we could just use vec4 for normalized colors and have col for 4u8 rgb and col_hsv for hsv.
     union{
         float ptr[4];
         struct {float r, g, b, a;}; // by default each is from 0 to 255, but when they're used they get normalized from 0 to 1 using col_normalize
