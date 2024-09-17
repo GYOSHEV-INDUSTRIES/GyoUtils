@@ -387,6 +387,7 @@ inline void printsl_custom(StrBuilder b) { for(int i = 0; i < b.size; i++) print
 
 StrBuilder make_str_builder(s32 size, Allocator alloc) {
     StrBuilder s = {};
+    ASSERT(alloc.handle != NULL, "StrBuilder invalid allocator!");
     s.alloc = alloc;
     s.size = 0;
     s.reserved_size = size;
