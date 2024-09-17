@@ -32,6 +32,7 @@ BREAKING CHANGES:
 - in math.h changed inputs to functions vec2_length, vec3_length, vec2_normalize, vec3_normalize, vec4_normalize.
 - in math.h renamed determinant to mat4_determinant.
 - in math.h removed some basic functions (floor, ceil, round, trunc, sqrt, abs, fmod).
+- in math.h removed col (in favor of vec4, rgb and hsv).
 - in benchmarks removed avg and max cycle counts/timings, since that information is practically useless, more info below.
 - in win64_files.h renamed some functions.
 
@@ -73,6 +74,7 @@ math.h:
     Added vec2_random, vec3_random and vec4_random.
     Renamed determinant to mat4_determinant.
     Added many basic geometric algebra functions.
+    Replaced col struct with rgb struct and hsv struct that convert to the generic vec4 color.
 
 str.h:
     Added str_count(...) to count how many times a character is inside a string.
