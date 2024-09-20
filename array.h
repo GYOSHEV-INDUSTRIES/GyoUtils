@@ -48,6 +48,7 @@ Array<T> make_array(s32 size, Allocator alloc) {
     array.reserved_size = size;
     array.size = 0;
     array.alloc = alloc;
+    ASSERT(alloc.handle != NULL, "Invalid Allocator!");
     array.ptr = (T*)array.alloc.handle(AllocOp::ALLOC, array.alloc.data, 0, size * sizeof(T), NULL);
     return array;
 }
@@ -85,6 +86,7 @@ void array_clear(Array<T>* array) {
 template<typename T>
 void array_resize(Array<T>* array, s32 new_size) {
     if(array->alloc.handle == NULL) array->alloc = default_allocator;
+    ASSERT(array->alloc.handle != NULL, "Invalid Allocator!");
     array->ptr = (T*)array->alloc.handle(AllocOp::REALLOC, array->alloc.data, array->reserved_size * sizeof(T), new_size * sizeof(T), array->ptr);
     ASSERT(array->ptr != NULL, "couldn't allocate new memory (array is full!)");
     array->reserved_size = new_size;
