@@ -5,6 +5,9 @@
 In this file:
 - better type names for common types (s8, u8, s16, u16, s32, u32, s64, u64, f32, f64)
 - max and min values for unsigned and signed types
+- INFINITY and NAN values for floats
+- DEPRECATED macro with custom message support
+- MSVC_BUG macro to automatically fix a msvc compiler bug related to macros
 - custom print replacement to printf, can be used to also print more complex custom types
 - printsl, like print but without \n at the end
 - ASSERT macro which can be deactivated, prints a custom (optional) formatted message and returns the expression value
@@ -49,6 +52,8 @@ typedef double   f64;
 #ifndef NAN
 #define NAN        (-(float)(INFINITY * 0.0F))
 #endif
+
+#define DEPRECATED(msg) __declspec(deprecated(msg))
 
 #define MSVC_BUG(MACRO, ARGS) MACRO ARGS // fuck you microsoft
 

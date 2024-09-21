@@ -43,6 +43,8 @@ NEW FILE: win64_basic.h:
     created win64_free to free memory.
 
 first.h:
+    Added DEPRECATED macro to clearly signal which pieces of code have been deprecated (supports msvc only for now, if you can support other compilers send us a pull request!).
+
     fixed print incorrectly printing percentages if they're the last thing to be print.
         print("%\\%", 20); would print "20\%" instead of "20%".
 
