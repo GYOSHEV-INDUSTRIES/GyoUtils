@@ -28,7 +28,7 @@ void printsl_custom(Bump b) {
 // TAG: MaybeWeShouldDoThisBetter
 // Using malloc/realloc/free works but makes us very slow. Allocators are to control memory, and malloc is one of them.
 // If our allocator goes through malloc why use it? You already have malloc!
-// We should replaces these spots to go through the platform api and make our allocators faster, but how? Is it a good idea?
+// We should replace these spots to go through the platform api and make our allocators faster, but how? Is it a good idea?
 
 
 void bump_reset(Bump* a) {
@@ -79,8 +79,9 @@ void* bump_handle(AllocOp op, void* alloc, s32 old_size, s32 size_requested, voi
     }
 }
 
-// will use and control pre-allocated memory
+// will use and control pre-allocated memory for you
 Bump make_bump_allocator(void* buffer, int buffer_length) {
+    ASSERT(buffer != NULL, "Invalid input buffer given");
     Bump a = {};
     a.data = (char*)buffer;
     a.size_available = buffer_length;

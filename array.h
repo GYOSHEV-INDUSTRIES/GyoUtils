@@ -48,8 +48,7 @@ Array<T> make_array(s32 size, Allocator alloc) {
     array.reserved_size = size;
     array.size = 0;
     array.alloc = alloc;
-    ASSERT(alloc.handle != NULL, "Invalid Allocator!");
-    array.ptr = (T*)array.alloc.handle(AllocOp::ALLOC, array.alloc.data, 0, size * sizeof(T), NULL);
+    array.ptr = (T*)mem_alloc(alloc, size * sizeof(T));
     return array;
 }
 
@@ -73,7 +72,7 @@ Array<T> make_fixed_array(s32 size, Bump* alloc) {
 // will free from the allocator only the space used by the array
 template<typename T>
 void array_free(Array<T>* array) {
-    if(array->alloc.handle != NULL) array->ptr = (T*)array->alloc.handle(AllocOp::FREE, array->alloc.data, 0, 0, array->ptr);
+    if(array->alloc.handle != NULL) array->ptr = (T*)mem_free(array->alloc, array->ptr);
     array->size = 0;
     array->reserved_size = 0;
 }
@@ -88,8 +87,7 @@ void array_clear(Array<T>* array) {
 template<typename T>
 void array_resize(Array<T>* array, s32 new_size) {
     if(array->alloc.handle == NULL) array->alloc = default_allocator;
-    ASSERT(array->alloc.handle != NULL, "Invalid Allocator!");
-    array->ptr = (T*)array->alloc.handle(AllocOp::REALLOC, array->alloc.data, array->reserved_size * sizeof(T), new_size * sizeof(T), array->ptr);
+    array->ptr = (T*)mem_realloc(array->alloc, array->reserved_size * sizeof(T), new_size * sizeof(T), array->ptr);
     ASSERT(array->ptr != NULL, "couldn't allocate new memory (array is full!)");
     array->reserved_size = new_size;
 }

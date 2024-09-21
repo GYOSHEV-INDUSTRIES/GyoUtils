@@ -390,8 +390,7 @@ StrBuilder make_str_builder(s32 size, Allocator alloc) {
     s.alloc = alloc;
     s.size = 0;
     s.reserved_size = size;
-    ASSERT(alloc.handle != NULL, "Invalid Allocator!");
-    s.ptr = (u8*)s.alloc.handle(AllocOp::ALLOC, s.alloc.data, 0, size * sizeof(u8), NULL);
+    s.ptr = (u8*)mem_alloc(alloc, size * sizeof(u8));
     return s;
 }
 
@@ -399,8 +398,7 @@ StrBuilder make_str_builder() { return make_str_builder(STR_BUILDER_DEFAULT_SIZE
 StrBuilder make_str_builder(s32 size) { return make_str_builder(size, default_allocator); }
 
 void str_builder_free(StrBuilder* b) {
-    ASSERT(b->alloc.handle != NULL, "Invalid Allocator!");
-    b->alloc.handle(AllocOp::FREE, b->alloc.data, 0, 0, b->ptr);
+    b->ptr = (u8*)mem_free(b->alloc, b->ptr);
     b->size = b->reserved_size = 0;
 }
 
@@ -410,8 +408,7 @@ void str_builder_clear(StrBuilder* b) {
 
 StrBuilder str_builder_copy(StrBuilder* b) {
     StrBuilder copy;
-    ASSERT(b->alloc.handle != NULL, "Invalid Allocator!");
-    copy.ptr = (u8*)b->alloc.handle(AllocOp::ALLOC, b->alloc.data, 0, b->reserved_size * sizeof(u8), NULL);
+    copy.ptr = (u8*)mem_alloc(b->alloc, b->reserved_size * sizeof(u8));
     copy.size = b->size;
     copy.reserved_size = b->reserved_size;
     memcpy(copy.ptr, b->ptr, b->size);
@@ -430,8 +427,7 @@ void str_builder_resize(StrBuilder* b, s32 min_size) {
     s32 new_size = b->reserved_size * 2;
     new_size = new_size >= STR_BUILDER_DEFAULT_SIZE ? new_size : STR_BUILDER_DEFAULT_SIZE; // API(cogno): 'max' identifier not found error
     new_size = new_size >= min_size ? new_size : min_size; // API(cogno): 'max' identifier not found error
-    ASSERT(b->alloc.handle != NULL, "Invalid Allocator!");
-    b->ptr = (u8*)b->alloc.handle(AllocOp::REALLOC, b->alloc.data, b->reserved_size * sizeof(u8), new_size * sizeof(u8), b->ptr);
+    b->ptr = (u8*)mem_realloc(b->alloc, b->reserved_size * sizeof(u8), new_size * sizeof(u8), b->ptr);
     b->reserved_size = new_size;
     ASSERT(b->ptr[0] == old_start, "ERROR ON REALLOC, initial byte unexpectedly changed, this is not supposed to happen...");
 }

@@ -3,15 +3,14 @@
 /*
 In this file:
 - The start of all allocators we made, with easy ways to use and expand them to fit your needs
-- default allocator, useful for generic operations
-- temporary arena allocator, useful for temporary quick operations to be done and forget about
+- default allocator used by stuff that allocated. By default a wrapper for malloc/realloc/free, but can obviously be replaced but whatever.
 */
-
 
 #ifndef GYOFIRST
     #include "first.h"
 #endif
 
+// Operations that each allocator supports. We might add/remove/change operations in the future if needed.
 ENUM(AllocOp,
     ALLOC,
     REALLOC,
@@ -24,6 +23,7 @@ ENUM(AllocOp,
 
 // API(cogno): can we have an allocator type so it's easier to find it?
 // API(cogno): can we have an allocator name so it's easier to find it? maybe a name per allocator?
+// To aid in debugging, we can track each allocation, so we can know if there are memory leaks or how they are used.
 struct TrackingInfo {
     void* alloc_block;
     int block_size; // size of the whole memory block
@@ -32,6 +32,7 @@ struct TrackingInfo {
 };
 
 #define TRACKING_INFO_ENABLED true // set to false to disable tracking info
+
 TrackingInfo* tracking_infos = NULL;
 int* current_tracking_index = NULL;
 const int MAX_TRACKING_INFOS = 200000;
@@ -101,6 +102,7 @@ inline void maybe_remove_all_allocations(void* alloc_block_to_remove) {
 #ifndef GYO_ARENA
     #include "arena.h"
 #endif
+// TODO(cogno): Stack Allocator
 
 // if you want to create your custom allocator compatible with gyoutils simply implement the handle_function (look at other allocator files for more info)
 struct Allocator {
@@ -151,20 +153,21 @@ void* default_handle(AllocOp op, void* allocator_data, s32 old_size, s32 size_re
     }
 }
 
-void* mem_alloc(Allocator alloc, s32 size) {
+inline void* mem_alloc(Allocator alloc, s32 size) {
+    ASSERT(alloc.handle != NULL, "Invalic Allocator (handle function missing!)");
     return alloc.handle(AllocOp::ALLOC, alloc.data, 0, size, NULL);
 }
-
-void* mem_realloc(Allocator alloc, s32 old_size, s32 new_size, void* to_realloc) {
+inline void* mem_realloc(Allocator alloc, s32 old_size, s32 new_size, void* to_realloc) {
+    ASSERT(alloc.handle != NULL, "Invalic Allocator (handle function missing!)");
     return alloc.handle(AllocOp::REALLOC, alloc.data, old_size, new_size, to_realloc);
 }
-
-void* mem_free(Allocator alloc, void* to_free) {
+inline void* mem_free(Allocator alloc, void* to_free) {
+    ASSERT(alloc.handle != NULL, "Invalic Allocator (handle function missing!)");
     return alloc.handle(AllocOp::FREE, alloc.data, 0, 0, to_free);
 }
 
-// TODO(cogno): Stack Allocator
-
-// API(cogno): what if instead of a single arena as default we make a stack of allocators so you can push/pop temporary allocators of different kinds for different functions? This seems interesting...
-
+// By default everything that allocates will use this.
+// If you want to use something else you can overwrite this with another allocator,
+// or control on a case per case basis (for example everything uses default allocator
+// except this specific array because when I constructed the array I gave it a different one).
 Allocator default_allocator = {NULL, default_handle}; // points to default handle
