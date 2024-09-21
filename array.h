@@ -165,7 +165,7 @@ T array_get_data(Array<T>* array, s32 index) {
 }
 
 template<typename T>
-void array_set(Array<T>* array, s32 index, s32 value) {
+void array_set(Array<T>* array, s32 index, T value) {
     ASSERT_BOUNDS(index, 0, array->size);
     array->ptr[index] = value;
 }
