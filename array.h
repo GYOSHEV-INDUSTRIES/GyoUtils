@@ -59,14 +59,12 @@ Array<T> make_array(s32 size) { return make_array<T>(size, default_allocator); }
 
 // makes an array which uses the given arena
 template<typename T>
-DEPRECATED("just use make_array(s32 size, Allocator alloc)")
-Array<T> make_array(s32 size, Arena* alloc) {
+Array<T> make_dynamic_array(s32 size, Arena* alloc) {
     return make_array<T>(size, make_allocator(alloc));
 }
 
 // quicker way to make a fixed-size array
 template<typename T>
-DEPRECATED("just use make_array(s32 size, Allocator alloc)")
 Array<T> make_fixed_array(s32 size, Bump* alloc) {
     return make_array<T>(size, make_allocator(alloc));
 }
