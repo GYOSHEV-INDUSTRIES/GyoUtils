@@ -21,89 +21,96 @@ Because of this **we've removed FixedArray**.
 You'll see usage examples of arrays and allocators inside allocators.h/array.h/str.h
 
 BREAKING CHANGES:
-- in print, char* are now printed as pointers instead of strings (you have to cast them to const char* to print them as strings).
-- in str.h, str_to_c_string returns a const char* instead of a char*.
-- in str.h, removed str_new_alloc (you can use str_copy instead)
-- in str.h, removed str functions that take a const char* as input (since you can implicitly cast a const char* to str)
-- renamed dynamic_array.h into array.h
-- removed fixed_array.h (you can still use array.h to have fixed-size arrays)
-- in array.h renamed array_new into make_array.
-- in math.h renamed sin, cos and tan into sin_turns, cos_turns and tan_turns for clarity.
-- in math.h changed inputs to functions vec2_length, vec3_length, vec2_normalize, vec3_normalize, vec4_normalize.
-- in math.h renamed determinant to mat4_determinant.
-- in math.h removed some basic functions (floor, ceil, round, trunc, sqrt, abs, fmod).
-- in math.h removed col (in favor of vec4, rgb and hsv).
-- in benchmarks removed avg and max cycle counts/timings, since that information is practically useless, more info below.
-- in win64_files.h renamed some functions.
+    > In print, char* are now printed as pointers instead of strings (you have to cast them to const char* to print them as strings).
+    > In str.h, str_to_c_string returns a const char* instead of a char*.
+    > In str.h, removed str_new_alloc (you can use str_copy instead).
+    > In str.h, removed str functions that take a const char* as input (since you can implicitly cast a const char* to str).
+    > Renamed dynamic_array.h into array.h.
+    > Removed fixed_array.h (you can still use array.h to have fixed-size arrays).
+    > In array.h renamed array_new into make_array.
+    > In math.h renamed sin, cos and tan into sin_turns, cos_turns and tan_turns for clarity.
+    > In math.h changed inputs to functions vec2_length, vec3_length, vec2_normalize, vec3_normalize, vec4_normalize.
+    > In math.h renamed determinant to mat4_determinant.
+    > In math.h removed some basic functions (floor, ceil, round, trunc, sqrt, abs, fmod).
+    > In math.h removed col (in favor of vec4, rgb and hsv).
+    > In benchmarks removed avg and max cycle counts/timings, since that information is practically useless, more info below.
+    > In win64_files.h renamed some functions.
 
 NEW FILE: win64_basic.h:
-    created this file to hold basic and common windows functions.
-    moved win64_print_error from win64_files.h into this file.
-    created win64_alloc to allocate memory.
-    created win64_free to free memory.
-
-first.h:
-    Added DEPRECATED macro to clearly signal which pieces of code have been deprecated (supports msvc only for now, if you can support other compilers send us a pull request!).
-
-    fixed print incorrectly printing percentages if they're the last thing to be print.
-        print("%\\%", 20); would print "20\%" instead of "20%".
-
-    improved print to tell you if you've added more % than inputs to print.
-        print("% % %", 20); would print "20 % %", now it will print "20 (missing input) (missing input)".
-
-    improved print to tell you if you've added more inputs than %.
-        print("%", 20, 30, 40) would print "20", now it will print "20(extra inputs given)".
-
-    pointers are now written like "0x0232_40C0_D8D8" (previously it would be printed like "0x0000023240C0D8D8")
-
-array.h:
-    renamed array_new into make_array for consistency across the library
-    fixed crash when printing an empty/null array
-
-math.h:
-    Added random_bool() and random_float(...) functions
-    Fixed wrong calculations for matrix functions perspective(...) and ortho(...).
-    Fixed wrong calculations for mat4_determinant(...) and mat4_inverse(...).
-    Removed functions already available in other better made standard modules,
-        These are: floor, ceil, round, trunc, sqrt, max, fmod
-    Added auto detection of math constants, so we don't inadvertently replace them,
-        These are: PI, TAU, E, SQRT2, SQRT3, DEG2RAD, DEG2TURNS, RAD2DEG, RAD2TURNS, TURNS2DEG, TURNS2RAD.
-    Renamed sin, cos and tan into sin_turns, cos_turns and tan_turns for clarity and to avoid conflicts with other modules.
-    Added support for hsv colors.
-    Added vec2/3/4_length_squared functions.
-    Changed inputs to functions vec2_length, vec3_length, vec2_normalize, vec3_normalize, vec4_normalize:
-        They will now take as input a default value to return if the vector cannot be normalized, forcing you to think about it, which reduces problem when writing code.
-    Added vec2_random, vec3_random and vec4_random.
-    Renamed determinant to mat4_determinant.
-    Added many basic geometric algebra functions.
-    Replaced col struct with rgb struct and hsv struct that convert to the generic vec4 color.
-
-str.h:
-    Added str_count(...) to count how many times a character is inside a string.
-    Each str function that allocs memory now goes through the default allocator (or a given input allocator).
-    Removed str_new_alloc, you can use str_copy instead (since it copies the underlying characters too) (remember that const char* can be implicitly cast to str, so you should be good with just renaming str_new_alloc into str_copy).
-    Changed str_copy, str_concat and str_to_c_string to use a given allocator (or the default allocator if nothing is specified).
-    Removed each function that takes a const char* as input (since const char* can be cast to str anyway). Your code shouldn't change at all (because instead of calling the function with const char* your code should automatically cast into str and call the real function).
-    Added str_builder_count_right(...) to count how many chars are to the right of a given one to find.
-    Added str_builder_remove_right(...) to remove from the last character to find to the right of it.
-    Added str_builder_append_ptr(..., T*) which will convert the pointer to text in the string.
-    Added str_builder_append_hex(..., u64)
-    Fixed str_builder_append_hex(..., u32) printing only a u16
-
-simple_benchmark.h:
-    In all benchmarking functions removed avg and max statistics.
-        These were previously included but they would always get ignored by advanced users. Most of the times you don't want to know how much time a function takes on average or in the worst case, because there are MANY factors you can't control that might affect the result (like the OS). Most of the times you don't want to know how fast a function is. What you actually want to know is how fast a function *can* go, to see if what you made is as fast as what you expected. If a function takes 1ms to execute you might consider that function pretty fast, but if a function that should take 10us takes 1ms to execute, then you made your function 100x slower than it should. Proper benchmarking is thus made by comparison, not by absolute values.
-    Restructured BENCHMARK_COMPARE and BENCHMARK_COMPARE_VOID to improve consistency:
-        The macros are now function call order independent. If you had 2 functions to benchmark, the order in which you would be calling them might affect the result. Now some randomization is included so order does not matter as much, leading to more accurate results.
+    > Created this file to hold basic and common windows functions.
+    > Moved win64_print_error from win64_files.h into this file.
+    > Created win64_alloc to allocate memory.
+    > Created win64_free to free memory.
 
 win64_files.h:
-    Renamed the following functions:
+    > Renamed the following functions:
         get_only_files_in_dir -> win64_get_only_files_in_dir
         get_only_folders_in_dir -> win64_get_only_folders_in_dir
         get_drive_names -> win64_get_drive_names
-    Added win64_get_last_write_time.
-    Added win64_read_entire_file.
-    Added win64_write_file.
+    > Added win64_get_last_write_time.
+    > Added win64_read_entire_file.
+    > Added win64_write_file.
+
+first.h:
+    > Added DEPRECATED macro to clearly signal which pieces of code have been deprecated (supports msvc only for now, if you can support other compilers send us a pull request!).
+    > Fixed print incorrectly printing percentages if they're the last thing to be print.
+        print("%\\%", 20); would print "20\%" instead of "20%".
+    > Improved print to tell you if you've added more % than inputs to print.
+        print("% % %", 20); would print "20 % %", now it will print "20 (missing input) (missing input)".
+    > Improved print to tell you if you've added more inputs than %.
+        print("%", 20, 30, 40) would print "20", now it will print "20(extra inputs given)".
+    > Pointers are now written like "0x0232_40C0_D8D8", previously it would be printed like "0x0000023240C0D8D8".
+
+array.h:
+    > Renamed array_new into make_array for consistency across the library.
+    > Fixed crash when printing an empty/null array.
+    > Fixed array_set only working for Array<s32>.
+
+math.h:
+    > Added random_bool() and random_float(...) functions.
+    > Fixed wrong calculations for matrix functions perspective(...) and ortho(...).
+    > Fixed wrong calculations for mat4_determinant(...) and mat4_inverse(...).
+    > Removed functions already available in other better made standard modules.
+        These are: floor, ceil, round, trunc, sqrt, max, fmod.
+    > Added auto detection of math constants, so we don't inadvertently replace them,
+        These are: PI, TAU, E, SQRT2, SQRT3, DEG2RAD, DEG2TURNS, RAD2DEG, RAD2TURNS, TURNS2DEG, TURNS2RAD.
+    > Renamed sin, cos and tan into sin_turns, cos_turns and tan_turns for clarity and to avoid conflicts with other modules.
+    > Added vec2/3/4_length_squared functions.
+    > Changed inputs to functions vec2_length, vec3_length, vec2_normalize, vec3_normalize, vec4_normalize:
+        They will now take as input a default value to return if the vector cannot be normalized, forcing you to think about it, which reduces problem when writing code.
+    > Added vec2_random, vec3_random and vec4_random.
+    > Renamed determinant to mat4_determinant for consistency across library.
+    > Added many basic geometric algebra functions.
+    > Added support for hsv colors.
+    > Replaced col struct with rgb struct and hsv struct that convert to the generic vec4 color.
+
+str.h:
+    > Added str_count(...) to count how many times a character is inside a string.
+    > Each str function that allocates memory now goes through the default allocator (or a given input allocator).
+    > Removed str_new_alloc, you can use str_copy instead (since it copies the underlying characters too) (remember that const char* can be implicitly cast to str, so you should be good with just renaming str_new_alloc into str_copy).
+    > Changed str_copy, str_concat and str_to_c_string to use a given allocator (or the default allocator if nothing is specified).
+    > Removed each function that takes a const char* as input (since const char* can be cast to str anyway). Your code shouldn't change at all (because instead of calling the function with const char* your code should automatically cast into str and call the real function).
+    > Added str_builder_count_right(...) to count how many chars are to the right of a given one to find.
+    > Added str_builder_remove_right(...) to remove from the last character to find to the right of it.
+    > Added str_builder_append_ptr(..., T*) which will convert the pointer to text in the string.
+    > Added str_builder_append_hex(..., u64).
+    > Fixed str_builder_append_hex(..., u32) printing only a u16 instead of the whole input u32.
+
+simple_benchmark.h:
+    > In all benchmarking functions removed avg and max statistics.
+        These were previously included but they would always get ignored by advanced users.
+        Most of the times you don't want to know how much time a function takes on average or in the worst case,
+        because there are MANY factors you can't control that might affect the result (like the OS).
+        Most of the times you don't want to know how fast a function is. What you actually want to know is 
+        how fast a function *can* go, to see if what you made is as fast as what you expected.
+        If a function takes 1ms to execute you might consider that function pretty fast,
+        but if that function should only take 10us, then you made it 100x slower than it should.
+        Proper benchmarking is thus made by comparison, not by absolute values.
+    > Restructured BENCHMARK_COMPARE and BENCHMARK_COMPARE_VOID to improve consistency:
+        The macros are now function call order independent.
+        If you had 2 functions to benchmark, the order in which you would be calling them might affect the result.
+        Now some randomization is included so order does not matter as much, leading to more accurate results.
+
 
 Version: 0.2.0 2024/02/15
 ---------------------------------
@@ -119,22 +126,22 @@ NEW: fixed_array.h
 An array of fixed size with bounds checking, basically Array without automatic expansion.
 
 first.h:
-    Removed print2, since it wasn't used by pratically anyone.
-    Changed ASSERT_BOUNDS macro to be start + length instead of start to end, you shouldn't notice any change for array bounds, but you might for variables.
+    > Removed print2, since it wasn't used by pratically anyone.
+    > Changed ASSERT_BOUNDS macro to be start + length instead of start to end, you shouldn't notice any change for array bounds, but you might for variables.
     
-    Changed ASSERT macro to return the expression, so it can be used inside if statements. When asserts are deactivated it will be compiled into the expression, so protective checks will still work.
-    You can use it like this:
-    if(!ASSERT(index <= array_size)) return;
-    // ...
-    array[index] = value;
+    > Changed ASSERT macro to return the expression, so it can be used inside if statements. 
+        When asserts are deactivated it will be compiled into the expression, so protective checks will still work.
+        You can use it like this:
+        if(!ASSERT(index <= array_size)) return;
+        // ...
+        array[index] = value;
     
-    If asserts are deactivated this will be transformed into
-    if(!(index <= array_size)) return;
-    meaning the check will still apply.
+        If asserts are deactivated this will be transformed into
+        if(!(index <= array_size)) return;
+        meaning the check will still apply.
     
-    Improved security of Array, str, StrBuilder and StrParser when ASSERT is deactivated.
-    
-    Improved defer macro in 2 ways:
+    > Improved security of Array, str, StrBuilder and StrParser when ASSERT is deactivated.
+    > Improved defer macro in 2 ways:
         1. There were some cases where the code would complain about input variables not being const, this is no more the case
         2. Syntax has been updated to avoid parenthesis, the new syntax is as follows:
         defer {
@@ -144,104 +151,105 @@ first.h:
         defer { free(ptr); };
 
 dynamic_array.h:
-    Array can be directly printed with out print(). Will be formatted in a single line. You can change how this works by changing the printsl_custom implementation
-    Renamed array_add to array_insert and array_free_all to array_free for clarity/brevity.
-    Added array_pop and array_dequeue so you can use this as a stack/queue.
+    > Array can be directly printed with out print(). Will be formatted in a single line. You can change how this works by changing the printsl_custom implementation.
+    > Renamed array_add to array_insert and array_free_all to array_free for clarity/brevity.
+    > Added array_pop and array_dequeue so you can use this as a stack/queue.
+    > Now you don't have to call make_array at the start, if you construct the array with empty data it will get automatically filled later.
+        This means that you can now do:
+            Array<int> a;
+            array_append(&a, 20);
+        Instead of
+            Array<int> a = make_array();
+            array_append(&a, 20);
+        Meaning you don't need to setup the array before using it.
     
-    Now you don't have to call make_array at the start, if you construct the array with empty data it will get automatically filled later.
-    This means that you can now do:
-        Array<int> a;
-        array_append(&a, 20);
-    Instead of
-        Array<int> a = make_array();
-        array_append(&a, 20);
-    Meaning you don't need to setup the array before using it.
-    
-    Fixed array_insert not working if you wanted to append something
+    > Fixed array_insert not working if you wanted to append something.
     
 Version: 0.1.4 2023/11/04
 ---------------------------------
 
 dynamic_array.h:
-    removed the OLDFor cycle macro, since we have the non-broken alternative For (and variants)
+    > Removed the OLDFor cycle macro, since we have the non-broken alternative For (and variants).
 
 str.h:
-    Added str_parser, a new construct to parse str and binary files.
-    Added str_ends_with function (with char and str overloads) to know if a str ends with something.
-    Added/Replaced str_trim with str_trim_inplace, now the _inplace version takes and edits the pointer, while the _trim version returns a new str.
-    Added unicode_utf8_to_codepoint(...) function
-    Added custom str_builder_append overloads for vec2, vec3 and vec4
-    Added custom str_builder_append_raw overloads for vec2, vec3 and vec4
-    
-    Fixed some functions using printf instead of snprintf (the platform independent alternative).
-    Changed unicode_utf8_to_size(...) and unicode_codepoint_to_size(...) to return s8 instead of u8, this leads to more performant code when used in array access (and since the returned value is always 1 to 4 it's simply a preferable choice)
+    > Added str_parser, a new construct to parse str and binary files.
+    > Added str_ends_with function (with char and str overloads) to know if a str ends with something.
+    > Added/Replaced str_trim with str_trim_inplace, now the _inplace version takes and edits the pointer, while the _trim version returns a new str.
+    > Added unicode_utf8_to_codepoint(...) function.
+    > Added custom str_builder_append overloads for vec2, vec3 and vec4.
+    > Added custom str_builder_append_raw overloads for vec2, vec3 and vec4.
+    > Fixed some functions using printf instead of snprintf (the platform independent alternative).
+    > Changed unicode_utf8_to_size(...) and unicode_codepoint_to_size(...) to return s8 instead of u8, this leads to more performant code when used in array access (and since the returned value is always 1 to 4 it's simply a preferable choice).
     
 win64_files.h:
-    Added win64_print_error() to quickly print any error that happened duinr windows api calls.
-    Added get_drive_names to know your drives names.
-    Added get_only_files_in_dir to know which folders are in a directory.
-    Fixed get_only_files_in_dir and get_only_folders_in_dir failing when interacting with files used by other processes, now they simply get skipped since we can't get their attributes.
-    Minor change of function signature for get_only_files_in_dir and get_only_folders_in_dir, now they take a str as folder_path instead of const char* (const char* get converted automatically to str so you shouldn't notice any change).
+    > Added win64_print_error() to quickly print any error that happened duinr windows api calls.
+    > Added get_drive_names to know your drives names.
+    > Added get_only_files_in_dir to know which folders are in a directory.
+    > Fixed get_only_files_in_dir and get_only_folders_in_dir failing when interacting with files used by other processes, now they simply get skipped since we can't get their attributes.
+    > Minor change of function signature for get_only_files_in_dir and get_only_folders_in_dir, now they take a str as folder_path instead of const char* (const char* get converted automatically to str so you shouldn't notice any change).
 
 math.h:
-    Added vec2, vec3, vec4 and col constructor, so it will be automatically cast variables to float (e.g. `int a = 4;  vec2 b = {a, a*2};`).
-    Added vec4 * mat4 and mat4 * vec4 operations.
-    Added vecN / vecN operations ({1, 5, 3} / {2, 6, 7} == {1 / 2, 5 / 6, 3 / 7}).
-    Added overload of function ortho(...) with default near and far planes (equal to glm's ortho).
-    Improved vec4 remap function to use SIMD.
-    Changed count_digits(...) to return u8 instead of int.
-    Fixed potential bugs in lerp macro caused by missing parenthesis.
-    Fixed potential bug due to types mismatch check in npow(...).
+    > Added vec2, vec3, vec4 and col constructor, so it will be automatically cast variables to float (e.g. `int a = 4;  vec2 b = {a, a*2};`).
+    > Added vec4 * mat4 and mat4 * vec4 operations.
+    > Added vecN / vecN operations ({1, 5, 3} / {2, 6, 7} == {1 / 2, 5 / 6, 3 / 7}).
+    > Added overload of function ortho(...) with default near and far planes (equal to glm's ortho).
+    > Improved vec4 remap function to use SIMD.
+    > Changed count_digits(...) to return u8 instead of int.
+    > Fixed potential bugs in lerp macro caused by missing parenthesis.
+    > Fixed potential bug due to types mismatch check in npow(...).
 
 first.h:
-    Fixed a bug in the `count_digits` function (precision loss)
-    Fixed macro redefinition warning/error for INFINITY and NAN in first.h
+    > Fixed a bug in the `count_digits` function (precision loss).
+    > Fixed macro redefinition warning/error for INFINITY and NAN in first.h.
 
 Version: 0.1.3 2023/10/01
 ---------------------------------
 
-Added macro in first.h to automatically create basic Enums with size info, a to_string function and print compatible
-Added BENCHMARK_VOID_MANY_INPUTS and BENCHMARK_MANY_INPUTS in simple_benchmark.h to test the same function with different inputs and record data on each one
-Reimplemented BENCHMARK_FUNC and BENCHMARK_FUNC_VOID to run until there's been 10 seconds of no changes to the best recorded time.
+first.h:
+    > Added macro to automatically create basic Enums with size info, a to_string function and print compatible.
+    > Increased compatibility of __debugbreak with other systems.
+    > Replaced usages of sprintf_s with standard function snprintf for compatibility.
+    > Added INFINITY and NAN macros when working with float/double/f32/f64.
+    > Fixed in gcc ASSERT macro errors about __VA_ARGS__ when used without arguments.
+    > Fixed in gcc __rdtsc error.
 
-Increased compatibility of __debugbreak with other systems.
-Replaced usages of sprintf_s with standard function snprintf for compatibility.
-Added INFINITY and NAN macros when working with float/double/f32/f64.
+simple_benchmark.h:
+    > Added BENCHMARK_VOID_MANY_INPUTS and BENCHMARK_MANY_INPUTS to test the same function with different inputs and record data on each one.
+    > Reimplemented BENCHMARK_FUNC and BENCHMARK_FUNC_VOID to run until there's been 10 seconds of no changes to the best recorded time.
 
-Fixed in gcc ASSERT macro errors about __VA_ARGS__ when used without arguments.
-Fixed in gcc error about __m128 and {} in math.h.
-Fixed in gcc __rdtsc error.
+math.h:
+    > Fixed in gcc error about __m128 and {}.
 
 Version: 0.1.2 2023/09/24
 ---------------------------------
 
-Fixed print for str and str_builder being printed as array of u8 instead of a string.
+> Fixed print for str and str_builder being printed as array of u8 instead of a string.
 
 
 Version: 0.1.1 2023/09/23
 ---------------------------------
 
-Defined some macros to automatically import `first.h` if you include just a single module like `math.h`.
-Same thing with performance counter and `profiling_v1.h`, `simple_benchmark.h` and `simple_profiling.h`.
-Some general cleaning in `profiling_v1.h` (private variables and used ANCHORS_AMT define).
+> Defined some macros to automatically import `first.h` if you include just a single module like `math.h`.
+> Same thing with performance counter and `profiling_v1.h`, `simple_benchmark.h` and `simple_profiling.h`.
+> Some general cleaning in `profiling_v1.h` (private variables and used ANCHORS_AMT define).
 
 first.h:
-    Reimplemented print and printsl to improve performance (as of now we're about at printf speed, sometimes slightly faster).
-    Renamed custom print implementations to print_custom, you should rename them also in your code.
-    Added print2, a new type of print which should be faster than printf. We don't know if we'll keep it because of it's stranger usage.
+    > Reimplemented print and printsl to improve performance (as of now we're about at printf speed, sometimes slightly faster).
+    > Renamed custom print implementations to print_custom, you should rename them also in your code.
+    > Added print2, a new type of print which should be faster than printf. We don't know if we'll keep it because of it's stranger usage.
 
 simple_benchmark.h:
-    Added macros BENCHMARK_COMPARE and BENCHMARK_COMPARE_VOID to quickly benchmark 2 functions with the same inputs, to know if the second one is faster or slower. You can find comments on how they work inside the module.
+    > Added macros BENCHMARK_COMPARE and BENCHMARK_COMPARE_VOID to quickly benchmark 2 functions with the same inputs, to know if the second one is faster or slower. You can find comments on how they work inside the module.
 
 str.h:
-    Added overloads str_builder_append() for u8, s8, u16, s16, u32, s32, u64, s64, f32, f64, char. These will convert the numbers into string representation and add it to the builder.
+    > Added overloads str_builder_append() for u8, s8, u16, s16, u32, s32, u64, s64, f32, f64, char. These will convert the numbers into string representation and add it to the builder.
 
 dynamic_array.h:
-    Added array_reserve() function.
+    > Added array_reserve() function.
 
 math.h:
-    Added remap function, with overloads for float, vec2, vec3 and vec4.
-    struct col for colors can now be printed.
+    > Added remap function, with overloads for float, vec2, vec3 and vec4.
+    > struct col for colors can now be printed.
 
 Version: 0.1.0 2023/09/16
 ---------------------------------
