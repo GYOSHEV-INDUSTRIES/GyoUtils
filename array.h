@@ -15,6 +15,8 @@ In this file:
 
 #define GYO_ARRAY
 
+#define GYO_ARRAY_DEFAULT_SIZE 8
+
 template <typename T>
 struct Array {
     s32 size = 0;
@@ -52,21 +54,16 @@ Array<T> make_array(s32 size, Allocator alloc) {
     return array;
 }
 
-// defaults to using the default allocator
-template<typename T>
-Array<T> make_array(s32 size) { return make_array<T>(size, default_allocator); }
+// overloads, pretty obvious
 
-// makes an array which uses the given arena
-template<typename T>
-Array<T> make_dynamic_array(s32 size, Arena* alloc) {
-    return make_array<T>(size, make_allocator(alloc));
-}
+template<typename T> Array<T> make_array(Allocator alloc) { return make_array<T>(GYO_ARRAY_DEFAULT_SIZE, alloc); }
+template<typename T> Array<T> make_array(s32 size) { return make_array<T>(size, default_allocator); }
 
-// quicker way to make a fixed-size array
-template<typename T>
-Array<T> make_fixed_array(s32 size, Bump* alloc) {
-    return make_array<T>(size, make_allocator(alloc));
-}
+template<typename T> Array<T> make_dynamic_array(s32 size, Arena* alloc) { return make_array<T>(size, make_allocator(alloc)); }
+template<typename T> Array<T> make_dynamic_array(Arena* alloc) { return make_array<T>(GYO_ARRAY_DEFAULT_SIZE, make_allocator(alloc)); }
+
+template<typename T> Array<T> make_fixed_array(s32 size, Bump* alloc) { return make_array<T>(size, make_allocator(alloc)); }
+template<typename T> Array<T> make_fixed_array(Bump* alloc) { return make_array<T>(GYO_ARRAY_DEFAULT_SIZE, make_allocator(alloc)); }
 
 
 // will free from the allocator only the space used by the array
@@ -88,7 +85,7 @@ template<typename T>
 void array_resize(Array<T>* array, s32 new_size) {
     if(array->alloc.handle == NULL) array->alloc = default_allocator;
     array->ptr = (T*)mem_realloc(array->alloc, array->reserved_size * sizeof(T), new_size * sizeof(T), array->ptr);
-    ASSERT(array->ptr != NULL, "couldn't allocate new memory (array is full!)");
+    ASSERT(array->ptr != NULL, "couldn't allocate new memory (array is full! it's size is %)", array->reserved_size);
     array->reserved_size = new_size;
 }
 
@@ -97,7 +94,7 @@ void array_reserve(Array<T>* array, s32 to_add) {
     if(array->size + to_add <= array->reserved_size) return; // we already have enough space
     
     s32 new_size = array->reserved_size * 2;
-    if(new_size < 8) new_size = 8;
+    if(new_size < GYO_ARRAY_DEFAULT_SIZE) new_size = GYO_ARRAY_DEFAULT_SIZE;
     if(array->size + to_add > new_size) new_size = array->size + to_add;
     array_resize(array, new_size);
     ASSERT(array->size + to_add <= array->reserved_size, "not enough memory allocated! wanted % but was %", array->size + to_add, array->reserved_size);
