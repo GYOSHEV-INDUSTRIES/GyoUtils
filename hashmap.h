@@ -157,45 +157,6 @@ void map_insert(HashMap<T, U>* map, T key, U value) {
     }
 }
 
-//API(Jason): im not sure if this is a good implementatin or not
-template<typename U>
-void map_insert(HashMap<str, U>* map, str key, U value) {
-    HashPair<str, U> p = {str_copy(key), value};
-    u64 hash = hash_default(&key, sizeof(key));
-    int matrix_index = hash % map->matrix_size;
-    ASSERT_BOUNDS(matrix_index, 0, map->matrix_size);
-    Finder* current_finder = &map->matrix_ptr[matrix_index];
-    if(current_finder->pair_index == MAP_INVALID_INDEX) {
-        array_append(&map->elements, p);
-        // simple case, no hash conflict, replace finder
-        Finder new_finder = {};
-        new_finder.pair_index = map->elements.size - 1;
-        map->matrix_ptr[matrix_index] = new_finder;
-    } else {
-        // complex case, either we have the key and we need to replace the value, or we have to use solver to set a new key
-        while(true) {
-            int possible_location = current_finder->pair_index;
-            // API(cogno): what if the struct doesn't have operator equals?
-            if(map->elements[possible_location].key == key) {
-                // key found, replace value
-                map->elements[possible_location].value = value;
-                return;
-            }
-            
-            int next_index = current_finder->next_finder_index;
-            if(next_index == MAP_INVALID_INDEX) break;
-            current_finder = &map->solver[next_index];
-        }
-        
-        // value is new, add to collision queue in the solver
-        array_append(&map->elements, p);
-        Finder new_finder = {};
-        new_finder.pair_index = map->elements.size - 1;
-        array_append(&map->solver, new_finder);
-        current_finder->next_finder_index = map->solver.size - 1; // keep the linked list intact
-    }
-}
-
 // API(cogno): I wish we could U map_find(T key); but we can't return null or something like that because if that's the value it was added then we have no way to know if we couldn't find it or if we could find it and it was null...
 template<typename T, typename U>
 bool map_find(HashMap<T, U>* map, T key, U* out_value) {
@@ -203,7 +164,7 @@ bool map_find(HashMap<T, U>* map, T key, U* out_value) {
     int index = hash % map->matrix_size;
     ASSERT_BOUNDS(index, 0, map->matrix_size);
     Finder* current_finder = &map->matrix_ptr[index];
-    //
+    
     while (true) {
         int possible_location = current_finder->pair_index;
         if(possible_location == MAP_INVALID_INDEX) break; // no elements ever set
