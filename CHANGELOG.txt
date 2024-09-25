@@ -29,6 +29,7 @@ BREAKING CHANGES:
     > Removed fixed_array.h (you can still use array.h to have fixed-size arrays).
     > In array.h renamed array_new into make_array.
     > In math.h renamed sin, cos and tan into sin_turns, cos_turns and tan_turns for clarity.
+    > In math.h renamed sgn into sign for clarity.
     > In math.h changed inputs to functions vec2_length, vec3_length, vec2_normalize, vec3_normalize, vec4_normalize.
     > In math.h renamed determinant to mat4_determinant.
     > In math.h removed some basic functions (floor, ceil, round, trunc, sqrt, abs, fmod).
@@ -75,6 +76,7 @@ math.h:
     > Added auto detection of math constants, so we don't inadvertently replace them,
         These are: PI, TAU, E, SQRT2, SQRT3, DEG2RAD, DEG2TURNS, RAD2DEG, RAD2TURNS, TURNS2DEG, TURNS2RAD.
     > Renamed sin, cos and tan into sin_turns, cos_turns and tan_turns for clarity and to avoid conflicts with other modules.
+    > Renamed sgn into sign for clarity.
     > Added vec2/3/4_length_squared functions.
     > Changed inputs to functions vec2_length, vec3_length, vec2_normalize, vec3_normalize, vec4_normalize:
         They will now take as input a default value to return if the vector cannot be normalized, forcing you to think about it, which reduces problem when writing code.

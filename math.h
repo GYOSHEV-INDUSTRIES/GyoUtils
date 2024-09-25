@@ -46,7 +46,7 @@ inline float remap(float in, float old_from, float old_to, float new_from, float
 
 #define min(a, b) (((a) < (b)) ? (a) : (b))
 #define max(a, b) (((a) < (b)) ? (b) : (a))
-#define sgn(a) (((a) == 0) ? (0) : (((a) > 0) ? 1 : -1))
+#define sign(a) (((a) == 0) ? (0) : (((a) > 0) ? 1 : -1))
 #define clamp(val, min_, max_) (max(min((val), (max_)), (min_)))
 #define lerp(start, dest, t) (((dest) - (start)) * (t) + (start))
 #ifndef PI

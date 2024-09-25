@@ -54,10 +54,10 @@ void test_simple_math(){
         REQUIRE(abs(0), 0);
         REQUIRE(abs(-4), 4);
     )
-    SECTION("sgn",
-        REQUIRE(sgn(4), 1);
-        REQUIRE(sgn(0), 0);
-        REQUIRE(sgn(-4), -1);
+    SECTION("sign",
+        REQUIRE(sign(4), 1);
+        REQUIRE(sign(0), 0);
+        REQUIRE(sign(-4), -1);
     )
     SECTION("clamp",
         REQUIRE(clamp(0, -2, 2), 0);
