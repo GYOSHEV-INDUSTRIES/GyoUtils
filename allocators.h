@@ -171,3 +171,7 @@ inline void* mem_free(Allocator alloc, void* to_free) {
 // or control on a case per case basis (for example everything uses default allocator
 // except this specific array because when I constructed the array I gave it a different one).
 Allocator default_allocator = {NULL, default_handle}; // points to default handle
+
+// will allocate a block of memory from a given allocator, and control that
+Bump make_bump_allocator(Allocator alloc, int min_size) { return make_bump_allocator(mem_alloc(alloc, min_size), min_size); }
+// API(cogno): same for Arena and all the others
