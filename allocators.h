@@ -154,15 +154,15 @@ void* default_handle(AllocOp op, void* allocator_data, s32 old_size, s32 size_re
 }
 
 inline void* mem_alloc(Allocator alloc, s32 size) {
-    ASSERT(alloc.handle != NULL, "Invalic Allocator (handle function missing!)");
+    ASSERT(alloc.handle != NULL, "Invalid Allocator (handle function missing!)");
     return alloc.handle(AllocOp::ALLOC, alloc.data, 0, size, NULL);
 }
 inline void* mem_realloc(Allocator alloc, s32 old_size, s32 new_size, void* to_realloc) {
-    ASSERT(alloc.handle != NULL, "Invalic Allocator (handle function missing!)");
+    ASSERT(alloc.handle != NULL, "Invalid Allocator (handle function missing!)");
     return alloc.handle(AllocOp::REALLOC, alloc.data, old_size, new_size, to_realloc);
 }
 inline void* mem_free(Allocator alloc, void* to_free) {
-    ASSERT(alloc.handle != NULL, "Invalic Allocator (handle function missing!)");
+    ASSERT(alloc.handle != NULL, "Invalid Allocator (handle function missing!)");
     return alloc.handle(AllocOp::FREE, alloc.data, 0, 0, to_free);
 }
 
