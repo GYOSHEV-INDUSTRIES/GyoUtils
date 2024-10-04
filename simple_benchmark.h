@@ -27,8 +27,7 @@ Basic benchmarking functionality
     #include "performance_counter.h"
 #endif
 
-void print_benchmark_time(u64 cycles) {
-    u64 cpu_frequency = estimate_cpu_frequency();
+void print_benchmark_time(u64 cycles, u64 cpu_frequency) {
     
     f64 time = cycles * 1000000000.0f / cpu_frequency;
     if(time < 1000) { print("% ns", time); return; }
@@ -41,6 +40,11 @@ void print_benchmark_time(u64 cycles) {
     
     time /= 1000;
     print("% s", time);
+}
+
+void print_benchmark_time(u64 cycles) {
+    u64 cpu_frequency = estimate_cpu_frequency();
+    print_benchmark_time(cycles, cpu_frequency);
 }
 
 

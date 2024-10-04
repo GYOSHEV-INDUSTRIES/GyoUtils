@@ -112,7 +112,7 @@ simple_benchmark.h:
         The macros are now function call order independent.
         If you had 2 functions to benchmark, the order in which you would be calling them might affect the result.
         Now some randomization is included so order does not matter as much, leading to more accurate results.
-
+    > Added function to print benchmark time with input cpu_frequency, so it's not recalculated every time.
 
 Version: 0.2.0 2024/02/15
 ---------------------------------

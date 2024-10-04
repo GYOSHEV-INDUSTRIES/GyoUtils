@@ -16,7 +16,7 @@ void win64_print_error() {
     print((const char*)buf);
 }
 
-void* win64_alloc(int size) {
+void* win64_alloc(u64 size) {
     return VirtualAlloc(NULL, size, MEM_RESERVE | MEM_COMMIT, PAGE_READWRITE);
 }
 
