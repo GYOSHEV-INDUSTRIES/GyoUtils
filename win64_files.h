@@ -6,24 +6,18 @@ functions to simplify working with windows' file system.
 - get_only_files_in_dir(...) to know which files only are in a directory
 - get_only_folders_in_dir(...) to know which folders only are in a directory
 - get_drive_names(...) to know which drives you have in your pc
+- win64_get_last_write_time(...) to know when a file was last edited
+- win64_write_file(...) to write data to a file
+- win64_read_entire_file(...) to read the entire contents of a file
 */
-
-#ifndef DISABLE_INCLUDES
-    #include <windows.h>
-#endif
 
 #ifndef GYOFIRST
     #include "first.h"
 #endif
 
-void win64_print_error() {
-    char buf[255]; // hope this is enough
-    DWORD dwError = GetLastError();
-    FormatMessage(FORMAT_MESSAGE_FROM_SYSTEM, 0, dwError, 0, buf, sizeof(buf), 0);
-    print(buf);
-}
+// API(cogno): since array allocates, we can make a get_next_file_in_dir to avoid the allocation. It's basically like str_split_left which returns the single split instead of str_split that returns the array that must be allocated.
 
-bool get_only_files_in_dir(str folder_path, Array<str>* filenames) {
+bool win64_get_only_files_in_dir(str folder_path, Array<str>* filenames) {
     StrBuilder builder = make_str_builder();
     defer { free(builder.ptr); };
     str_builder_append(&builder, folder_path);
@@ -59,7 +53,7 @@ bool get_only_files_in_dir(str folder_path, Array<str>* filenames) {
         }
         
         if(result & FILE_ATTRIBUTE_ARCHIVE) {
-            str file_name = str_new_alloc(win_file_data.cFileName); // else it doesn't live outside this function
+            str file_name = str_copy((const char*)win_file_data.cFileName); // else it doesn't live outside this function
             array_append(filenames, file_name);
         }
         
@@ -71,7 +65,7 @@ bool get_only_files_in_dir(str folder_path, Array<str>* filenames) {
     return true;
 }
 
-bool get_only_folders_in_dir(str folder_path, Array<str>* folders) {
+bool win64_get_only_folders_in_dir(str folder_path, Array<str>* folders) {
     StrBuilder builder = make_str_builder();
     defer { free(builder.ptr); };
     str_builder_append(&builder, folder_path);
@@ -108,7 +102,7 @@ bool get_only_folders_in_dir(str folder_path, Array<str>* folders) {
         
         if(result & FILE_ATTRIBUTE_DIRECTORY) {
             // NOTE(cogno): windows is so fucking stupid it adds '.' and '..' as folders, we need to filter them out
-            str folder_name = str_new_alloc(win_file_data.cFileName); // else it doesn't live outside this function
+            str folder_name = str_copy(win_file_data.cFileName); // else it doesn't live outside this function
             if(str_matches(folder_name, "."))  continue;
             if(str_matches(folder_name, "..")) continue;
             array_append(folders, folder_name);
@@ -123,7 +117,7 @@ bool get_only_folders_in_dir(str folder_path, Array<str>* folders) {
 }
 
 // NOTE(cogno): each name will be terminated with ':', so you'll see "C:" etc.
-bool get_drive_names(Array<str>* drive_names) {
+bool win64_get_drive_names(Array<str>* drive_names) {
     const int BUFF_SIZE = 255;
     char buf[BUFF_SIZE];
     // get the drive letters as a set of strings
@@ -139,11 +133,73 @@ bool get_drive_names(Array<str>* drive_names) {
         char ch = *start;
         if(ch == 0) break;
         
-        str drive_name = str_new_alloc(start);
+        str drive_name = str_copy(start);
         drive_name.size--; //remove the '\'
         array_append(drive_names, drive_name);
         start += drive_name.size + 2;
     }
     
     return drive_names->size > 0;
+}
+
+inline FILETIME win64_get_last_write_time(char *filename) {
+    FILETIME last_write_time = {};
+    if(!ASSERT(filename != NULL, "no input file given")) return last_write_time;
+    
+    WIN32_FIND_DATA find_data;
+    HANDLE find_handle = FindFirstFileA(filename, &find_data);
+    if (find_handle != INVALID_HANDLE_VALUE) {
+        last_write_time = find_data.ftLastWriteTime;
+        FindClose(find_handle);
+    }
+    
+    return last_write_time;
+}
+
+// Writes input data to a file which is created automatically if the file doesn't exist.
+// Returns true if the file is created and the data is saved without any problem, false otherwise.
+// For extended error information you should look at win64_print_error().
+bool win64_write_file(const char* filename, u8* file_data, u32 data_size) {
+    auto file_handle = CreateFileA(filename, GENERIC_WRITE, 0, 0, CREATE_ALWAYS, 0, 0);
+    if (file_handle == INVALID_HANDLE_VALUE) return false;
+    defer {
+        bool ok = CloseHandle(file_handle);
+        ASSERT(ok, "couldn't close file");
+    };
+
+    DWORD bytes_written;
+    WriteFile(file_handle, file_data, data_size, &bytes_written, 0);
+    return true;
+}
+
+// Reads the entire file into a buffer allocated automatically.
+// Optionally writes into bytes_read how big the file is (if NULL it's ignored).
+// Returns NULL if file cannot be read for some reason.
+// For extended error information you should look at win64_print_error().
+u8* win64_read_entire_file(const char* filename, Allocator alloc, u32* bytes_read) {
+    if(!ASSERT(filename != NULL, "No input file given.")) return NULL;
+    if(!ASSERT(alloc.handle != NULL, "No allocator given!")) return NULL;
+
+    auto file_handle = CreateFileA(filename, GENERIC_READ, FILE_SHARE_READ, 0, OPEN_EXISTING, 0, 0);
+    if (file_handle == INVALID_HANDLE_VALUE) return NULL;
+    defer {
+        bool ok = CloseHandle(file_handle);
+        ASSERT(ok, "couldn't close file");
+    };
+
+    DWORD file_size = GetFileSize(file_handle, NULL);
+    if (file_size == INVALID_FILE_SIZE) return NULL;
+
+    auto* allocated = mem_alloc(alloc, file_size);
+    if(allocated == NULL) return NULL;
+
+    DWORD bytes_read_win64;
+    ReadFile(file_handle, allocated, file_size, &bytes_read_win64, 0);
+    if (bytes_read != NULL) *bytes_read = (u32)bytes_read_win64;
+
+    return (u8*)allocated;
+}
+
+u8* win64_read_entire_file(const char* filename, u32* bytes_read) {
+    return win64_read_entire_file(filename, default_allocator, bytes_read);
 }

@@ -4,13 +4,12 @@
 In this file:
 - unicode utility functions
 - str, a simple replacement to std::string, simply told, a ptr to char array + size, making them more useful in many situations.
-- str_builder, a simple way to dynamically construct str (since str is an array of bytes you can use str_builder to also build binary files and many other things!)
-- str_parser, a simple way to dynamically DEconstruct a str (since str is an array of bytes you can use str_parser to also parse binary files and many other things!)
+- StrBuilder, a simple way to dynamically construct str (since str is an array of bytes you can use str_builder to also build binary files and many other things!)
+- StrParser, a simple way to dynamically DEconstruct a str (since str is an array of bytes you can use str_parser to also parse binary files and many other things!)
 */
 
 #ifndef DISABLE_INCLUDES
-    // Todo(Quattro) create our memcpy implementation
-    #include <string.h>
+    #include <string.h> // for memcpy
 #endif
 
 #ifndef GYOFIRST
@@ -64,16 +63,15 @@ int c_string_length(const char* s) {
     return len - 1;
 }
 
-//TODO(cogno): test all of this file
-
-//TODO(cogno): more unicode support (currently str kind of does not support it, I mean utf8 is just an array of bytes but these functions don't take it into account so they might be wrong, alternatively we can make 2 different strings, one with unicode and one without, it might make stuff a lot simpler, I'd say str and unicode_str)
-//TODO(cogno): str substring
-//TODO(cogno): str split all
-//TODO(cogno): str parse to s32
-//TODO(cogno): str parse to float/double
-//TODO(cogno): str is s32, float, maybe even variants like s8, u8, s16, u16 ?
-//TODO(cogno): str is alphanumeric (?)
-//TODO(cogno): str is whitespace (?)
+// nice things to have but which we haven't used yet, we'll do these when we need. If you want these you can implement them and send the code to us!
+//API(cogno): more unicode support (currently str kind of does not support it, I mean utf8 is just an array of bytes but these functions don't take it into account so they might be wrong, alternatively we can make 2 different strings, one with unicode and one without, it might make stuff a lot simpler, I'd say str and unicode_str)
+//API(cogno): str substring
+//API(cogno): str split all
+//API(cogno): str parse to s32
+//API(cogno): str parse to float/double
+//API(cogno): str is s32, float, maybe even variants like s8, u8, s16, u16 ?
+//API(cogno): str is alphanumeric (?)
+//API(cogno): str is whitespace (?)
 
 struct str{
     u8* ptr;
@@ -100,29 +98,22 @@ struct str{
     u8& operator[](s32 i) { ASSERT_BOUNDS(i, 0, size); return ptr[i]; }
 };
 
-// makes a new string from a c_str allocating a new buffer for it
-str str_new_alloc(const char* c_str) {
-    str new_str = {};
-    new_str.size = c_string_length(c_str);
-    new_str.ptr = (u8*)malloc(new_str.size * sizeof(u8));
-    memcpy(new_str.ptr, c_str, sizeof(u8) * new_str.size);
-    return new_str;
-}
-
+// NOTE(cogno): you can directly cast a const char* to a str (so you can do str name = "YourName"; and it will work)
 inline void printsl_custom(str v) { for(int i = 0; i < v.size; i++) printsl_custom((char)v.ptr[i]); }
 
-char* str_to_c_string(str to_convert) {
+const char* str_to_c_string(str to_convert, Allocator alloc) {
     ASSERT(to_convert.size != MAX_U32, "str is full, cannot convert to c str");
     u32 c_size = to_convert.size + 1;
-    char* ptr = (char*)malloc(c_size);
+    char* ptr = (char*)mem_alloc(alloc, c_size);
     memcpy(ptr, to_convert.ptr, to_convert.size);
     ptr[to_convert.size] = 0;
-    return ptr;
+    return (const char*)ptr;
 }
+const char* str_to_c_string(str to_convert) { return str_to_c_string(to_convert, default_allocator); }
 
-str str_concat(str s1, str s2) {
+str str_concat(str s1, str s2, Allocator alloc) {
     str total;
-    total.ptr = (u8*)malloc(s1.size + s2.size);
+    total.ptr = (u8*)mem_alloc(alloc, s1.size + s2.size);
     total.size = s1.size + s2.size;
     
     memcpy(total.ptr, s1.ptr, s1.size);
@@ -130,17 +121,17 @@ str str_concat(str s1, str s2) {
     
     return total;
 }
-str str_concat(const char* s1, const char* s2) { return str_concat((str)s1, (str)s2); }
-str str_concat(str s1, const char* s2) { return str_concat(s1, (str)s2); }
-str str_concat(const char* s1, str s2) { return str_concat((str)s1, s2); }
+str str_concat(str s1, str s2) { return str_concat(s1, s2, default_allocator); }
 
-str str_copy(str to_copy) {
+// copies a string allocating into a given allocator
+str str_copy(str to_copy, Allocator alloc) {
     str copy;
-    copy.ptr = (u8*)malloc(to_copy.size);
+    copy.ptr = (u8*)mem_alloc(alloc, to_copy.size);
     copy.size = to_copy.size;
     memcpy(copy.ptr, to_copy.ptr, to_copy.size);
     return copy;
 }
+str str_copy(str to_copy) { return str_copy(to_copy, default_allocator); }
 
 // splits a single str in 2 parts on the first occurrence of a char, no allocations necessary.
 // the character split is NOT included in the final strings, 
@@ -332,6 +323,15 @@ bool str_ends_with(str to_check, str checker) {
     return true;
 }
 
+// counts occurrencies of a character in the given string
+int str_count(str to_check, char to_count) {
+    int the_count = 0;
+    For(to_check) {
+        if(it == to_count) the_count++;
+    }
+    return the_count;
+}
+
 // supports unicode utf8
 u32 str_length_in_char(str string) {
     u32 char_count = 0;
@@ -365,11 +365,6 @@ bool str_matches(str a, str b) {
     return true;
 }
 
-bool str_matches(const char* a, const char* b) {return str_matches((str)a, (str)b); }
-bool str_matches(str a, const char* b) {return str_matches(a, (str)b); }
-bool str_matches(const char* a, str b) {return str_matches((str)a, b); }
-
-
 /*
 StrBuilder, used to dinamically construct str.
 Since str is an array of bytes you can also use this to construct binary data (like files)
@@ -377,34 +372,34 @@ Since str is an array of bytes you can also use this to construct binary data (l
 
 #define STR_BUILDER_DEFAULT_SIZE 100
 
+// API(cogno): make this work automatically if make_str_builder is not called.
 struct StrBuilder {
     u8* ptr;
     s32 size;
     s32 reserved_size;
+    Allocator alloc;
     u8& operator[](s32 i) { ASSERT_BOUNDS(i, 0, size); return ptr[i]; }
 };
 
+// TODO(cogno): make StrBuilder usable when zero initialized
+// TODO(cogno): make StrParser usable when zero initialized
 inline void printsl_custom(StrBuilder b) { for(int i = 0; i < b.size; i++) printsl_custom((char)b.ptr[i]); }
 
-StrBuilder make_str_builder(u8* ptr, s32 size) {
+StrBuilder make_str_builder(s32 size, Allocator alloc) {
     StrBuilder s = {};
-    s.ptr = ptr;
+    s.alloc = alloc;
+    s.size = 0;
     s.reserved_size = size;
+    s.ptr = (u8*)mem_alloc(alloc, size * sizeof(u8));
     return s;
 }
 
-StrBuilder make_str_builder() {
-    auto* ptr = (u8*)malloc(STR_BUILDER_DEFAULT_SIZE); // default at 100 bytes
-    return make_str_builder(ptr, STR_BUILDER_DEFAULT_SIZE);
-}
-
-StrBuilder make_str_builder(s32 size) {
-    auto* ptr = (u8*)malloc(size);
-    return make_str_builder(ptr, size);
-}
+StrBuilder make_str_builder() { return make_str_builder(STR_BUILDER_DEFAULT_SIZE, default_allocator); }
+StrBuilder make_str_builder(s32 size) { return make_str_builder(size, default_allocator); }
 
 void str_builder_free(StrBuilder* b) {
-    free(b->ptr);
+    b->ptr = (u8*)mem_free(b->alloc, b->ptr);
+    b->size = b->reserved_size = 0;
 }
 
 void str_builder_clear(StrBuilder* b) {
@@ -413,7 +408,7 @@ void str_builder_clear(StrBuilder* b) {
 
 StrBuilder str_builder_copy(StrBuilder* b) {
     StrBuilder copy;
-    copy.ptr = (u8*)malloc(b->reserved_size);
+    copy.ptr = (u8*)mem_alloc(b->alloc, b->reserved_size * sizeof(u8));
     copy.size = b->size;
     copy.reserved_size = b->reserved_size;
     memcpy(copy.ptr, b->ptr, b->size);
@@ -427,20 +422,12 @@ str str_builder_get_str(StrBuilder* b) {
     return s;
 }
 
-void str_builder_resize(StrBuilder* b) {
-    u8 old_start = b->ptr[0];
-    s32 new_size = b->reserved_size * 2;
-    new_size = new_size >= STR_BUILDER_DEFAULT_SIZE ? new_size : STR_BUILDER_DEFAULT_SIZE; // API(cogno): 'max' identifier not found error
-    b->ptr = (u8*)realloc(b->ptr, new_size);
-    ASSERT(b->ptr[0] == old_start, "ERROR ON REALLOC, initial byte unexpectedly changed, this is not supposed to happen...");
-}
-
 void str_builder_resize(StrBuilder* b, s32 min_size) {
     u8 old_start = b->ptr[0];
     s32 new_size = b->reserved_size * 2;
     new_size = new_size >= STR_BUILDER_DEFAULT_SIZE ? new_size : STR_BUILDER_DEFAULT_SIZE; // API(cogno): 'max' identifier not found error
     new_size = new_size >= min_size ? new_size : min_size; // API(cogno): 'max' identifier not found error
-    b->ptr = (u8*)realloc(b->ptr, new_size);
+    b->ptr = (u8*)mem_realloc(b->alloc, b->reserved_size * sizeof(u8), new_size * sizeof(u8), b->ptr);
     b->reserved_size = new_size;
     ASSERT(b->ptr[0] == old_start, "ERROR ON REALLOC, initial byte unexpectedly changed, this is not supposed to happen...");
 }
@@ -553,6 +540,34 @@ void str_builder_append(StrBuilder* b, f64 to_append) {
     str_builder_append(b, converted);
 }
 
+void str_builder_append_hex(StrBuilder* b, u64 to_append) {
+    char buff[20];
+    snprintf(buff, 20, "%04X_%04X_%04X_%04X", (u32)(to_append >> 48) & 0xffff, (u32)(to_append >> 32) & 0xffff, (u32)(to_append >> 16) & 0xffff, (u32)to_append & 0xffff);
+    str converted = buff;
+    str_builder_append(b, converted);
+}
+
+void str_builder_append_hex(StrBuilder* b, u32 to_append) {
+    char buff[12];
+    snprintf(buff, 12, "%04X_%04X", (to_append >> 16) & 0xffff, to_append & 0xffff);
+    str converted = buff;
+    str_builder_append(b, converted);
+}
+
+// converts the ptr to hex text, it will NOT read the contents of the ptr itself
+template<typename T> 
+void str_builder_append_ptr(StrBuilder* b, T* to_append) {
+    union Temp {
+        T* ptr;
+        u64 u64;
+    } t; // NOTE(cogno): if we cast T* to u64/u32 we might get a warning (which some projects turn into an error), so we use an union
+    t.ptr = to_append;
+    char buff[20];
+    snprintf(buff, 20, "%04X_%04X_%04X", (u32)(t.u64 >> 32) & 0xffff, (u32)(t.u64 >> 16) & 0xffff, (u32)t.u64 & 0xffff);
+    str converted = buff;
+    str_builder_append(b, converted);
+}
+
 // custom str_builder variants, you can add yours too!
 #ifdef GYOMATH
 void str_builder_append(StrBuilder* b, vec2 to_append) {
@@ -585,7 +600,7 @@ void str_builder_append(StrBuilder* b, vec4 to_append) {
     str_builder_append(b, ')');
 }
 
-//TODO(cogno): str_builder append mat4, col, etc.
+//API(cogno): str_builder append mat4, col, etc.
 #endif
 
 // NOTE(cogno): all append_raw are little-endian
@@ -635,14 +650,27 @@ void str_builder_append_raw(StrBuilder* b, vec4 to_add) {
     str_builder_append_raw(b, to_add.z);
     str_builder_append_raw(b, to_add.w);
 }
-// TODO(cogno): str builder append raw mat4, col etc.
+// API(cogno): str builder append raw mat4, col etc.
 #endif
 
-// TODO(cogno): string builder insert at index
-// TODO(cogno): string builder replace
+// API(cogno): string builder insert at index
+// API(cogno): string builder replace
 
 void str_builder_remove_last_bytes(StrBuilder* b, s32 bytes_to_remove) { b->size -= bytes_to_remove; }
 
+// counts how many bytes are right of the last <to_find> character in the string,
+// returns -1 if <to_find> is not found
+int str_builder_count_right(StrBuilder* b, u8 to_find) {
+    for(int i = b->size - 1; i >= 0; i--) {
+        if(b->ptr[i] == to_find) return b->size - i - 1;
+    }
+    return -1;
+}
+
+void str_builder_remove_right(StrBuilder* b, u8 to_find) {
+    auto size_found = str_builder_count_right(b, to_find);
+    if (size_found > 0) str_builder_remove_last_bytes(b, size_found);
+}
 
 /*
 StrParser, used to dinamically deconstruct str.
@@ -797,12 +825,15 @@ bool str_parser_parse_u64(StrParser* p, u64* out) {
     return true;
 }
 
+inline bool operator ==(str a, str b) {return str_matches(a,b);}
+
+
 // parse functions convert str to types and return them
-// TODO(cogno): parse s8
-// TODO(cogno): parse s16
-// TODO(cogno): parse s32
-// TODO(cogno): parse s64
-// TODO(cogno): parse f32
-// TODO(cogno): parse f64
+// API(cogno): parse s8
+// API(cogno): parse s16
+// API(cogno): parse s32
+// API(cogno): parse s64
+// API(cogno): parse f32
+// API(cogno): parse f64
 
 

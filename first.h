@@ -5,11 +5,15 @@
 In this file:
 - better type names for common types (s8, u8, s16, u16, s32, u32, s64, u64, f32, f64)
 - max and min values for unsigned and signed types
+- INFINITY and NAN values for floats
+- DEPRECATED macro with custom message support
+- MSVC_BUG macro to automatically fix a msvc compiler bug related to macros
 - custom print replacement to printf, can be used to also print more complex custom types
 - printsl, like print but without \n at the end
 - ASSERT macro which can be deactivated, prints a custom (optional) formatted message and returns the expression value
 - ASSERT_BOUNDS to make out of bounds checks easier
 - defer macro, like golang's defer
+- For macro to provide a more convenient way to iterate over Array and similar structs
 */
 
 #ifndef DISABLE_INCLUDES
@@ -49,73 +53,43 @@ typedef double   f64;
 #define NAN        (-(float)(INFINITY * 0.0F))
 #endif
 
+#define DEPRECATED(msg) __declspec(deprecated(msg))
+
 #define MSVC_BUG(MACRO, ARGS) MACRO ARGS // fuck you microsoft
 
 //
-// alternative to printf, print and printsl:
+// alternative to printf: print and printsl.
 // any print is just printsl with a \n at the end (sl = single line)
 //
 // usage: either print(variable), or print("message with replacements", var1, var2, ...)
 // printf uses % followed by a character (or more) to know how to print your variable, for
-// example %d prints integers, %f floats, %p pointers etc, we don't do that, we decide how
-// to print the variable depending on it's type (floats will be printed as floats,
-// integers as integers, etc.).
-// to do so simply put '%' where you want your variable to be printed.
-// if you want to print % as a symbol, add \\ before the %
+// example %d prints integers, %f floats, %p pointers etc. 
+// We don't do that, we automatically decide how to print the variable depending on it's type,
+// meaning floats will be printed as floats, integers as integers, etc.
+// To do so simply put '%' where you want your variable to be printed.
+// If you want to print % as a symbol, add '\\' before the % you want to print. Example below.
+// If the input given is not a know type, '(unknown type)' will be print instead.
+// If more inputs than replacements are given, '(missing input)' will be print instead.
+// If less inputs than replacements are given, '(extra inputs given)' will be print instead.
+// To implement custom printing for you custom type, implement void printsl_function(<your type>) {...}, 
+// some example code implementations are given below and in other modules (like str, arrays, etc).
 //
-// if you want more advanted formatting (how many characters a float has, padding, identation, ...)
-// then simply use printf
+// If you want more advanted formatting (how many characters a float has, padding, identation, ...)
+// then simply use printf, that's why it exists.
 //
 // example usage:
 // int a = 15;
 // float b = 12.5;
-// print(a);
-// print("this is value %", a);
-// print("this is a percentage: %\\%", a);
-// print("values a=%, b=%", a, b);
+// print(a);                               // prints '15'
+// print("this is value %", a);            // prints 'this is value 15'
+// print("this is a percentage: %\\%", a); // prints 'this is a percentage: 15%'
+// print("values a=%, b=%", a, b);         // prints 'values a=15, b=12.50000'
+// print("input forgotten: %, %", a);      // prints 'input forgotten: 15, (missing input)'
+// print("too many inputs: %", a, b);      // prints 'too many inputs: 15(extra inputs given)'
+// print("input broken: %");               // prints 'input broken: %' instead of having '(missing input)' because it was instructed with printing directly the input as a string, since no other inputs were given.
 //
 
-// TODO(cogno): also convert, f32, f64
-int u64_to_char_ptr(u64 value, char* dest) {
-    char temp[22];
-    char* temp_ptr = temp;
-    u64 v = value;
-    
-    // put each digit into temp (smallest to highest units)
-    int i;
-    while(v || temp_ptr == temp) {
-        i = v % 10;
-        v /= 10;
-        *temp_ptr++ = i + '0';
-    }
-    
-    int digits_count = temp_ptr - temp;
-    
-    // copy digits into final buffer in the correct order
-    while(temp_ptr > temp) *dest++ = *--temp_ptr;
-    return digits_count;
-}
-
-
-int s64_to_char_ptr(s64 value, char* dest) {
-    if(value >= 0) return u64_to_char_ptr((u64)value, dest);
-    
-    *dest++ = '-';
-    return 1 + u64_to_char_ptr(-value, dest);
-}
-
-int s32_to_char_ptr(s32 value, char* dest) { return s64_to_char_ptr((s64)value, dest); }
-int u32_to_char_ptr(u32 value, char* dest) { return u64_to_char_ptr((u64)value, dest); }
-int u16_to_char_ptr(u16 value, char* dest) { return u64_to_char_ptr((u64)value, dest); }
-int u8_to_char_ptr( u8  value, char* dest) { return u64_to_char_ptr((u64)value, dest); }
-int s16_to_char_ptr(s16 value, char* dest) { return s64_to_char_ptr((s64)value, dest); }
-int s8_to_char_ptr( s8  value, char* dest) { return s64_to_char_ptr((s64)value, dest); }
-
-//
-// new print (like old but buffered for extra speed)
-//
-
-
+#define _buffer_append(fmt, ...) __buffer_index += snprintf(__print_buff + __buffer_index, __BUFF_SIZE - __buffer_index, fmt, __VA_ARGS__)
 
 int __buffer_index = 0;
 const int __BUFF_SIZE = 0xFF;
@@ -125,47 +99,70 @@ inline void flush_to_stdout() {
     __buffer_index = 0;
 }
 
-// TODO(cogno): temp, will be replaced with our custom implementations
-#define buffer_append(fmt, ...) __buffer_index += snprintf(__print_buff + __buffer_index, __BUFF_SIZE - __buffer_index, fmt, __VA_ARGS__)
-
-
-
 // print standard specializations
 // API(cogno): maybe a name like custom_format is better? I don't know
 inline void printsl_custom(const char* s) { int index = 0; while(s[index]) __print_buff[__buffer_index++] = s[index++]; }
-inline void printsl_custom(char* s)       { int index = 0; while(s[index]) __print_buff[__buffer_index++] = s[index++]; }
 inline void printsl_custom(char c)        { __print_buff[__buffer_index++] = c; }
-inline void printsl_custom(s8  d)         { __buffer_index += s8_to_char_ptr( d, __print_buff + __buffer_index); }
-inline void printsl_custom(s16 d)         { __buffer_index += s16_to_char_ptr(d, __print_buff + __buffer_index); }
-inline void printsl_custom(s32 d)         { __buffer_index += s32_to_char_ptr(d, __print_buff + __buffer_index); }
-inline void printsl_custom(s64 d)         { __buffer_index += s64_to_char_ptr(d, __print_buff + __buffer_index); }
-inline void printsl_custom(u8  d)         { __buffer_index += u8_to_char_ptr( d, __print_buff + __buffer_index); }
-inline void printsl_custom(u16 d)         { __buffer_index += u16_to_char_ptr(d, __print_buff + __buffer_index); }
-inline void printsl_custom(u32 d)         { __buffer_index += u32_to_char_ptr(d, __print_buff + __buffer_index); }
-inline void printsl_custom(u64 d)         { __buffer_index += u64_to_char_ptr(d, __print_buff + __buffer_index); }
-inline void printsl_custom(float f)       { buffer_append("%.5f", f); }
-inline void printsl_custom(double f)      { buffer_append("%.5f", f); }
+inline void printsl_custom(s8  d)         { _buffer_append("%d",   d); }
+inline void printsl_custom(s16 d)         { _buffer_append("%d",   d); }
+inline void printsl_custom(s32 d)         { _buffer_append("%ld",  d); }
+inline void printsl_custom(s64 d)         { _buffer_append("%lld", d); }
+inline void printsl_custom(u8  d)         { _buffer_append("%u",   d); }
+inline void printsl_custom(u16 d)         { _buffer_append("%u",   d); }
+inline void printsl_custom(u32 d)         { _buffer_append("%lu",  d); }
+inline void printsl_custom(u64 d)         { _buffer_append("%llu", d); }
+inline void printsl_custom(float f)       { _buffer_append("%.5f", f); }
+inline void printsl_custom(double f)      { _buffer_append("%.5f", f); }
 inline void printsl_custom(bool b)        { if (b) printsl_custom("true"); else printsl_custom("false"); }
 inline void printsl_custom() { }
 
 // default behaviour, unknown types prints "(unknown type)", while pointers are printed as such
 template<typename T> void printsl_custom(T v)  { printsl_custom("(unknown type)"); }
-template<typename T> void printsl_custom(T* v) { buffer_append("0x%p", v); } // NOTE(cogno): leave this before const char* s so strings are printed as such (and not as pointers)
-
+template<typename T> void printsl_custom(T* to_print) {
+    union Temp {
+        T* ptr;
+        u64 u64;
+    } t; // NOTE(cogno): if we cast T* to u64/u32 we might get a warning (which some projects turn into an error), so we use an union
+    t.ptr = to_print;
+    _buffer_append("0x%04X_%04X_%04X", (u32)(t.u64 >> 32) & 0xffff, (u32)(t.u64 >> 16) & 0xffff, (u32)t.u64 & 0xffff);
+}
 
 // first we recursively accumulate into a buffer, then we flush it
-inline void accumulate_into_buffer(const char* s) { buffer_append("%s", s); }
-template <typename T, typename... Types>
-void accumulate_into_buffer(const char* s, T t1, Types... others) {
+inline void _accumulate_into_buffer(const char* s) {
+    // we don't have any more inputs but we might still need to escape some '\%' to print percentages
+    //API(cogno): maybe we can write '(missing input)' ?
     int current_index = 0;
     while(true) {
         char c = s[current_index++];
         if(c == 0) return;
+        if(c == '\\') {
+            char next = s[current_index];
+            if(next == '%') { printsl_custom('%'); current_index++; }
+        } else if(c == '%') {
+            printsl_custom("(missing input)");
+        } else {
+            printsl_custom(c);
+        }
+    }
+}
+
+template <typename T, typename... Types>
+void _accumulate_into_buffer(const char* s, T t1, Types... others) {
+    // printf("'%s'\n", s);
+    int current_index = 0;
+    while(true) {
+        char c = s[current_index++];
+        if(c == 0) {
+            // if we are at the end of the string *here* we have more inputs to print, but there's obviously no space (we should be in the function above!)
+            printsl_custom("(extra inputs given)");
+            return;
+        }
         else if(c == '\\') {
             char next = s[current_index];
             // escape characters
             if(next == '%') { printsl_custom('%'); current_index++; }
         } else if(c == '%') {
+            // printf("'putting format'\n");
             break; // put formatted input
         } else {
             // just a character to print
@@ -173,7 +170,7 @@ void accumulate_into_buffer(const char* s, T t1, Types... others) {
         }
     }
     printsl_custom(t1);
-    accumulate_into_buffer(s + current_index, others...);
+    _accumulate_into_buffer(s + current_index, others...);
 }
 
 //
@@ -197,14 +194,14 @@ void print(T t) {
 //
 template <typename T, typename... Types>
 void printsl(const char* s, T t1, Types... others) {
-    accumulate_into_buffer(s, t1, others...);
+    _accumulate_into_buffer(s, t1, others...);
     flush_to_stdout();
 }
 
 // print formatting
 template <typename T, typename... Types>
 void print(const char* s, T t1, Types... others) {
-    accumulate_into_buffer(s, t1, others...);
+    _accumulate_into_buffer(s, t1, others...);
     printsl_custom('\n');
     flush_to_stdout();
 }
@@ -241,7 +238,6 @@ inline bool assert_func(bool expr, const char* expression_as_string, const char*
         print("    File: %", filename);
         print("    Line: %", line_count);
         print("    Function: %", function_name);
-        print("Stack Trace:"); // TODO(cogno): can we display it only when needed/when it actually works?
         DEBUG_BREAK;
         abort(); // so the stack trace works (exit(-1) or exit(0) don't)
     }
@@ -251,13 +247,13 @@ inline bool assert_func(bool expr, const char* expression_as_string, const char*
 template <typename... Types>
 inline bool assert_func(bool expr, const char* expression_as_string, const char* filename, int line_count, const char* function_name, const char* optional_message, Types... message_inputs) {
     if(!expr) {
+        // printf("assertion failed\n");
         printsl("### Assertion failed: ");
         print(optional_message, message_inputs...);
         print("    Code: '%'", expression_as_string);
         print("    File: %", filename);
         print("    Line: %", line_count);
         print("    Function: %", function_name);
-        print("Stack Trace:"); // TODO(cogno): can we display it only when needed/when it actually works?
         DEBUG_BREAK;
         abort(); // so the stack trace works (exit(-1) or exit(0) don't)
     }
@@ -431,3 +427,40 @@ void printsl_custom(EnumName to_print) { \
     printsl("%::%", #EnumName, to_string(to_print)); \
 }
 
+// 
+// macros for improved for cycle. 
+// Works with any structs with 'size' and 'ptr' values. 
+// The 4 alternatives can iterate over elements by values, by pointer, by values in reverse order and
+// by pointer in reverse order
+// Example:
+// For(array) {
+//     print("index % = %", it_index, it);    
+// }
+// Which is much less stuff to write than:
+// for(int i = 0; i < array.size; i++) {
+//     auto value = array.ptr[i];
+//     print("index % = %", i, value);
+// }
+//
+#define For(arr) \
+for(int it_index = 0, _=1;_;_=0) \
+    for(auto it = (arr).ptr[it_index]; it_index < (arr).size; it = (arr).ptr[++it_index])
+
+#define For_ptr(arr) \
+for(int it_index = 0, _=1;_;_=0) \
+    for(auto* it = &((arr).ptr[it_index]); it_index < (arr).size; it = &((arr).ptr[++it_index]))
+
+#define For_rev(arr) \
+for(int it_index = (arr).size - 1, _=1;_;_=0) \
+    for(auto it = (arr).ptr[it_index]; it_index >= 0; it = (arr).ptr[--it_index])
+
+#define For_ptr_rev(arr) \
+for(int it_index = (arr).size - 1, _=1;_;_=0) \
+    for(auto* it = &((arr).ptr[it_index]); it_index >= 0; it = &((arr).ptr[--it_index]))
+
+#define For_rev_ptr(arr) For_ptr_rev((arr))
+
+// A simple macro to write for(Range(10, 30)) instead of for(int it = 10; it < 30; it++), just for brevity
+// TODO(cogno): what if you put an array inside another? "it" name conflict?
+#define FOR_RANGE(min, max) s32 it = min; it < max; it++
+#define Range(min, max) FOR_RANGE(min, max)

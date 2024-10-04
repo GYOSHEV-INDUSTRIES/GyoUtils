@@ -14,11 +14,12 @@ Configuration macros
 */
 
 #include "first.h"
-
 #include "math.h"
-#include "dynamic_array.h"
-#include "fixed_array.h"
+#include "allocators.h"
+
+#include "array.h"
 #include "str.h"
+#include "hashmap.h"
 
 #include "performance_counter.h"
 #include "simple_profiling.h"
@@ -26,5 +27,6 @@ Configuration macros
 #include "simple_benchmark.h"
 
 #if _WIN32
+    #include "win64_basic.h"
     #include "win64_files.h"
 #endif

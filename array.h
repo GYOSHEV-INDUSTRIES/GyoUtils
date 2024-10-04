@@ -3,24 +3,37 @@
 /*
 In this file:
 - Array, a simple replacement to std::vector
-- For macro to provide a more convenient way to iterate over Array
-- Range macro to also simplify basic for cycle syntax
 */
 
 #ifndef GYOFIRST
     #include "first.h"
 #endif
 
+#ifndef GYO_ALLOCATORS
+    #include "allocators.h"
+#endif
+
+#define GYO_ARRAY
+
+#define GYO_ARRAY_DEFAULT_SIZE 8
+
 template <typename T>
 struct Array {
     s32 size = 0;
     s32 reserved_size = 0;
     T* ptr = NULL;
+    Allocator alloc;
     T& operator[](s32 i) { ASSERT_BOUNDS(i, 0, size); return ptr[i]; }
 };
 
+// TODO(cogno): pass to s64/u64, an array of 4gb of data is kind of bad...
+
 template <typename T>
 void printsl_custom(Array<T> arr) {
+    if (arr.ptr == NULL) {
+        printsl("(null array)");
+        return;
+    }
     printsl("[");
     For(arr) {
         if (it_index != 0) printsl(",");
@@ -29,23 +42,32 @@ void printsl_custom(Array<T> arr) {
     printsl("]");
 }
 
+// uses the custom given allocator
 template<typename T>
-Array<T> array_new(s32 size) {
+Array<T> make_array(s32 size, Allocator alloc) {
     ASSERT(size >= 0, "cannot create array with negative size %", size);
     Array<T> array;
     array.reserved_size = size;
     array.size = 0;
-    array.ptr = (T*)calloc(size, sizeof(T));
+    array.alloc = alloc;
+    array.ptr = (T*)mem_alloc(alloc, size * sizeof(T));
     return array;
 }
 
+// overloads, pretty obvious
+
+template<typename T> Array<T> make_array(Allocator alloc) { return make_array<T>(GYO_ARRAY_DEFAULT_SIZE, alloc); }
+template<typename T> Array<T> make_array(s32 size) { return make_array<T>(size, default_allocator); }
+
+
+// will free from the allocator only the space used by the array
 template<typename T>
 void array_free(Array<T>* array) {
-    free(array->ptr);
+    if(array->alloc.handle != NULL) array->ptr = (T*)mem_free(array->alloc, array->ptr);
     array->size = 0;
     array->reserved_size = 0;
-    array->ptr = NULL;
 }
+
 
 template<typename T>
 void array_clear(Array<T>* array) {
@@ -55,7 +77,9 @@ void array_clear(Array<T>* array) {
 
 template<typename T>
 void array_resize(Array<T>* array, s32 new_size) {
-    array->ptr = (T*)realloc(array->ptr, sizeof(*array->ptr) * new_size);
+    if(array->alloc.handle == NULL) array->alloc = default_allocator;
+    array->ptr = (T*)mem_realloc(array->alloc, array->reserved_size * sizeof(T), new_size * sizeof(T), array->ptr);
+    ASSERT(array->ptr != NULL, "couldn't allocate new memory (array is full! it's size is %)", array->reserved_size);
     array->reserved_size = new_size;
 }
 
@@ -64,7 +88,7 @@ void array_reserve(Array<T>* array, s32 to_add) {
     if(array->size + to_add <= array->reserved_size) return; // we already have enough space
     
     s32 new_size = array->reserved_size * 2;
-    if(new_size < 8) new_size = 8;
+    if(new_size < GYO_ARRAY_DEFAULT_SIZE) new_size = GYO_ARRAY_DEFAULT_SIZE;
     if(array->size + to_add > new_size) new_size = array->size + to_add;
     array_resize(array, new_size);
     ASSERT(array->size + to_add <= array->reserved_size, "not enough memory allocated! wanted % but was %", array->size + to_add, array->reserved_size);
@@ -132,7 +156,7 @@ T array_get_data(Array<T>* array, s32 index) {
 }
 
 template<typename T>
-void array_set(Array<T>* array, s32 index, s32 value) {
+void array_set(Array<T>* array, s32 index, T value) {
     ASSERT_BOUNDS(index, 0, array->size);
     array->ptr[index] = value;
 }
@@ -143,40 +167,3 @@ T* array_get_ptr(Array<T>* array, s32 index) {
     return &array->ptr[index];
 }
 
-// 
-// macros for improved for cycle. 
-// Works with any structs with 'size' and 'ptr' values. 
-// The 4 alternatives can iterate over elements by values, by pointer, by values in reverse order and
-// by pointer in reverse order
-// Example:
-// For(array) {
-//     print("index % = %", it_index, it);    
-// }
-// Which is much less stuff to write than:
-// for(int i = 0; i < array.size; i++) {
-//     auto value = array.ptr[i];
-//     print("index % = %", i, value);
-// }
-//
-#define For(arr) \
-for(int it_index = 0, _=1;_;_=0) \
-    for(auto it = (arr).ptr[it_index]; it_index < (arr).size; it = (arr).ptr[++it_index])
-
-#define For_ptr(arr) \
-for(int it_index = 0, _=1;_;_=0) \
-    for(auto* it = &((arr).ptr[it_index]); it_index < (arr).size; it = &((arr).ptr[++it_index]))
-
-#define For_rev(arr) \
-for(int it_index = (arr).size - 1, _=1;_;_=0) \
-    for(auto it = (arr).ptr[it_index]; it_index >= 0; it = (arr).ptr[--it_index])
-
-#define For_ptr_rev(arr) \
-for(int it_index = (arr).size - 1, _=1;_;_=0) \
-    for(auto* it = &((arr).ptr[it_index]); it_index >= 0; it = &((arr).ptr[--it_index]))
-
-#define For_rev_ptr(arr) For_ptr_rev((arr))
-
-// A simple macro to write for(Range(10, 30)) instead of for(int it = 10; it < 30; it++), just for brevity
-// TODO(cogno): what if you put an array inside another? "it" name conflict?
-#define FOR_RANGE(min, max) s32 it = min; it < max; it++
-#define Range(min, max) FOR_RANGE(min, max)
