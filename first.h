@@ -443,19 +443,19 @@ void printsl_custom(EnumName to_print) { \
 // }
 //
 #define For(arr) \
-for(int it_index = 0, _=1;_;_=0) \
+for(int it_index = 0, _=1;_ && (arr).size > 0;_=0) \
     for(auto it = (arr).ptr[it_index]; it_index < (arr).size; it = (arr).ptr[++it_index])
 
 #define For_ptr(arr) \
-for(int it_index = 0, _=1;_;_=0) \
+for(int it_index = 0, _=1;_ && (arr).size > 0;_=0) \
     for(auto* it = &((arr).ptr[it_index]); it_index < (arr).size; it = &((arr).ptr[++it_index]))
 
 #define For_rev(arr) \
-for(int it_index = (arr).size - 1, _=1;_;_=0) \
+for(int it_index = (arr).size - 1, _=1;_ && (arr).size > 0;_=0) \
     for(auto it = (arr).ptr[it_index]; it_index >= 0; it = (arr).ptr[--it_index])
 
 #define For_ptr_rev(arr) \
-for(int it_index = (arr).size - 1, _=1;_;_=0) \
+for(int it_index = (arr).size - 1, _=1;_ && (arr).size > 0;_=0) \
     for(auto* it = &((arr).ptr[it_index]); it_index >= 0; it = &((arr).ptr[--it_index]))
 
 #define For_rev_ptr(arr) For_ptr_rev((arr))
