@@ -1,4 +1,13 @@
-Version: 0.3.0
+---------------------------------
+Version: 0.3.1
+---------------------------------
+
+math.h:
+    > Added checks to not override min/max macros if already defined
+
+
+---------------------------------
+Version: 0.3.0   2024/10/05
 The Allocators Revolution
 ---------------------------------
 
@@ -114,6 +123,7 @@ simple_benchmark.h:
         Now some randomization is included so order does not matter as much, leading to more accurate results.
     > Added function to print benchmark time with input cpu_frequency, so it's not recalculated every time.
 
+---------------------------------
 Version: 0.2.0 2024/02/15
 ---------------------------------
 
@@ -167,6 +177,7 @@ dynamic_array.h:
     
     > Fixed array_insert not working if you wanted to append something.
     
+---------------------------------
 Version: 0.1.4 2023/11/04
 ---------------------------------
 
@@ -204,6 +215,7 @@ first.h:
     > Fixed a bug in the `count_digits` function (precision loss).
     > Fixed macro redefinition warning/error for INFINITY and NAN in first.h.
 
+---------------------------------
 Version: 0.1.3 2023/10/01
 ---------------------------------
 
@@ -222,12 +234,14 @@ simple_benchmark.h:
 math.h:
     > Fixed in gcc error about __m128 and {}.
 
+---------------------------------
 Version: 0.1.2 2023/09/24
 ---------------------------------
 
 > Fixed print for str and str_builder being printed as array of u8 instead of a string.
 
 
+---------------------------------
 Version: 0.1.1 2023/09/23
 ---------------------------------
 
@@ -253,6 +267,7 @@ math.h:
     > Added remap function, with overloads for float, vec2, vec3 and vec4.
     > struct col for colors can now be printed.
 
+---------------------------------
 Version: 0.1.0 2023/09/16
 ---------------------------------
 
