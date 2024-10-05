@@ -5,8 +5,11 @@ Version: 0.3.1
 first.h:
     > Improved For macros to allow iteration of empty containers (instead of causing a out of bounds read / access violation exception).
 
+str.h:
+    > Added str_contains.
+
 math.h:
-    > Added checks to not override min/max macros if already defined
+    > Added checks to not override min/max macros if already defined.
 
 
 ---------------------------------

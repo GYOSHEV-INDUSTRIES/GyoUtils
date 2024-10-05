@@ -365,6 +365,13 @@ bool str_matches(str a, str b) {
     return true;
 }
 
+bool str_contains(str to_check, char to_find) {
+    For(to_check) {
+        if (it == to_find) return true;
+    }
+    return false;
+}
+
 /*
 StrBuilder, used to dinamically construct str.
 Since str is an array of bytes you can also use this to construct binary data (like files)
