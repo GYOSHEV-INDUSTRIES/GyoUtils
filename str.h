@@ -16,7 +16,9 @@ In this file:
     #include "first.h"
 #endif
 
-//UNICODE UTILS
+//
+// UNICODE UTILS
+//
 s8 unicode_utf8_to_size(u8 val) {
     if (val < 128) return 1;
     if (val < 224) return 2;
@@ -63,6 +65,9 @@ int c_string_length(const char* s) {
     return len - 1;
 }
 
+bool u8_is_whitespace(u8 ch) { return ch == ' ' || ch == '\t' || ch == '\r' || ch == '\n' || ch == '\v' || ch == '\f'; }
+bool u8_is_digit(u8 ch) { return ch > '0' && ch < '9'; }
+
 // nice things to have but which we haven't used yet, we'll do these when we need. If you want these you can implement them and send the code to us!
 //API(cogno): more unicode support (currently str kind of does not support it, I mean utf8 is just an array of bytes but these functions don't take it into account so they might be wrong, alternatively we can make 2 different strings, one with unicode and one without, it might make stuff a lot simpler, I'd say str and unicode_str)
 //API(cogno): str substring
@@ -71,7 +76,6 @@ int c_string_length(const char* s) {
 //API(cogno): str parse to float/double
 //API(cogno): str is s32, float, maybe even variants like s8, u8, s16, u16 ?
 //API(cogno): str is alphanumeric (?)
-//API(cogno): str is whitespace (?)
 
 struct str{
     u8* ptr;
@@ -219,10 +223,9 @@ bool str_split_right(str to_split, u8 char_to_split, str* left_side, str* right_
 }
 
 void str_trim_left_inplace(str* to_trim) {
-    //API(cogno): I don't think space and \t are enough...
     while(true) {
         if(to_trim->size <= 0) return; // nothing left to trim
-        if(to_trim->ptr[0] == ' ' || to_trim->ptr[0] == '\t') {
+        if(u8_is_whitespace(to_trim->ptr[0])) {
             to_trim->ptr++;
             to_trim->size--;
         } else break;
@@ -230,10 +233,9 @@ void str_trim_left_inplace(str* to_trim) {
 }
 
 void str_trim_right_inplace(str* to_trim) {
-    //API(cogno): I don't think space and \t are enough...
     while(true) {
         if(to_trim->size <= 0) return; // nothing left to trim
-        if(to_trim->ptr[to_trim->size - 1] == ' ' || to_trim->ptr[to_trim->size - 1] == '\t') {
+        if(u8_is_whitespace(to_trim->ptr[to_trim->size - 1])) {
             to_trim->size--;
         } else break;
     }
@@ -245,11 +247,10 @@ void str_trim_inplace(str* to_trim) {
 }
 
 str str_trim_left(str to_trim) {
-    //API(cogno): I don't think space and \t are enough...
     str out = to_trim;
     while(true) {
         if(out.size <= 0) return out; // nothing left to trim
-        if(out.ptr[0] == ' ' || out.ptr[0] == '\t') {
+        if(u8_is_whitespace(out.ptr[0])) {
             out.ptr++;
             out.size--;
         } else break;
@@ -258,11 +259,10 @@ str str_trim_left(str to_trim) {
 }
 
 str str_trim_right(str to_trim) {
-    //API(cogno): I don't think space and \t are enough...
     str out = to_trim;
     while(true) {
         if(out.size <= 0) return out; // nothing left to trim
-        if(out.ptr[out.size - 1] == ' ' || out.ptr[out.size - 1] == '\t') {
+        if(u8_is_whitespace(out.ptr[out.size - 1])) {
             out.size--;
         } else break;
     }
@@ -275,23 +275,14 @@ str str_trim(str to_trim) {
     return trim2;
 }
 
+// API(cogno): Is it better to have str_to_<number>, str_parser_parse_<number> or both? We should probably compress the code.
 bool str_to_u32(str to_convert, u32* out_value) {
     for(int i = 0; i < to_convert.size; i++) {
-        char ch = to_convert[i];
-        if(ch > '9' || ch < '0') return false;
+        u8 ch = to_convert[i];
+        if(!u8_is_digit(ch)) return false;
         *out_value = (*out_value) * 10 + (ch - '0');
     }
     return true;
-}
-
-//variant of the above without error checking
-u32 str_to_u32(str to_convert) {
-    u32 out_value = 0;
-    for(int i = 0; i < to_convert.size; i++) {
-        char ch = to_convert[i];
-        out_value = out_value * 10 + (ch - '0');
-    }
-    return out_value;
 }
 
 bool str_starts_with(str to_check, char ch) {
@@ -324,6 +315,7 @@ bool str_ends_with(str to_check, str checker) {
 }
 
 // counts occurrencies of a character in the given string
+// BUG(cogno): I think this can overflow/underflow.
 int str_count(str to_check, char to_count) {
     int the_count = 0;
     For(to_check) {
@@ -350,7 +342,7 @@ bool str_is_u32(str to_check) {
     if (to_check.size <= 0) return false;
     for(int i = 0; i < to_check.size; i++) {
         u8 ch = to_check[i];
-        if(ch > '9' || ch < '0') return false;
+        if(!u8_is_digit(ch)) return false;
     }
     return true;
 }
@@ -358,9 +350,7 @@ bool str_is_u32(str to_check) {
 bool str_matches(str a, str b) {
     if(a.size != b.size) return false;
     for(int i = 0; i < a.size; i++) {
-        u8 a1 = a[i];
-        u8 b1 = b[i];
-        if(a1 != b1) return false;
+        if(a[i] != b[i]) return false;
     }
     return true;
 }
@@ -371,6 +361,9 @@ bool str_contains(str to_check, char to_find) {
     }
     return false;
 }
+
+// API(cogno): not a big fan of this. Right now we use for the HashMap, can we avoid it? str_matches is much more explicit.
+inline bool operator ==(str a, str b) {return str_matches(a,b);}
 
 /*
 StrBuilder, used to dinamically construct str.
@@ -432,8 +425,8 @@ str str_builder_get_str(StrBuilder* b) {
 void str_builder_resize(StrBuilder* b, s32 min_size) {
     u8 old_start = b->ptr[0];
     s32 new_size = b->reserved_size * 2;
-    new_size = new_size >= STR_BUILDER_DEFAULT_SIZE ? new_size : STR_BUILDER_DEFAULT_SIZE; // API(cogno): 'max' identifier not found error
-    new_size = new_size >= min_size ? new_size : min_size; // API(cogno): 'max' identifier not found error
+    new_size = max(new_size, STR_BUILDER_DEFAULT_SIZE);
+    new_size = max(new_size, min_size);
     b->ptr = (u8*)mem_realloc(b->alloc, b->reserved_size * sizeof(u8), new_size * sizeof(u8), b->ptr);
     b->reserved_size = new_size;
     ASSERT(b->ptr[0] == old_start, "ERROR ON REALLOC, initial byte unexpectedly changed, this is not supposed to happen...");
@@ -755,9 +748,7 @@ T str_parser_get(StrParser* p) {
     return out;
 }
 
-bool str_parser_starts_with_digit(StrParser* p) {
-    return p->ptr[0] >= '0' && p->ptr[0] <= '9';
-}
+bool str_parser_starts_with_digit(StrParser* p) { return u8_is_digit(p->ptr[0]); }
 
 // NOTE(cogno): each _parse function returns a boolean if it was parsed correctly and the given pointer with the parsed value
 
@@ -776,6 +767,7 @@ bool str_parser_parse_bool(StrParser* p, bool* out) {
     return false;
 }
 
+// BUG(cogno): I'm not sure, but I think it's possible to trick parse_u8/u16/u32/u64 to accept numbers outside their number range. We should probably check that, since it also has implications on parse_s8/s16/s32/s64
 bool str_parser_parse_u8(StrParser* p, u8* out) {
     if(!str_parser_starts_with_digit(p)) return false;
     
@@ -832,11 +824,27 @@ bool str_parser_parse_u64(StrParser* p, u64* out) {
     return true;
 }
 
-inline bool operator ==(str a, str b) {return str_matches(a,b);}
+bool str_parser_parse_s8(StrParser* p, s8* out) {
+    if(p->ptr[0] != '-' && p->ptr[0] != '+' && !str_parser_starts_with_digit(p)) return false; // definitely not a number
 
+    s8 sign = 1;
+    if(p->ptr[0] == '-') {
+        sign = -1;
+        str_parser_advance(p, 1);
+    } else if(p->ptr[0] == '+') str_parser_advance(p, 1);
+    
+    u8 value = 0;
+    bool ok = str_parser_parse_u8(p, &value);
+    if(!ok) return false; // it turns out it never was a s8, return error
+
+    if(sign > 0 && value > MAX_S8) return false; // out of range!
+    if(sign < 0 && value > MIN_S8) return false; // out or range
+
+    *out = sign * value;
+    return true;
+}
 
 // parse functions convert str to types and return them
-// API(cogno): parse s8
 // API(cogno): parse s16
 // API(cogno): parse s32
 // API(cogno): parse s64
