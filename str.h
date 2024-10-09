@@ -71,10 +71,6 @@ bool u8_is_digit(u8 ch) { return ch >= '0' && ch <= '9'; }
 // nice things to have but which we haven't used yet, we'll do these when we need. If you want these you can implement them and send the code to us!
 //API(cogno): more unicode support (currently str kind of does not support it, I mean utf8 is just an array of bytes but these functions don't take it into account so they might be wrong, alternatively we can make 2 different strings, one with unicode and one without, it might make stuff a lot simpler, I'd say str and unicode_str)
 //API(cogno): str substring
-//API(cogno): str split all
-//API(cogno): str parse to s32
-//API(cogno): str parse to float/double
-//API(cogno): str is s32, float, maybe even variants like s8, u8, s16, u16 ?
 //API(cogno): str is alphanumeric (?)
 
 struct str{
@@ -275,16 +271,6 @@ str str_trim(str to_trim) {
     return trim2;
 }
 
-// API(cogno): Is it better to have str_to_<number>, str_parser_parse_<number> or both? We should probably compress the code.
-bool str_to_u32(str to_convert, u32* out_value) {
-    for(int i = 0; i < to_convert.size; i++) {
-        u8 ch = to_convert[i];
-        if(!u8_is_digit(ch)) return false;
-        *out_value = (*out_value) * 10 + (ch - '0');
-    }
-    return true;
-}
-
 bool str_starts_with(str to_check, char ch) {
     return to_check.size > 0 && to_check[0] == ch;
 }
@@ -336,15 +322,6 @@ u32 str_length_in_char(str string) {
         read_index += unicode_size;
         char_count++;
     }
-}
-
-bool str_is_u32(str to_check) {
-    if (to_check.size <= 0) return false;
-    for(int i = 0; i < to_check.size; i++) {
-        u8 ch = to_check[i];
-        if(!u8_is_digit(ch)) return false;
-    }
-    return true;
 }
 
 // Returns true if this string is only a sequence of ascii digits (eg. '17222848829')
@@ -1018,7 +995,7 @@ bool str_parser_parse_s8(StrParser* p, s8* out) {
     s64 hopefully_valid = 0;
     bool ok = str_parser_parse_s64(p, &hopefully_valid);
     if(!ok) return false;
-    if(hopefully_valid > 0 && hopefully_valid > MAX_S8) return false; // out of range!
+    if(hopefully_valid > 0 &&  hopefully_valid > MAX_S8) return false; // out of range!
     if(hopefully_valid < 0 && -hopefully_valid > MIN_S8) return false; // out of range!
     if(out != NULL) *out = (s8)hopefully_valid;
     return true;
