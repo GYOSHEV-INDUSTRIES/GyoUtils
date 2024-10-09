@@ -66,7 +66,7 @@ int c_string_length(const char* s) {
 }
 
 bool u8_is_whitespace(u8 ch) { return ch == ' ' || ch == '\t' || ch == '\r' || ch == '\n' || ch == '\v' || ch == '\f'; }
-bool u8_is_digit(u8 ch) { return ch > '0' && ch < '9'; }
+bool u8_is_digit(u8 ch) { return ch >= '0' && ch <= '9'; }
 
 // nice things to have but which we haven't used yet, we'll do these when we need. If you want these you can implement them and send the code to us!
 //API(cogno): more unicode support (currently str kind of does not support it, I mean utf8 is just an array of bytes but these functions don't take it into account so they might be wrong, alternatively we can make 2 different strings, one with unicode and one without, it might make stuff a lot simpler, I'd say str and unicode_str)
@@ -343,6 +343,14 @@ bool str_is_u32(str to_check) {
     for(int i = 0; i < to_check.size; i++) {
         u8 ch = to_check[i];
         if(!u8_is_digit(ch)) return false;
+    }
+    return true;
+}
+
+// Returns true if this string is only a sequence of ascii digits (eg. '17222848829')
+bool str_is_digit_sequence(str to_check) {
+    For(to_check) {
+        if(!u8_is_digit(it)) return false;
     }
     return true;
 }
@@ -713,12 +721,54 @@ str str_parser_to_str(StrParser p) {
     return out;
 }
 
-bool str_parser_is_empty(StrParser* p) { return p->size == 0; }
 
 void str_parser_advance(StrParser* p, s32 size) {
     if(!ASSERT(size <= p->size, "advancing by too much! the string is % long, but you're advancing by %", p->size, size)) return;
     p->ptr  += size;
     p->size -= size;
+}
+
+
+bool str_parser_is_empty(StrParser* p) { return p->size == 0; }
+bool str_parser_starts_with(StrParser* p, u8 ch) { return p->size > 0 && p->ptr[0] == ch; }
+bool str_parser_starts_with_digit(StrParser* p)  { return p->size > 0 && u8_is_digit(p->ptr[0]); }
+bool str_parser_second_is(StrParser* p, u8 ch)   { return p->size > 1 && p->ptr[1] == ch; }
+bool str_parser_second_is_digit(StrParser* p)    { return p->size > 1 && u8_is_digit(p->ptr[1]); }
+
+// advances the str_parser by 1 if next is equal to the input,
+// leaves the parser as is if that's not the case.
+void str_parser_maybe_consume(StrParser* p, u8 maybe_next) {
+    if(str_parser_starts_with(p, maybe_next)) str_parser_advance(p, 1);
+}
+
+// Returns true if the next text can be parsed as a positive number.
+// The next text is considered a number if it starts with a digit
+// or the symbol '+' and a digit after.
+bool str_parser_starts_with_positive_number(StrParser* p) {
+    bool first_is_digit = str_parser_starts_with_digit(p);
+    bool first_is_plus  = str_parser_starts_with(p, '+');
+    bool second_is_digit = str_parser_second_is_digit(p);
+
+    bool is_positive_number = first_is_digit || (first_is_plus && second_is_digit);
+    return is_positive_number;
+}
+
+
+// Returns true if the next text can be parsed as an integer
+// The next text is considered a number if it starts with a digit (eg. "153"), 
+// or if the number starts with + or - (eg. "+24" or "-39995").
+// This means that "+value" and "-element" are NOT considered integers.
+bool str_parser_starts_with_integer_number(StrParser* p) {
+    bool first_is_digit = str_parser_starts_with_digit(p);
+    bool first_is_plus  = str_parser_starts_with(p, '+');
+    bool first_is_minus = str_parser_starts_with(p, '-');
+    bool second_is_digit = str_parser_second_is_digit(p);
+
+    bool is_positive = first_is_plus && second_is_digit;
+    bool is_negative = first_is_minus && second_is_digit;
+
+    bool is_integer = first_is_digit || is_positive || is_negative;
+    return is_integer;
 }
 
 bool str_parser_starts_with(StrParser* p, str start) {
@@ -748,20 +798,80 @@ T str_parser_get(StrParser* p) {
     return out;
 }
 
-bool str_parser_starts_with_digit(StrParser* p) { return u8_is_digit(p->ptr[0]); }
+// counts how many digits are in a row at the start of the parser
+u64 str_parser_count_digit_sequence_length(StrParser* p) {
+    u64 out = 0; // we use u64 to avoid overflow problems
+    for(int i = 0; i < p->size; i++) {
+        if(!u8_is_digit(p->ptr[i])) break;
+        out++;
+    }
+    return out;
+}
 
-// NOTE(cogno): each _parse function returns a boolean if it was parsed correctly and the given pointer with the parsed value
+// Checks if the next text is a number above the given input.
+// For example checks if the text "24" is a number above the number "12" as text (true in this case).
+// Any number is *not* considered above itself, (so "24" is not > "24").
+// This function works only if max is a sequences of digits and p immediately starts with one.
+bool str_parser_text_number_is_above(StrParser* p, str max) {
+    // DEBUG(cogno): we don't want to force these operations, they can be slower than just doing the work. It would be like looking if the input Array<int> was sorted before doing binary search, it's useless! We put these asserts in just to help during development.
+    ASSERT(str_is_digit_sequence(max), "checker string is not a sequence of digits, cannot number check");
+    
+    u64 parser_sequence_length = str_parser_count_digit_sequence_length(p);
+    ASSERT(parser_sequence_length > 0, "parser doesn't start with a sequence of digits, cannot number check");
+
+    u64 string_sequence_length = (u64)max.size;
+
+    u64 common_length = min(parser_sequence_length, string_sequence_length);
+    u64 max_length    = max(parser_sequence_length, string_sequence_length);
+    u64 head_length = max_length - common_length;
+
+    for(int i = 0; i < head_length; i++) {
+        // check the part not common between the sequences.
+        if (string_sequence_length > parser_sequence_length) {
+            if (max[i] - '0' > 0) return false; // max has more digits, parser is below!
+        } else if(parser_sequence_length > string_sequence_length) {
+            if (p->ptr[i] - '0' > 0) return true; // parser has more digits, he's above!
+        }
+    }
+    
+    // if we are here either both sequences have the same length or the header was only a run of '0's,
+    // meaning both numbers are equal up to here, let's see which one is above
+    u64 parser_shift = parser_sequence_length - common_length;
+    u64 string_shift = string_sequence_length - common_length;
+    for(int i = 0; i < common_length; i++) {
+        u8 parser_digit = p->ptr[i + parser_shift] - '0';
+        u8 string_digit =    max[i + string_shift] - '0';
+        if(     parser_digit > string_digit) return true;
+        else if(parser_digit < string_digit) return false;
+    }
+
+    return false; // both numbers are fully equal, definitely not above
+}
+
+// checks if the next text is a number below the given input
+// For example checks if the text "24" is a number below the number "30" as text (true in this case).
+// '0' is considered NOT below '0'. Also negative numbers are ignored.
+// This function works only if the both texts are only sequences of digits.
+bool str_parser_text_number_is_below(StrParser* p, str min) {
+    ASSERT(str_parser_starts_with_digit(p), "str parser doesn't start with a digit, cannot number check");
+    ASSERT(min.size > 0 && u8_is_digit(min[0]), "checker string doesn't start with a digit, cannot number check");
+    // TODO(cogno): this
+    return false;
+}
+
+// NOTE(cogno): each _parse function returns a boolean if it was parsed correctly and optionally fills the given pointer with the parsed value
+// this means that each _parse function can be also used to consume an unwanted value
 
 bool str_parser_parse_bool(StrParser* p, bool* out) {
     str to_check = str_parser_to_str(*p);
     if(str_starts_with(to_check, "true")) {
         str_parser_advance(p, 4);
-        *out = true;
+        if(out != NULL) *out = true;
         return true;
     }
     if(str_starts_with(to_check, "false")) {
         str_parser_advance(p, 5);
-        *out = false;
+        if(out != NULL) *out = false;
         return true;
     }
     return false;
@@ -769,63 +879,67 @@ bool str_parser_parse_bool(StrParser* p, bool* out) {
 
 // BUG(cogno): I'm not sure, but I think it's possible to trick parse_u8/u16/u32/u64 to accept numbers outside their number range. We should probably check that, since it also has implications on parse_s8/s16/s32/s64
 bool str_parser_parse_u8(StrParser* p, u8* out) {
-    if(!str_parser_starts_with_digit(p)) return false;
-    
+    if(!str_parser_starts_with_positive_number(p)) return false;
+    str_parser_maybe_consume(p, '+'); // we can ignore it
+
     char start = str_parser_get<char>(p);
-    *out = start - '0';
+    if(out != NULL) *out = start - '0';
     for(int i = 1; i < 3; i++) { // u8 have at most 3 digits (value 255)
         if(!str_parser_starts_with_digit(p)) return true; //we no longer have portions of the number, but we previously found some, so we're done successfully
         
         char ch = str_parser_get<char>(p);
-        *out = (*out * 10) + ch - '0'; // add the new digit to the mix
+        if(out != NULL) *out = (*out * 10) + ch - '0'; // add the new digit to the mix
     }
     return true;
 }
 
 bool str_parser_parse_u16(StrParser* p, u16* out) {
-    if(!str_parser_starts_with_digit(p)) return false;
+    if(!str_parser_starts_with_positive_number(p)) return false;
+    str_parser_maybe_consume(p, '+'); // we can ignore it
     
     char start = str_parser_get<char>(p);
-    *out = start - '0';
+    if(out != NULL) *out = start - '0';
     for(int i = 1; i < 5; i++) { // u16 have at most 5 digits (value 65535)
         if(!str_parser_starts_with_digit(p)) return true; //we no longer have portions of the number, but we previously found some, so we're done successfully
 
         char ch = str_parser_get<char>(p);
-        *out = (*out * 10) + ch - '0'; // add the new digit to the mix
+        if(out != NULL) *out = (*out * 10) + ch - '0'; // add the new digit to the mix
     }
     return true;
 }
 
 bool str_parser_parse_u32(StrParser* p, u32* out) {
-    if(!str_parser_starts_with_digit(p)) return false;
+    if(!str_parser_starts_with_positive_number(p)) return false;
+    str_parser_maybe_consume(p, '+'); // we can ignore it
     
     char start = str_parser_get<char>(p);
-    *out = start - '0';
+    if(out != NULL) *out = start - '0';
     for(int i = 1; i < 10; i++) { // u32 have at most 10 digits (value 4294967295)
         if(!str_parser_starts_with_digit(p)) return true; //we no longer have portions of the number, but we previously found some, so we're done successfully
 
         char ch = str_parser_get<char>(p);
-        *out = (*out * 10) + ch - '0'; // add the new digit to the mix
+        if(out != NULL) *out = (*out * 10) + ch - '0'; // add the new digit to the mix
     }
     return true;
 }
 
 bool str_parser_parse_u64(StrParser* p, u64* out) {
-    if(!str_parser_starts_with_digit(p)) return false;
+    if(!str_parser_starts_with_positive_number(p)) return false;
+    str_parser_maybe_consume(p, '+'); // we can ignore it
     
     char start = str_parser_get<char>(p);
-    *out = start - '0';
+    if(out != NULL) *out = start - '0';
     for(int i = 1; i < 20; i++) { // u64 have at most 20 digits (value 18446744073709551615)
         if(!str_parser_starts_with_digit(p)) return true; //we no longer have portions of the number, but we previously found some, so we're done successfully
 
         char ch = str_parser_get<char>(p);
-        *out = (*out * 10) + ch - '0'; // add the new digit to the mix
+        if(out != NULL) *out = (*out * 10) + ch - '0'; // add the new digit to the mix
     }
     return true;
 }
 
 bool str_parser_parse_s8(StrParser* p, s8* out) {
-    if(p->ptr[0] != '-' && p->ptr[0] != '+' && !str_parser_starts_with_digit(p)) return false; // definitely not a number
+    if(!str_parser_starts_with_integer_number(p)) return false; // definitely not a number
 
     s8 sign = 1;
     if(p->ptr[0] == '-') {
@@ -840,7 +954,7 @@ bool str_parser_parse_s8(StrParser* p, s8* out) {
     if(sign > 0 && value > MAX_S8) return false; // out of range!
     if(sign < 0 && value > MIN_S8) return false; // out or range
 
-    *out = sign * value;
+    if(out != NULL) *out = sign * value;
     return true;
 }
 
