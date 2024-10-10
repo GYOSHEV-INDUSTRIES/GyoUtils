@@ -30,8 +30,6 @@ str.h:
       With this each function can also be used to quickly consume the next "token" while ignoring what it is,
       instead of being forced to fill a discard value.
     > Added str_parser_maybe_consume to optionally skip the next character.
-    > Added str_parser_text_number_is_above, useful to bounds check numbers before converting them from text to numbers.
-    > Added str_parser_text_number_is_below, alternative to above.
     > Improved str_parse_u8/u16/u32/u64 to have overflow prevention.
     > Added str_parser_parse_s8/s16/s32/s64 with number range checking to avoid overflows/underflows.
 
