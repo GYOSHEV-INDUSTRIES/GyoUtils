@@ -752,9 +752,7 @@ bool str_parser_starts_with(StrParser* p, str start) {
     if(start.size > p->size) return false;
     
     for(int i = 0; i < start.size; i++) {
-        char ch_p = p->ptr[i];
-        char ch_s = start[i];
-        if(ch_p != ch_s) return false;
+        if(p->ptr[i] != start[i]) return false;
     }
     
     return true;
@@ -772,16 +770,6 @@ template<typename T>
 T str_parser_get(StrParser* p) {
     T out = *(T*)p->ptr;
     str_parser_advance(p, sizeof(T));
-    return out;
-}
-
-// counts how many digits are in a row at the start of the parser
-u64 str_parser_count_digit_sequence_length(StrParser* p) {
-    u64 out = 0; // we use u64 to avoid overflow problems
-    for(int i = 0; i < p->size; i++) {
-        if(!u8_is_digit(p->ptr[i])) break;
-        out++;
-    }
     return out;
 }
 
