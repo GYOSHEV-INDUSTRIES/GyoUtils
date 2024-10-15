@@ -176,30 +176,29 @@ bool win64_write_file(const char* filename, u8* file_data, u32 data_size) {
 // Optionally writes into bytes_read how big the file is (if NULL it's ignored).
 // Returns NULL if file cannot be read for some reason.
 // For extended error information you should look at win64_print_error().
-u8* win64_read_entire_file(const char* filename, Allocator alloc, u32* bytes_read) {
-    if(!ASSERT(filename != NULL, "No input file given.")) return NULL;
-    if(!ASSERT(alloc.handle != NULL, "No allocator given!")) return NULL;
+str win64_read_entire_file(const char* filename, Allocator alloc) {
+    if(!ASSERT(filename != NULL, "No input file given.")) return {};
+    if(!ASSERT(alloc.handle != NULL, "No allocator given!")) return {};
 
     auto file_handle = CreateFileA(filename, GENERIC_READ, FILE_SHARE_READ, 0, OPEN_EXISTING, 0, 0);
-    if (file_handle == INVALID_HANDLE_VALUE) return NULL;
+    if (file_handle == INVALID_HANDLE_VALUE) return {};
     defer {
         bool ok = CloseHandle(file_handle);
         ASSERT(ok, "couldn't close file");
     };
 
     DWORD file_size = GetFileSize(file_handle, NULL);
-    if (file_size == INVALID_FILE_SIZE) return NULL;
+    if (file_size == INVALID_FILE_SIZE) return {};
 
     auto* allocated = mem_alloc(alloc, file_size);
-    if(allocated == NULL) return NULL;
+    if(allocated == NULL) return {};
 
     DWORD bytes_read_win64;
     ReadFile(file_handle, allocated, file_size, &bytes_read_win64, 0);
-    if (bytes_read != NULL) *bytes_read = (u32)bytes_read_win64;
-
-    return (u8*)allocated;
+    str out = {};
+    out.ptr = (u8*)allocated;
+    out.size = (s32)bytes_read_win64;
+    return out;
 }
 
-u8* win64_read_entire_file(const char* filename, u32* bytes_read) {
-    return win64_read_entire_file(filename, default_allocator, bytes_read);
-}
+str win64_read_entire_file(const char* filename) { return win64_read_entire_file(filename, default_allocator); }

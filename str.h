@@ -140,17 +140,23 @@ str str_copy(str to_copy) { return str_copy(to_copy, default_allocator); }
 // if the character is NOT found false is returned, left_side will contain the full string and
 // right_side will be empty
 bool str_split_left(str to_split, u8 char_to_split, str* left_side, str* right_side) {
-    for(int i = 0; i < to_split.size; i++) {
-        if(to_split[i] == char_to_split) {
-            left_side->ptr = to_split.ptr;
-            left_side->size = i;
-            right_side->ptr  = to_split.ptr  + (i + 1); //remember, we skip the character
-            right_side->size = to_split.size - (i + 1); //remember, we skip the character
+    For(to_split) {
+        if(it == char_to_split) {
+            if(left_side != NULL) {
+                left_side->ptr = to_split.ptr;
+                left_side->size = it_index;
+            }
+            if (right_side != NULL) {
+                right_side->ptr  = to_split.ptr  + (it_index + 1); //remember, we skip the character
+                right_side->size = to_split.size - (it_index + 1); //remember, we skip the character
+            }
             return true;
         }
     }
-    left_side->ptr = to_split.ptr;
-    left_side->size = to_split.size;
+    if(left_side != NULL) {
+        left_side->ptr = to_split.ptr;
+        left_side->size = to_split.size;
+    }
     return false;
 }
 
