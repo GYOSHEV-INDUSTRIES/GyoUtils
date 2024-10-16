@@ -8,6 +8,7 @@ In a nutshell:
 BREAKING CHANGES:
     > In str.h removed str_to_u32 functions. You can use StrParser instead.
     > In str.h removed str_is_u32 function. You can use StrParser instead.
+    > In str.h changed str_split_right if no split is performed, making it simpler to use.
     > In win64_files changed win64_read_entire_file to return the file as a str, always containg the bytes read.
 
 first.h:
@@ -18,9 +19,23 @@ str.h:
     > Added u8_is_digit.
     > Added u8_is_whitespace.
     > Improved all trim operations to include all whitespace characters (space, tab, enter, carriage return, vertical tab and formfeed).
+    > Added null ptr checks to str_trim_left_inplace, str_trim_right_inplace and str_trim_inplace.
     > Removed str_to_u32 and str_is_u32 functions. You can use StrParser instead.
     > Improved str_split_left to accept NULL as valid input pointers, if you want to ignore values.
+    > Improved str_split_newline_left to accept NULL as valid input pointers, if you want to ignore values.
+    > Improved str_split_right to accept NULL as valid input pointers, if you want to ignore values.
+    > Changed str_split_right when no split is made.
+      The entire string is now put into the *right_side* input pointer.
+      Previously it would be placed into the left_side. This would lead to an extra bool check to handle
+      the final iteration while in loops. Now the check is not necessary.
     > Optimized str_split_left, should be about 30% faster now.
+    > Optimized str_split_newline_left, as a consequence of str_split_left, should be about 30% faster now.
+    > Optimized str_split_right, should be about 30% faster now.
+    > Optimized str_starts_with, should be about 30% faster now.
+    > Fixed str_split_left overload with a string splitter as input not touching the left_side pointer when it should.
+    > Fixed str_split_left overload with a string splitter as input incorrectly splitting the right side.
+    > Also changed the same overload to accept NULL as valid inputs, if results are to be ignored.
+
 
     str_parser:
     > Fixed str_parser_starts_with_digit to not explode if the str_parser is empty.

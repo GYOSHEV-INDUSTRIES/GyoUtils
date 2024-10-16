@@ -133,12 +133,47 @@ str str_copy(str to_copy, Allocator alloc) {
 }
 str str_copy(str to_copy) { return str_copy(to_copy, default_allocator); }
 
-// splits a single str in 2 parts on the first occurrence of a char, no allocations necessary.
-// the character split is NOT included in the final strings, 
-// put the original string in to_split and empty ones in left_side and right_side.
-// if the character is found the function returns true and fills left_side and right_side,
-// if the character is NOT found false is returned, left_side will contain the full string and
-// right_side will be empty
+bool str_starts_with(str to_check, char ch) { return to_check.size > 0 && to_check[0] == ch; }
+bool str_ends_with(str to_check, char ch) { return to_check.size > 0 && to_check[to_check.size - 1] == ch; }
+
+bool str_starts_with(str to_check, str checker) {
+    if (to_check.size < checker.size) return false; //not enough character to check
+    
+    For(checker) {
+        if(it != checker.ptr[it_index]) return false;
+    }
+    
+    return true;
+}
+
+bool str_ends_with(str to_check, str checker) {
+    if(to_check.size < checker.size) return false; // not enough characters
+    
+    for(int i = 0; i < checker.size; i++) {
+        s32 index = to_check.size - checker.size + i;
+        if(to_check.ptr[index] != checker.ptr[i]) return false;
+    }
+    
+    return true;
+}
+
+
+// Splits a single str in 2 parts on the first occurrence of a byte, no allocations necessary.
+// The character split is NOT included in the final strings, but can be easily recovered if you wish,
+// by simply doing left_side.size++;
+// 
+// You can optionally give pointers to str that will get filled with the 2 portions of the 
+// string being split. If you do not want one (or both) you can simply give NULL as input.
+// If the character is found the function returns true and fills left_side and right_side.
+// If the character is NOT found false is returned, left_side will contain the original string and
+// right_side will not be touched.
+// Since input pointers are optionally, you can also use this function to know if a split can be made.
+// 
+// Usually APIs that let you split a string return you an Array of every split that could be made.
+// This function provides an alternative method which doesn't need to allocate memory, 
+// leading to faster code.
+// If you do want the array of all the possible splits, you can simply continuously split and save
+// each result into your Array.
 bool str_split_left(str to_split, u8 char_to_split, str* left_side, str* right_side) {
     For(to_split) {
         if(it == char_to_split) {
@@ -163,68 +198,74 @@ bool str_split_left(str to_split, u8 char_to_split, str* left_side, str* right_s
 //version of split left that splits an entire str instead of a single char
 //the string to split is NOT included in the final strings
 bool str_split_left(str to_split, str splitter, str* left_side, str* right_side) {
+    
     for(int original_index = 0; original_index < to_split.size; original_index++) {
+        if(original_index + splitter.size > to_split.size) break; // splitter doesn't fit this portion, definitely no way to split EVER.
+
+        // check if this portion is equal to splitter
         bool matches = true;
-        for(int to_split_index = 0; to_split_index < splitter.size; to_split_index++) {
-            if(original_index + to_split_index >= to_split.size) return false; //string finished, couldn't find anything
-            
-            ASSERT(original_index + to_split_index < to_split.size, "reading outside memory");
-            ASSERT(to_split_index < to_split.size, "reading outside memory");
-            
-            if(to_split[original_index + to_split_index] != to_split[to_split_index]) {
+        For(splitter) {
+            if(it != to_split[original_index + it_index]) {
                 matches = false;
                 break;
             }
         }
         
-        if (matches) {
-            left_side->ptr = to_split.ptr;
-            left_side->size = original_index;
-            right_side->ptr  = to_split.ptr  + (original_index + to_split.size); //remember, we skip the str
-            right_side->size = to_split.size - (original_index + to_split.size); //remember, we skip the str
+        if (matches) { // match found, split here.
+            if(left_side != NULL) {
+                left_side->ptr = to_split.ptr;
+                left_side->size = original_index;
+            }
+            if(right_side != NULL) {
+                right_side->ptr  = to_split.ptr  + (original_index + splitter.size); //remember, we skip the str
+                right_side->size = to_split.size - (original_index + splitter.size); //remember, we skip the str
+            }
             return true;
         }
     }
     
-    left_side->ptr = to_split.ptr;
-    left_side->size = to_split.size;
-    return false;
-}
-
-//splits on newline (\n) and removes \r if found (fuck \r\n, fuck windows)
-bool str_split_newline_left(str to_split, str* left_side, str* right_side) {
-    for(int i = 0; i < to_split.size; i++) {
-        if(to_split[i] == '\n') {
-            left_side->ptr = to_split.ptr;
-            left_side->size = i;
-            right_side->ptr  = to_split.ptr  + (i + 1);
-            right_side->size = to_split.size - (i + 1);
-            
-            if(left_side->size > 0 && left_side->ptr[left_side->size - 1] == '\r') left_side->size--;
-            return true;
-        }
+    if(left_side != NULL) {
+        left_side->ptr = to_split.ptr;
+        left_side->size = to_split.size;
     }
-    left_side->ptr = to_split.ptr;
-    left_side->size = to_split.size;
     return false;
 }
 
+// Splits on newline (\n) and removes \r if found (fuck \r\n, fuck windows)
+bool str_split_newline_left(str to_split, str* left_side, str* right_side) { 
+    bool ok = str_split_left(to_split, '\n', left_side, right_side);
+    if(left_side != NULL && str_ends_with(*left_side, '\r')) left_side->size--;
+    return ok;
+}
+
+// Equal to str_split_left, but starts from the end of the string instead.
+// left_side and right_side are optional.
+// If the string is split, left_side and right_side contain the portions of the string split.
+// If the string is NOT split, left_side will not be touched and right_side will contain 
+// the rest of the string (this is the opposite of what str_split_left does!).
 bool str_split_right(str to_split, u8 char_to_split, str* left_side, str* right_side) {
     for(int i = to_split.size - 1; i >= 0; i--) {
-        if(to_split[i] == char_to_split) {
-            left_side->ptr = to_split.ptr;
-            left_side->size = i;
-            right_side->ptr  = to_split.ptr  + (i + 1); //remember, we skip the character
-            right_side->size = to_split.size - (i + 1); //remember, we skip the character
+        if(to_split.ptr[i] == char_to_split) {
+            if(left_side != NULL) {
+                left_side->ptr = to_split.ptr;
+                left_side->size = i;
+            }
+            if(right_side != NULL) {
+                right_side->ptr  = to_split.ptr  + (i + 1); //remember, we skip the character
+                right_side->size = to_split.size - (i + 1); //remember, we skip the character
+            }
             return true;
         }
     }
-    left_side->ptr = to_split.ptr;
-    left_side->size = to_split.size;
+    if(right_side != NULL) {
+        right_side->ptr = to_split.ptr;
+        right_side->size = to_split.size;
+    }
     return false;
 }
 
 void str_trim_left_inplace(str* to_trim) {
+    if(!ASSERT(to_trim != NULL, "invalid input ptr (was NULL)")) return;
     while(true) {
         if(to_trim->size <= 0) return; // nothing left to trim
         if(u8_is_whitespace(to_trim->ptr[0])) {
@@ -235,6 +276,7 @@ void str_trim_left_inplace(str* to_trim) {
 }
 
 void str_trim_right_inplace(str* to_trim) {
+    if(!ASSERT(to_trim != NULL, "invalid input ptr (was NULL)")) return;
     while(true) {
         if(to_trim->size <= 0) return; // nothing left to trim
         if(u8_is_whitespace(to_trim->ptr[to_trim->size - 1])) {
@@ -277,35 +319,6 @@ str str_trim(str to_trim) {
     return trim2;
 }
 
-bool str_starts_with(str to_check, char ch) {
-    return to_check.size > 0 && to_check[0] == ch;
-}
-
-bool str_starts_with(str to_check, str checker) {
-    if (to_check.size < checker.size) return false; //not enough character to check
-    
-    for(int i = 0; i < checker.size; i++) {
-        if(to_check[i] != checker[i]) return false;
-    }
-    
-    return true;
-}
-
-bool str_ends_with(str to_check, char ch) {
-    return to_check.size > 0 && to_check[to_check.size - 1] == ch;
-}
-
-bool str_ends_with(str to_check, str checker) {
-    if(to_check.size < checker.size) return false; // not enough characters
-    
-    for(int i = 0; i < checker.size; i++) {
-        s32 index = to_check.size - checker.size + i;
-        if(to_check[index] != checker[i]) return false;
-    }
-    
-    return true;
-}
-
 // counts occurrencies of a character in the given string
 // BUG(cogno): I think this can overflow/underflow.
 int str_count(str to_check, char to_count) {
@@ -328,14 +341,6 @@ u32 str_length_in_char(str string) {
         read_index += unicode_size;
         char_count++;
     }
-}
-
-// Returns true if this string is only a sequence of ascii digits (eg. '17222848829')
-bool str_is_digit_sequence(str to_check) {
-    For(to_check) {
-        if(!u8_is_digit(it)) return false;
-    }
-    return true;
 }
 
 bool str_matches(str a, str b) {
