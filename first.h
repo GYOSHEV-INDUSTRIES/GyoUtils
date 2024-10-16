@@ -12,6 +12,7 @@ In this file:
 - printsl, like print but without \n at the end
 - ASSERT macro which can be deactivated, prints a custom (optional) formatted message and returns the expression value
 - ASSERT_BOUNDS to make out of bounds checks easier
+- EXPECT macro, a quicker way to write single ASSERT checks with error message
 - defer macro, like golang's defer
 - For macro to provide a more convenient way to iterate over Array and similar structs
 */
@@ -264,9 +265,11 @@ inline bool assert_func(bool expr, const char* expression_as_string, const char*
 #ifndef NO_ASSERT
 #define ASSERT(expr, ...) (assert_func(expr, #expr, __FILE__, __LINE__, __FUNCTION__,##__VA_ARGS__))
 #define ASSERT_BOUNDS(var, start, length) ASSERT(((var) >= (start)) && ((var) < ((start) + (length))), "OUT OF BOUNDS! expected between % and % but was %", (start), ((start) + (length)), (var))
+#define EXPECT(value, wanted) (ASSERT((value) == (wanted), "expected '" #value "' to be '%' but was actually '%'", wanted, value))
 #else
 #define ASSERT(expr, ...) (expr)
 #define ASSERT_BOUNDS(var, start, length) (((var) >= (start)) && ((var) < ((start) + (length))))
+#define EXPECT(value, wanted) ((value) == (wanted))
 #endif
 
 //

@@ -13,6 +13,8 @@ BREAKING CHANGES:
 
 first.h:
     > Improved For macros to allow iteration of empty containers (instead of causing a out of bounds read / access violation exception).
+    > Added EXPECT macro, an alternative to ASSERT with automatic quick message in case it's called.
+      In other words EXPECT(a, true) is a quick way to write ASSERT(a == true, "excepted 'a' to be 'true' but was actually '%'", a)
 
 str.h:
     > Added str_contains.
