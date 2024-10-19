@@ -16,6 +16,10 @@ first.h:
     > Added EXPECT macro, an alternative to ASSERT with automatic quick message in case it's called.
       In other words EXPECT(a, true) is a quick way to write ASSERT(a == true, "excepted 'a' to be 'true' but was actually '%'", a)
 
+array.h:
+    > Added pointer+size versions of many functions, to aid in C-style programming.
+      These are: print_as_array, array_insert, array_remove_at, array_pop, array_dequeue, array_get_data, array_set and array_get_ptr.
+
 str.h:
     > Added str_contains.
     > Added u8_is_digit.
