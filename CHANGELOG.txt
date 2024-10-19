@@ -20,6 +20,7 @@ str.h:
     > Added str_contains.
     > Added u8_is_digit.
     > Added u8_is_whitespace.
+    > Added overload to str_copy that accepts ptr + len to the buffer to copy into.
     > Improved all trim operations to include all whitespace characters (space, tab, enter, carriage return, vertical tab and formfeed).
     > Added null ptr checks to str_trim_left_inplace, str_trim_right_inplace and str_trim_inplace.
     > Removed str_to_u32 and str_is_u32 functions. You can use StrParser instead.

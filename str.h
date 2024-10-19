@@ -124,13 +124,16 @@ str str_concat(str s1, str s2, Allocator alloc) {
 str str_concat(str s1, str s2) { return str_concat(s1, s2, default_allocator); }
 
 // copies a string allocating into a given allocator
-str str_copy(str to_copy, Allocator alloc) {
+str str_copy(str to_copy, void* dest_buffer, int dest_buffer_size) {
+    ASSERT(dest_buffer != NULL, "no destination buffer given");
+    ASSERT(to_copy.size <= dest_buffer_size, "not enough space in destination buffer, cannot copy");
     str copy;
-    copy.ptr = (u8*)mem_alloc(alloc, to_copy.size);
+    copy.ptr = (u8*)dest_buffer;
     copy.size = to_copy.size;
     memcpy(copy.ptr, to_copy.ptr, to_copy.size);
     return copy;
 }
+str str_copy(str to_copy, Allocator alloc) { return str_copy(to_copy, mem_alloc(alloc, to_copy.size), to_copy.size); }
 str str_copy(str to_copy) { return str_copy(to_copy, default_allocator); }
 
 bool str_starts_with(str to_check, char ch) { return to_check.size > 0 && to_check[0] == ch; }
