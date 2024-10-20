@@ -101,24 +101,34 @@ struct str{
 // NOTE(cogno): you can directly cast a const char* to a str (so you can do str name = "YourName"; and it will work)
 inline void printsl_custom(str v) { for(int i = 0; i < v.size; i++) printsl_custom((char)v.ptr[i]); }
 
+const char* str_to_c_string(str to_convert, void* dest, int dest_size) {
+    ASSERT(dest != NULL, "NULL dest buffer given");
+    ASSERT(to_convert.size != MAX_U32, "str is full, cannot convert to c str");
+    s32 c_size = to_convert.size + 1;
+    ASSERT(c_size <= dest_size, "not enough space in dest buffer, wanted %, given %", c_size, dest_size);
+    memcpy(dest, to_convert.ptr, to_convert.size);
+    ((u8*)dest)[to_convert.size] = 0;
+    return (const char*)dest;
+}
 const char* str_to_c_string(str to_convert, Allocator alloc) {
     ASSERT(to_convert.size != MAX_U32, "str is full, cannot convert to c str");
     u32 c_size = to_convert.size + 1;
-    char* ptr = (char*)mem_alloc(alloc, c_size);
-    memcpy(ptr, to_convert.ptr, to_convert.size);
-    ptr[to_convert.size] = 0;
-    return (const char*)ptr;
+    void* ptr = mem_alloc(alloc, c_size);
+    return str_to_c_string(to_convert, ptr, c_size);
 }
 const char* str_to_c_string(str to_convert) { return str_to_c_string(to_convert, default_allocator); }
 
+void str_concat(str s1, str s2, void* dest, int dest_size) {
+    ASSERT(dest != NULL, "NULL dest buffer given");
+    ASSERT(s1.size + s2.size <= dest_size, "not enough space in dest buffer, wanted % got only %", s1.size + s2.size, dest_size);
+    memcpy(dest, s1.ptr, s1.size);
+    memcpy((u8*)dest + s1.size, s2.ptr, s2.size);
+}
 str str_concat(str s1, str s2, Allocator alloc) {
     str total;
     total.ptr = (u8*)mem_alloc(alloc, s1.size + s2.size);
     total.size = s1.size + s2.size;
-    
-    memcpy(total.ptr, s1.ptr, s1.size);
-    memcpy(total.ptr + s1.size, s2.ptr, s2.size);
-    
+    str_concat(s1, s2, (void*)total.ptr, total.size);
     return total;
 }
 str str_concat(str s1, str s2) { return str_concat(s1, s2, default_allocator); }
