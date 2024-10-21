@@ -124,7 +124,10 @@ bool win64_get_drive_names(Array<str>* drive_names) {
     int sz = GetLogicalDriveStrings(sizeof(buf), buf);
     if(sz == 0) return false;
     
-    if(!ASSERT(sz <= BUFF_SIZE, "buffer not big enough (needs at least % bytes)", sz)) return false;
+    if(sz > BUFF_SIZE) {
+        ASSERT(sz <= BUFF_SIZE, "buffer not big enough (needs at least % bytes)", sz);
+        return false;
+    }
 
     // buf now contains a list of all the drive letters. Each drive letter is
     // terminated with '\0' and the last one is terminated by two consecutive '\0' bytes.
@@ -143,8 +146,8 @@ bool win64_get_drive_names(Array<str>* drive_names) {
 }
 
 inline FILETIME win64_get_last_write_time(char *filename) {
+    ASSERT(filename != NULL, "no input file given");
     FILETIME last_write_time = {};
-    if(!ASSERT(filename != NULL, "no input file given")) return last_write_time;
     
     WIN32_FIND_DATA find_data;
     HANDLE find_handle = FindFirstFileA(filename, &find_data);
@@ -177,8 +180,8 @@ bool win64_write_file(const char* filename, u8* file_data, u32 data_size) {
 // Returns NULL if file cannot be read for some reason.
 // For extended error information you should look at win64_print_error().
 str win64_read_entire_file(const char* filename, Allocator alloc) {
-    if(!ASSERT(filename != NULL, "No input file given.")) return {};
-    if(!ASSERT(alloc.handle != NULL, "No allocator given!")) return {};
+    ASSERT(filename != NULL, "No input file given.");
+    ASSERT(alloc.handle != NULL, "No allocator given!");
 
     auto file_handle = CreateFileA(filename, GENERIC_READ, FILE_SHARE_READ, 0, OPEN_EXISTING, 0, 0);
     if (file_handle == INVALID_HANDLE_VALUE) return {};

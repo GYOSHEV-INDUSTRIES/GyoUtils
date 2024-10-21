@@ -31,7 +31,7 @@ void print_as_array(T* ptr, int array_size) {
 template <typename T>
 void array_insert(T* ptr, int array_size, T to_insert, int index) {
     ASSERT(ptr != NULL, "invalid buffer given (was NULL)");
-    if(!ASSERT_BOUNDS(index, 0, array_size + 1)) return;
+    ASSERT_ALWAYS(index >= 0 && index <= array_size, "OUT OF RANGE remove attempt. Index is %, range is from 0 to % (both inclusive)", index, array_size);
     
     //move every data from index to end forward by 1
     for(s32 i = array_size; i > index; i--) {
@@ -44,7 +44,7 @@ void array_insert(T* ptr, int array_size, T to_insert, int index) {
 template <typename T>
 void array_remove_at(T* ptr, int array_size, int index) {
     ASSERT(ptr != NULL, "invalid buffer given (was NULL)");
-    if(!ASSERT_BOUNDS(index, 0, array_size)) return;
+    ASSERT_ALWAYS(index >= 0 && index < array_size, "OUT OF RANGE remove attempt. Index is %, range is from 0 (inclusive) to %", index, array_size);
 
     //move every data from index to end back by 1
     for(s32 i = index; i < array_size - 1; i++) {

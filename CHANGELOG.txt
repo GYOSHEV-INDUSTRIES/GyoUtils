@@ -2,10 +2,13 @@
 Version: 0.3.1
 ---------------------------------
 In a nutshell:
+    > Changed how ASSERTs work, by introducing ASSERT_ALWAYS, removing functionality to ASSERT and adding EXPECT.
     > Improvements to str_parser, making it more versatile.
     > Fixed common problems with min/max and For macros.
 
 BREAKING CHANGES:
+    > In first.h, ASSERT cannot be used anymore inside an if statement (like if(!ASSERT(...)) {...} )
+    > In first.h, ASSERT_BOUNDS cannot be used anymore inside an if statement (like if(!ASSERT_BOUNDS(...)) {...} )
     > In str.h removed str_to_u32 functions. You can use StrParser instead.
     > In str.h removed str_is_u32 function. You can use StrParser instead.
     > In str.h changed str_split_right if no split is performed, making it simpler to use.
@@ -13,6 +16,8 @@ BREAKING CHANGES:
 
 first.h:
     > Improved For macros to allow iteration of empty containers (instead of causing a out of bounds read / access violation exception).
+    > Added ASSERT_ALWAYS, a variant of ASSERT which can never be deactivated, useful for important/security checks.
+    > Changed how ASSERT and ASSERT_BOUNDS work when deactivated, now they can't be used inside an if anymore.
     > Added EXPECT macro, an alternative to ASSERT with automatic quick message in case it's called.
       In other words EXPECT(a, true) is a quick way to write ASSERT(a == true, "excepted 'a' to be 'true' but was actually '%'", a)
 

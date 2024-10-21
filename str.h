@@ -278,7 +278,7 @@ bool str_split_right(str to_split, u8 char_to_split, str* left_side, str* right_
 }
 
 void str_trim_left_inplace(str* to_trim) {
-    if(!ASSERT(to_trim != NULL, "invalid input ptr (was NULL)")) return;
+    ASSERT(to_trim != NULL, "invalid input ptr (was NULL)");
     while(true) {
         if(to_trim->size <= 0) return; // nothing left to trim
         if(u8_is_whitespace(to_trim->ptr[0])) {
@@ -289,7 +289,7 @@ void str_trim_left_inplace(str* to_trim) {
 }
 
 void str_trim_right_inplace(str* to_trim) {
-    if(!ASSERT(to_trim != NULL, "invalid input ptr (was NULL)")) return;
+    ASSERT(to_trim != NULL, "invalid input ptr (was NULL)");
     while(true) {
         if(to_trim->size <= 0) return; // nothing left to trim
         if(u8_is_whitespace(to_trim->ptr[to_trim->size - 1])) {
@@ -724,7 +724,7 @@ str str_parser_to_str(StrParser p) {
 
 
 void str_parser_advance(StrParser* p, s32 size) {
-    if(!ASSERT(size <= p->size, "advancing by too much! the string is % long, but you're advancing by %", p->size, size)) return;
+    ASSERT_ALWAYS(size <= p->size, "advancing by too much! the string is % long, but you're advancing by %", p->size, size);
     p->ptr  += size;
     p->size -= size;
 }

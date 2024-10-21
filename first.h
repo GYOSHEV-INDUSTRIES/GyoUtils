@@ -209,18 +209,23 @@ void print(const char* s, T t1, Types... others) {
 
 
 //
-// ASSERT macros. stops program execution with a given (optional) message if an expression is not satisfied.
-// can be deactivated by defining 'NO_ASSERT'. When deactivated the macro is turned into the expression, so it
-// can be used inside if to keep runtime checks.
-// Example:
-// if(!ASSERT(index < array_size, "attempting to read out of bounds! reading at %", index)) return;
-// array[index] = value;
-//
-// When this code is run with asserts enabled if the index is above array_size the program will stop with an info message
-// But when asserts are disabled this code is equivalent to
-// if(!(index < array_size)) return;
-// Which is very useful to keep the check even at runtime!
-//
+// ASSERT macros:
+// > ASSERT_ALWAYS(...)
+//   Stops program execution with a given (optional) message if an expression is not satisfied.
+//   Can never be deactivated. Useful for important/security checks.
+//   This macro is useful because:
+//   - It stops program execution when something is different than expected.
+//   - It shows on stdout a where the assert has been called from
+//   - It automatically puts a debugger breakpoint, leading to an easier time while debugging.
+// > ASSERT(...)
+//   Variant of ASSERT_ALWAYS which can be deactivated by defining 'NO_ASSERT'.
+// > ASSERT_BOUNDS
+//   Variant of ASSERT to quickly check if a variable is in a given range, with a pre-built message.
+//   ASSERT_BOUNDS(var, start, len) is basically ASSERT(var >= start && var < start + length, "OUT OF BOUNDS")
+//   Example usage: ASSERT_BOUNDS(index, 0, array.size);
+// > EXPECT(...)
+//   Variant of ASSERT to quickly check if a variable is equal to a given value, with a pre-built message.
+//   EXPECT(var, value) is basically ASSERT(var == value, "Variable was different than expected")
 //
 
 #ifdef _MSC_VER
@@ -261,15 +266,16 @@ inline bool assert_func(bool expr, const char* expression_as_string, const char*
     return expr;
 }
 
+#define ASSERT_ALWAYS(expr, ...) (assert_func(expr, #expr, __FILE__, __LINE__, __FUNCTION__,##__VA_ARGS__))
 
 #ifndef NO_ASSERT
-#define ASSERT(expr, ...) (assert_func(expr, #expr, __FILE__, __LINE__, __FUNCTION__,##__VA_ARGS__))
+#define ASSERT(expr, ...) ASSERT_ALWAYS(expr, __VA_ARGS__)
 #define ASSERT_BOUNDS(var, start, length) ASSERT(((var) >= (start)) && ((var) < ((start) + (length))), "OUT OF BOUNDS! expected between % and % but was %", (start), ((start) + (length)), (var))
 #define EXPECT(value, wanted) (ASSERT((value) == (wanted), "expected '" #value "' to be '%' but was actually '%'", wanted, value))
 #else
-#define ASSERT(expr, ...) (expr)
-#define ASSERT_BOUNDS(var, start, length) (((var) >= (start)) && ((var) < ((start) + (length))))
-#define EXPECT(value, wanted) ((value) == (wanted))
+#define ASSERT(expr, ...)
+#define ASSERT_BOUNDS(var, start, length)
+#define EXPECT(value, wanted)
 #endif
 
 //
