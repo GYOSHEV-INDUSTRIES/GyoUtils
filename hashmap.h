@@ -33,6 +33,36 @@ struct Finder {
     int next_finder_index = MAP_INVALID_INDEX;
 };
 
+// djb2 hashing taken from http://www.cse.yorku.ca/~oz/hash.html
+// API(cogno): we need to find a way to have more than one hashing algorithm, maybe let the user choose his own? either that or have a universal hashing algorithm
+template<class T>
+u64 hash_default(T* str, int size){
+    u64 hash = 5381;
+
+    while (size-- > 0) {
+        u8 c = (u8)*str++;
+        hash = ((hash << 5) + hash) + c; /* hash * 33 + c */
+    }
+
+    return hash;
+}
+
+template<>
+u64 hash_default<str>(str* string, int size) {
+    u64 hash = 5381;
+
+    str string_cp = *string;
+
+    while (string_cp.size-- > 0) {
+        u8 c = *string_cp.ptr++;
+        hash = ((hash << 5) + hash) + c; /* hash * 33 + c */
+    }
+
+    return hash;
+}
+
+#if GYO_INCLUDE_DYNAMIC_ARRAYS
+
 template<typename T, typename U>
 struct HashMap {
     // since we want to iterate over elements using our For macro we hold them in a stack and use a second special array for hashes.
@@ -80,33 +110,7 @@ template<typename T, typename U>
 HashMap<T, U> make_hashmap(int size) { return make_hashmap<T, U>(size, default_allocator); }
 
 
-// djb2 hashing taken from http://www.cse.yorku.ca/~oz/hash.html
-// API(cogno): we need to find a way to have more than one hashing algorithm, maybe let the user choose his own? either that or have a universal hashing algorithm
-template<class T>
-u64 hash_default(T* str, int size){
-    u64 hash = 5381;
 
-    while (size-- > 0) {
-        u8 c = (u8)*str++;
-        hash = ((hash << 5) + hash) + c; /* hash * 33 + c */
-    }
-
-    return hash;
-}
-
-template<>
-u64 hash_default<str>(str* string, int size) {
-    u64 hash = 5381;
-
-    str string_cp = *string;
-
-    while (string_cp.size-- > 0) {
-        u8 c = *string_cp.ptr++;
-        hash = ((hash << 5) + hash) + c; /* hash * 33 + c */
-    }
-
-    return hash;
-}
 
 // API(cogno): Is it a good idea to have str == str operator? I don't think so.
 // I would prefer to have to explicitly tell map_insert to use str_equals
@@ -116,6 +120,7 @@ u64 hash_default<str>(str* string, int size) {
 //}
 // this way the user can also implement both his own hashing and his own equals for his own types
 //               - Cogno 2024/08/28
+
 
 template<typename T, typename U>
 void map_insert(HashMap<T, U>* map, T key, U value) {
@@ -198,3 +203,4 @@ void map_remove(HashMap<T, U>* map, T key) {
 }
 
 // API(cogno): can we change the For macro so we can iterate over elements of a collection *while skipping unwanted elements automatically* ?
+#endif

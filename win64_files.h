@@ -16,6 +16,7 @@ functions to simplify working with windows' file system.
 #endif
 
 // API(cogno): since array allocates, we can make a get_next_file_in_dir to avoid the allocation. It's basically like str_split_left which returns the single split instead of str_split that returns the array that must be allocated.
+#if GYO_INCLUDE_DYNAMIC_ARRAYS
 
 bool win64_get_only_files_in_dir(str folder_path, Array<str>* filenames) {
     StrBuilder builder = make_str_builder();
@@ -144,6 +145,9 @@ bool win64_get_drive_names(Array<str>* drive_names) {
     
     return drive_names->size > 0;
 }
+
+#endif
+
 
 inline FILETIME win64_get_last_write_time(char *filename) {
     ASSERT(filename != NULL, "no input file given");

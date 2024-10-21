@@ -3,6 +3,8 @@
 /*
 In this file:
 - Array, a simple replacement to std::vector
+- FixedArray, a variant of Array which cannot resize
+- Generic functions implemented on raw pointers, if you want to use them directly
 */
 
 #ifndef GYOFIRST
@@ -14,8 +16,19 @@ In this file:
 #endif
 
 #define GYO_ARRAY
-
 #define GYO_ARRAY_DEFAULT_SIZE 8
+
+
+// by default we include both fixed and dynamic arrays, if you only want one you can
+// define these values yourself and set them to false
+#ifndef GYO_INCLUDE_DYNAMIC_ARRAYS
+#define GYO_INCLUDE_DYNAMIC_ARRAYS true
+#endif
+
+#ifndef GYO_INCLUDE_FIXED_ARRAYS
+#define GYO_INCLUDE_FIXED_ARRAYS true
+#endif
+
 
 template <typename T>
 void print_as_array(T* ptr, int array_size) {
@@ -93,7 +106,7 @@ T* array_get_ptr(T* ptr, int array_size, int index) {
 }
 
 
-
+#if GYO_INCLUDE_DYNAMIC_ARRAYS
 
 template <typename T>
 struct Array {
@@ -184,3 +197,71 @@ template<typename T> T array_get_data(Array<T>* array, s32 index) { return array
 template<typename T> void array_set(Array<T>* array, s32 index, T value) { return array_set(array->ptr, array->size, index, value); }
 template<typename T> T* array_get_ptr(Array<T>* array, s32 index) { return array_get_ptr(array->ptr, array->size, index); }
 
+#endif
+
+#if GYO_INCLUDE_FIXED_ARRAYS
+
+template<typename T>
+struct FixedArray {
+    T* ptr;
+    int size;
+    int reserved_size;
+    T& operator[](s32 i) { ASSERT_BOUNDS(i, 0, size); return ptr[i]; }
+};
+
+template <typename T> void printsl_custom(FixedArray<T> arr) { print_as_array(arr.ptr, arr.size); }
+
+template<typename T>
+FixedArray<T> make_array(T* block, s32 size) {
+    ASSERT(size >= 0, "cannot create array with negative size %", size);
+    ASSERT(block != NULL, "cannot create array with NULL ptr");
+    FixedArray<T> array;
+    array.reserved_size = size;
+    array.size = 0;
+    array.ptr = block;
+    return array;
+}
+
+
+template<typename T>
+FixedArray<T> make_array_from_c_array(T* ptr, int size) {
+    auto array = make_array(ptr, size);
+    array.size = size;
+    return array;
+}
+
+
+template<typename T>
+void array_clear(FixedArray<T>* array) {
+    array->size = 0;
+    // API(cogno): maybe we should add a slow path to memset all to 0? maybe always do it? maybe provide 2 options? I don't know...
+}
+
+template<typename T>
+void array_insert(FixedArray<T>* array, T data, s32 index) {
+    ASSERT(array->size + 1 <= array->reserved_size, "OUT OF MEMORY! Trying to insert an element in an array which is full (% elements)", array->size);
+    array_insert(array->ptr, array->size++, data, index);
+}
+
+template<typename T>
+void array_append(FixedArray<T>* array, T data) {
+    ASSERT(array != NULL, "NO array given (input array ptr is NULL)");
+    ASSERT(array->ptr != NULL, "invalid array given (was an array pointing to NULL)");
+    ASSERT(array->size + 1 <= array->reserved_size, "OUT OF MEMORY! Trying to insert an element in an array which is full (% elements)", array->size);
+    array->ptr[array->size++] = data;
+}
+
+template<typename T> void array_remove_at(FixedArray<T>* array, s32 index) { array_remove_at(array->ptr, array->size--, index); }
+// so you can use this as a stack (push=append)
+template<typename T> T array_pop(FixedArray<T>* array) { return array_pop(array->ptr, array->size--); }
+
+// so you can use this as a queue (queue=append)
+template<typename T> T array_dequeue(FixedArray<T>* array) { return array_dequeue(array->ptr, array->size--); }
+
+// NOTE(cogno): most of the times you can simply use the operator overload, so doing array[0] = 10; or auto temp = array[15];, but if you have the pointer to the array (instead of the array) then the operator overload will not work (because you'll be accessing the pointer!) so these functions can be used instead (or you can take a reference to the array instead of a pointer)
+template<typename T> T array_get_data(FixedArray<T>* array, s32 index) { return array_get_data(array->ptr, array->size, index); }
+template<typename T> void array_set(FixedArray<T>* array, s32 index, T value) { return array_set(array->ptr, array->size, index, value); }
+template<typename T> T* array_get_ptr(FixedArray<T>* array, s32 index) { return array_get_ptr(array->ptr, array->size, index); }
+
+
+#endif

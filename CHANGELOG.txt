@@ -3,6 +3,7 @@ Version: 0.3.1
 ---------------------------------
 In a nutshell:
     > Changed how ASSERTs work, by introducing ASSERT_ALWAYS, removing functionality to ASSERT and adding EXPECT.
+    > Reintroduced FixedArray.
     > Improvements to str_parser, making it more versatile.
     > Fixed common problems with min/max and For macros.
 
@@ -24,6 +25,8 @@ first.h:
 array.h:
     > Added pointer+size versions of many functions, to aid in C-style programming.
       These are: print_as_array, array_insert, array_remove_at, array_pop, array_dequeue, array_get_data, array_set and array_get_ptr.
+    > Added FixedArray, a variant of Array which does not resize automatically.
+    > Added option to not include Array or FixedArray independently. Stuff from gyoutils that uses Array or FixedArray is also excluded automatically.
 
 str.h:
     > Added str_contains.
