@@ -52,7 +52,8 @@ str.h:
     > Fixed str_split_left overload with a string splitter as input not touching the left_side pointer when it should.
     > Fixed str_split_left overload with a string splitter as input incorrectly splitting the right side.
     > Also changed the same overload to accept NULL as valid inputs, if results are to be ignored.
-
+    > Added FixedStrBuilder, a variant of StrBuilder which doesn't reallocate when full. Faster than StrBuilder but more limited.
+    > Added option to include or not StrBuilder or FixedStrBuilder.
 
     str_parser:
     > Fixed str_parser_starts_with_digit to not explode if the str_parser is empty.
