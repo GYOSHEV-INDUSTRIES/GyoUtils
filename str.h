@@ -116,48 +116,43 @@ inline void printsl_custom(str v) { for(int i = 0; i < v.size; i++) printsl_cust
 
 const char* str_to_c_string(str to_convert, void* dest, int dest_size) {
     ASSERT(dest != NULL, "NULL dest buffer given");
-    ASSERT(to_convert.size != MAX_U32, "str is full, cannot convert to c str");
-    s32 c_size = to_convert.size + 1;
-    ASSERT(c_size <= dest_size, "not enough space in dest buffer, wanted %, given %", c_size, dest_size);
+    ASSERT_ALWAYS(to_convert.size + 1 <= dest_size && to_convert.size <= dest_size, "not enough space in dest buffer, wanted %+1, given %", to_convert.size, dest_size);
     memcpy(dest, to_convert.ptr, to_convert.size);
     ((u8*)dest)[to_convert.size] = 0;
     return (const char*)dest;
 }
-const char* str_to_c_string(str to_convert, Allocator alloc) {
-    ASSERT(to_convert.size != MAX_U32, "str is full, cannot convert to c str");
-    u32 c_size = to_convert.size + 1;
-    void* ptr = mem_alloc(alloc, c_size);
-    return str_to_c_string(to_convert, ptr, c_size);
-}
-const char* str_to_c_string(str to_convert) { return str_to_c_string(to_convert, default_allocator); }
+const char* str_to_c_string(str to_convert, Bump* alloc)  { return str_to_c_string(to_convert, mem_alloc(alloc, to_convert.size + 1), to_convert.size + 1); }
+const char* str_to_c_string(str to_convert, Arena* alloc) { return str_to_c_string(to_convert, mem_alloc(alloc, to_convert.size + 1), to_convert.size + 1); }
+const char* str_to_c_string(str to_convert)               { return str_to_c_string(to_convert, mem_alloc(to_convert.size + 1),        to_convert.size + 1); }
 
-void str_concat(str s1, str s2, void* dest, int dest_size) {
+str str_concat(str s1, str s2, void* dest, int dest_size) {
     ASSERT(dest != NULL, "NULL dest buffer given");
-    ASSERT(s1.size + s2.size <= dest_size, "not enough space in dest buffer, wanted % got only %", s1.size + s2.size, dest_size);
+    ASSERT_ALWAYS((u32)s1.size < MAX_U32 - (u32)s2.size, "OVERFLOW, cannot concatenate the 2 strings because the resulting one would be too big. (% + % is more than %)", s1.size, s2.size, MAX_U32);
+    ASSERT_ALWAYS(s1.size + s2.size <= dest_size, "not enough space in dest buffer, wanted % got only %", s1.size + s2.size, dest_size);
     memcpy(dest, s1.ptr, s1.size);
     memcpy((u8*)dest + s1.size, s2.ptr, s2.size);
-}
-str str_concat(str s1, str s2, Allocator alloc) {
-    str total;
-    total.ptr = (u8*)mem_alloc(alloc, s1.size + s2.size);
+    str total = {};
+    total.ptr = (u8*)dest;
     total.size = s1.size + s2.size;
-    str_concat(s1, s2, (void*)total.ptr, total.size);
     return total;
 }
-str str_concat(str s1, str s2) { return str_concat(s1, s2, default_allocator); }
+str str_concat(str s1, str s2, Bump* alloc)  { return str_concat(s1, s2, mem_alloc(alloc, s1.size + s2.size), s1.size + s2.size); }
+str str_concat(str s1, str s2, Arena* alloc) { return str_concat(s1, s2, mem_alloc(alloc, s1.size + s2.size), s1.size + s2.size); }
+str str_concat(str s1, str s2)               { return str_concat(s1, s2, mem_alloc(s1.size + s2.size),        s1.size + s2.size); }
 
 // copies a string allocating into a given allocator
 str str_copy(str to_copy, void* dest_buffer, int dest_buffer_size) {
     ASSERT(dest_buffer != NULL, "no destination buffer given");
-    ASSERT(to_copy.size <= dest_buffer_size, "not enough space in destination buffer, cannot copy");
-    str copy;
+    ASSERT_ALWAYS(to_copy.size <= dest_buffer_size, "not enough space in destination buffer, cannot copy (wanted % but got %)", to_copy.size, dest_buffer_size);
+    str copy = {};
     copy.ptr = (u8*)dest_buffer;
     copy.size = to_copy.size;
-    memcpy(copy.ptr, to_copy.ptr, to_copy.size);
+    memcpy(dest_buffer, to_copy.ptr, to_copy.size);
     return copy;
 }
-str str_copy(str to_copy, Allocator alloc) { return str_copy(to_copy, mem_alloc(alloc, to_copy.size), to_copy.size); }
-str str_copy(str to_copy) { return str_copy(to_copy, default_allocator); }
+str str_copy(str to_copy, Bump* alloc)  { return str_copy(to_copy, mem_alloc(alloc, to_copy.size), to_copy.size); }
+str str_copy(str to_copy, Arena* alloc) { return str_copy(to_copy, mem_alloc(alloc, to_copy.size), to_copy.size); }
+str str_copy(str to_copy)               { return str_copy(to_copy, mem_alloc(to_copy.size),        to_copy.size); }
 
 bool str_starts_with(str to_check, char ch) { return to_check.size > 0 && to_check[0] == ch; }
 bool str_ends_with(str to_check, char ch) { return to_check.size > 0 && to_check[to_check.size - 1] == ch; }

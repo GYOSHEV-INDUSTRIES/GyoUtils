@@ -146,6 +146,13 @@ inline void* mem_free(Allocator alloc, void* to_free) {
     return alloc.handle(AllocOp::FREE, alloc.data, 0, 0, to_free);
 }
 
+// NOTE(cogno): we never call malloc/calloc/realloc/free directly, so if you want to know who is allocating what you can add a print/ASSERT here and you will instantly know who is calling what. Very useful for debugging.
+
+inline void* mem_alloc(s32 size) { return calloc(size, sizeof(u8)); }
+inline void* mem_realloc(void* to_realloc, s32 new_size) { return realloc(to_realloc, new_size); }
+inline void  mem_free(void* to_free) { free(to_free); }
+
+
 // By default everything that allocates will use this.
 // If you want to use something else you can overwrite this with another allocator,
 // or control on a case per case basis (for example everything uses default allocator
