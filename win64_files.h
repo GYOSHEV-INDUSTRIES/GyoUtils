@@ -197,9 +197,11 @@ HANDLE win64_read_file_size(const char* filename, int* out_file_size) {
     return file_handle;
 }
 
-// internal function, do not call (you should probably call win64_read_entire_file(...))
+// Reads the given file amount from the given file handle, then closes the handle automatically.
+// Returns the output data as a str for convenience (if the str is empty there was a problem reading the file).
 str _win64_read_entire_file(HANDLE file_handle, int file_size, void* dest, int dest_size) {
     ASSERT(file_handle != NULL, "invalid input file handle (was NULL)");
+    ASSERT(dest        != NULL, "invalid input destination buffer (was NULL)");
     ASSERT_ALWAYS(file_size <= dest_size, "Input buffer is not big enough! (wanted % but got %)", file_size, dest_size);
     defer {
         bool ok = CloseHandle(file_handle);
