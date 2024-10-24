@@ -206,8 +206,8 @@ str _win64_read_entire_file(HANDLE file_handle, int file_size, void* dest, int d
         ASSERT(ok, "couldn't close file");
     };
     str out = {};
-    out.ptr = dest;
-    bool ok = ReadFile(file_handle, out.ptr, file_size, &out.size, 0);
+    out.ptr = (u8*)dest;
+    bool ok = ReadFile(file_handle, out.ptr, file_size, (LPDWORD)&out.size, 0);
     if(!ok) return {};
     return out;
 }
