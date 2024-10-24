@@ -411,7 +411,7 @@ StrBuilder make_str_builder(s32 size, Allocator alloc) {
     return s;
 }
 
-StrBuilder make_str_builder() { return make_str_builder(STR_BUILDER_DEFAULT_SIZE, default_allocator); }
+StrBuilder make_str_builder() { return make_str_builder(GYO_STR_BUILDER_DEFAULT_SIZE, default_allocator); }
 StrBuilder make_str_builder(s32 size) { return make_str_builder(size, default_allocator); }
 
 void str_builder_free(StrBuilder* b) {
@@ -442,7 +442,7 @@ str str_builder_get_str(StrBuilder* b) {
 void str_builder_resize(StrBuilder* b, s32 min_size) {
     u8 old_start = b->ptr[0];
     s32 new_size = b->reserved_size * 2;
-    new_size = max(new_size, STR_BUILDER_DEFAULT_SIZE);
+    new_size = max(new_size, GYO_STR_BUILDER_DEFAULT_SIZE);
     new_size = max(new_size, min_size);
     b->ptr = (u8*)mem_realloc(b->alloc, b->reserved_size * sizeof(u8), new_size * sizeof(u8), b->ptr);
     b->reserved_size = new_size;
