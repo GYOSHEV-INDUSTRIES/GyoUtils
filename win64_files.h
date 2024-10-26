@@ -16,7 +16,6 @@ functions to simplify working with windows' file system.
 #endif
 
 // API(cogno): since array allocates, we can make a get_next_file_in_dir to avoid the allocation. It's basically like str_split_left which returns the single split instead of str_split that returns the array that must be allocated.
-#if GYO_INCLUDE_DYNAMIC_ARRAYS
 
 bool win64_get_only_files_in_dir(str folder_path, Array<str>* filenames) {
     StrBuilder builder = make_str_builder();
@@ -146,7 +145,6 @@ bool win64_get_drive_names(Array<str>* drive_names) {
     return drive_names->size > 0;
 }
 
-#endif
 
 
 inline FILETIME win64_get_last_write_time(char *filename) {
@@ -214,17 +212,8 @@ str _win64_read_entire_file(HANDLE file_handle, int file_size, void* dest, int d
     return out;
 }
 
-
 // reads the entire file data (and automatically allocates)
-str win64_read_entire_file(const char* filename) {
-    int file_size = 0;
-    HANDLE file_handle = win64_read_file_size(filename, &file_size);
-    if(file_handle == NULL) return {}; // handle already closed by function
-    return _win64_read_entire_file(file_handle, file_size, mem_alloc(file_size), file_size);
-}
-
-// reads the entire file data (and automatically allocates)
-str win64_read_entire_file(const char* filename, Bump* alloc) {
+str win64_read_entire_file(const char* filename, Allocator alloc) {
     int file_size = 0;
     HANDLE file_handle = win64_read_file_size(filename, &file_size);
     if(file_handle == NULL) return {}; // handle already closed by function
@@ -232,9 +221,5 @@ str win64_read_entire_file(const char* filename, Bump* alloc) {
 }
 
 // reads the entire file data (and automatically allocates)
-str win64_read_entire_file(const char* filename, Arena* alloc) {
-    int file_size = 0;
-    HANDLE file_handle = win64_read_file_size(filename, &file_size);
-    if(file_handle == NULL) return {}; // handle already closed by function
-    return _win64_read_entire_file(file_handle, file_size, mem_alloc(alloc, file_size), file_size);
-}
+str win64_read_entire_file(const char* filename) { return win64_read_entire_file(filename, default_allocator); }
+

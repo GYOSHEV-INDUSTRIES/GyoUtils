@@ -145,12 +145,13 @@ inline void* mem_free(Allocator alloc, void* to_free) {
     ASSERT(alloc.handle != NULL, "Invalid Allocator (handle function missing!)");
     return alloc.handle(AllocOp::FREE, alloc.data, 0, 0, to_free);
 }
+inline void* mem_free_all(Allocator alloc) {
+    ASSERT(alloc.handle != NULL, "Invalid Allocator (handle function missing!)");
+    return alloc.handle(AllocOp::FREE_ALL, alloc.data, 0, 0, NULL);
+}
 
-// NOTE(cogno): we never call malloc/calloc/realloc/free directly, so if you want to know who is allocating what you can add a print/ASSERT here and you will instantly know who is calling what. Very useful for debugging.
 
-inline void* mem_alloc(s32 size) { return calloc(size, sizeof(u8)); }
-inline void* mem_realloc(void* to_realloc, s32 new_size) { return realloc(to_realloc, new_size); }
-inline void  mem_free(void* to_free) { free(to_free); }
+
 
 
 // By default everything that allocates will use this.
@@ -162,3 +163,24 @@ Allocator default_allocator = {NULL, default_handle}; // points to default handl
 // will allocate a block of memory from a given allocator, and control that
 Bump make_bump_allocator(Allocator alloc, int min_size) { return make_bump_allocator(mem_alloc(alloc, min_size), min_size); }
 // API(cogno): same for Arena and all the others
+
+
+Allocator make_allocator(Allocator parent, Bump* out_allocator, s32 size) {
+    ASSERT(out_allocator != NULL, "Invalid input given, cannot build an allocator (was NULL)");
+    *out_allocator = make_bump_allocator(parent, size);
+    Allocator out = {};
+    out.data = (void*)out_allocator;
+    out.handle = bump_handle;
+    return out;
+}
+
+// Construct an allocator with the given input, initializing it in the process.
+// This is just a shortcut so you don't have to make_bump and then make_allocator
+Allocator make_allocator(Bump* out_allocator, s32 size) {
+    ASSERT(out_allocator != NULL, "Invalid input given, cannot build an allocator (was NULL)");
+    *out_allocator = make_bump_allocator(size);
+    Allocator out = {};
+    out.data = (void*)out_allocator;
+    out.handle = bump_handle;
+    return out;
+}

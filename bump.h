@@ -40,6 +40,7 @@ void bump_reset(Bump* a) {
 
 // generic functionality used by Allocator in allocators.h, you can use the functions below for ease of use
 void* bump_handle(AllocOp op, void* alloc, s32 old_size, s32 size_requested, void* to_free) {
+    ASSERT(alloc != NULL, "Invalid allocator data given (was NULL)");
     Bump* allocator = (Bump*)alloc;
     switch(op) {
         case AllocOp::GET_NAME: return (void*)"Bump Allocator";
@@ -60,7 +61,7 @@ void* bump_handle(AllocOp op, void* alloc, s32 old_size, s32 size_requested, voi
             if(unaligned_by != 0 && space_left_in_block < size_requested) allocator->curr_offset += space_left_in_block;
             
             // bump allocators do NOT resize
-            ASSERT(allocator->curr_offset + size_requested <= allocator->size_available, "arena out of memory (currently at %, requested %, available %)", allocator->curr_offset, size_requested, allocator->size_available);
+            ASSERT(allocator->curr_offset + size_requested <= allocator->size_available, "Bump out of memory (currently at %, requested %, available %)", allocator->curr_offset, size_requested, allocator->size_available);
             
             auto* alloc_start = (char*)allocator->data + allocator->curr_offset;
             allocator->prev_offset = allocator->curr_offset;
@@ -69,10 +70,14 @@ void* bump_handle(AllocOp op, void* alloc, s32 old_size, s32 size_requested, voi
         } break;
         case AllocOp::FREE_ALL: {
             bump_reset(allocator);
+            return NULL;
+        } break;
+        case AllocOp::DEINIT: {
+            bump_reset(allocator);
             allocator->size_available = 0;
             free(allocator->data); // TAG: MaybeWeShouldDoThisBetter
             return NULL;
-        }; break;
+        } break;
         default: return NULL; // not implemented
     }
 }
@@ -93,5 +98,3 @@ Bump make_bump_allocator(int min_size) {
     return b;
 }
 
-void  mem_free_all(Bump* a) { bump_handle(AllocOp::FREE_ALL, a, 0, 0, NULL); }
-void* mem_alloc(Bump* a, int size) { return bump_handle(AllocOp::ALLOC, a, 0, size, NULL); }

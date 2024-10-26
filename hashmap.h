@@ -61,8 +61,6 @@ u64 hash_default<str>(str* string, int size) {
     return hash;
 }
 
-#if GYO_INCLUDE_DYNAMIC_ARRAYS
-
 template<typename T, typename U>
 struct HashMap {
     // since we want to iterate over elements using our For macro we hold them in a stack and use a second special array for hashes.
@@ -203,4 +201,3 @@ void map_remove(HashMap<T, U>* map, T key) {
 }
 
 // API(cogno): can we change the For macro so we can iterate over elements of a collection *while skipping unwanted elements automatically* ?
-#endif

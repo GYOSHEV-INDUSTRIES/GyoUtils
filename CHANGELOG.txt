@@ -3,7 +3,6 @@ Version: 0.3.1
 ---------------------------------
 In a nutshell:
     > Changed how ASSERTs work, by introducing ASSERT_ALWAYS, removing functionality to ASSERT and adding EXPECT.
-    > Reintroduced FixedArray.
     > Improvements to str_parser, making it more versatile.
     > Fixed common problems with min/max and For macros.
 
@@ -25,8 +24,6 @@ first.h:
 array.h:
     > Added pointer+size versions of many functions, to aid in C-style programming.
       These are: print_as_array, array_insert, array_remove_at, array_pop, array_dequeue, array_get_data, array_set and array_get_ptr.
-    > Added FixedArray, a variant of Array which does not resize automatically.
-    > Added option to not include Array or FixedArray independently. Stuff from gyoutils that uses Array or FixedArray is also excluded automatically.
 
 str.h:
     > Added str_contains.
@@ -52,8 +49,6 @@ str.h:
     > Fixed str_split_left overload with a string splitter as input not touching the left_side pointer when it should.
     > Fixed str_split_left overload with a string splitter as input incorrectly splitting the right side.
     > Also changed the same overload to accept NULL as valid inputs, if results are to be ignored.
-    > Added FixedStrBuilder, a variant of StrBuilder which doesn't reallocate when full. Faster than StrBuilder but more limited.
-    > Added option to include or not StrBuilder or FixedStrBuilder.
 
     str_parser:
     > Fixed str_parser_starts_with_digit to not explode if the str_parser is empty.
@@ -95,7 +90,7 @@ Since allocators control memory we've integrated them into Array.
 By default Array will use the default allocator (working identical to the old version of Array).
 By instead giving it a different allocator you can control how arrays access and use memory.
 For example by creating an array with a Bump allocator you can have an array which will *not* realloc, effectively making it a fixed array.
-Because of this **we've removed FixedArray**.
+Because of this **we've removed Array**.
 You'll see usage examples of arrays and allocators inside allocators.h/array.h/str.h
 
 BREAKING CHANGES:

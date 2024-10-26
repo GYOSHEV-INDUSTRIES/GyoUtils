@@ -5,7 +5,7 @@ In this file:
 - unicode utility functions
 - str, a simple replacement to std::string, simply told, a ptr to char array + size, making them more useful in many situations.
 - StrBuilder, a simple way to dynamically construct str (since str is an array of bytes you can use str_builder to also build binary files and many other things!)
-- FixedStrBuilder, a variant of StrBuilder which doesn't automatically expand. Faster but more limited.
+- StrBuilder, a variant of StrBuilder which doesn't automatically expand. Faster but more limited.
 - StrParser, a simple way to dynamically DEconstruct a str (since str is an array of bytes you can use str_parser to also parse binary files and many other things!)
 */
 
@@ -19,15 +19,6 @@ In this file:
 
 #define GYO_STR_BUILDER_DEFAULT_SIZE 100
 #define GYO_FIXED_STR_BUILDER_DEFAULT_SIZE 100
-
-#ifndef GYO_INCLUDE_STR_BUILDER
-#define GYO_INCLUDE_STR_BUILDER true
-#endif
-
-#ifndef GYO_INCLUDE_FIXED_STR_BUILDER
-#define GYO_INCLUDE_FIXED_STR_BUILDER true
-#endif
-
 
 //
 // UNICODE UTILS
@@ -121,9 +112,8 @@ const char* str_to_c_string(str to_convert, void* dest, int dest_size) {
     ((u8*)dest)[to_convert.size] = 0;
     return (const char*)dest;
 }
-const char* str_to_c_string(str to_convert, Bump* alloc)  { return str_to_c_string(to_convert, mem_alloc(alloc, to_convert.size + 1), to_convert.size + 1); }
-const char* str_to_c_string(str to_convert, Arena* alloc) { return str_to_c_string(to_convert, mem_alloc(alloc, to_convert.size + 1), to_convert.size + 1); }
-const char* str_to_c_string(str to_convert)               { return str_to_c_string(to_convert, mem_alloc(to_convert.size + 1),        to_convert.size + 1); }
+const char* str_to_c_string(str to_convert, Allocator alloc)  { return str_to_c_string(to_convert, mem_alloc(alloc, to_convert.size + 1), to_convert.size + 1); }
+const char* str_to_c_string(str to_convert) { return str_to_c_string(to_convert, default_allocator); }
 
 str str_concat(str s1, str s2, void* dest, int dest_size) {
     ASSERT(dest != NULL, "NULL dest buffer given");
@@ -136,9 +126,8 @@ str str_concat(str s1, str s2, void* dest, int dest_size) {
     total.size = s1.size + s2.size;
     return total;
 }
-str str_concat(str s1, str s2, Bump* alloc)  { return str_concat(s1, s2, mem_alloc(alloc, s1.size + s2.size), s1.size + s2.size); }
-str str_concat(str s1, str s2, Arena* alloc) { return str_concat(s1, s2, mem_alloc(alloc, s1.size + s2.size), s1.size + s2.size); }
-str str_concat(str s1, str s2)               { return str_concat(s1, s2, mem_alloc(s1.size + s2.size),        s1.size + s2.size); }
+str str_concat(str s1, str s2, Allocator alloc)  { return str_concat(s1, s2, mem_alloc(alloc, s1.size + s2.size), s1.size + s2.size); }
+str str_concat(str s1, str s2) { return str_concat(s1, s2, default_allocator); }
 
 // copies a string allocating into a given allocator
 str str_copy(str to_copy, void* dest_buffer, int dest_buffer_size) {
@@ -150,9 +139,8 @@ str str_copy(str to_copy, void* dest_buffer, int dest_buffer_size) {
     memcpy(dest_buffer, to_copy.ptr, to_copy.size);
     return copy;
 }
-str str_copy(str to_copy, Bump* alloc)  { return str_copy(to_copy, mem_alloc(alloc, to_copy.size), to_copy.size); }
-str str_copy(str to_copy, Arena* alloc) { return str_copy(to_copy, mem_alloc(alloc, to_copy.size), to_copy.size); }
-str str_copy(str to_copy)               { return str_copy(to_copy, mem_alloc(to_copy.size),        to_copy.size); }
+str str_copy(str to_copy, Allocator alloc)  { return str_copy(to_copy, mem_alloc(alloc, to_copy.size), to_copy.size); }
+str str_copy(str to_copy) { return str_copy(to_copy, default_allocator); }
 
 bool str_starts_with(str to_check, char ch) { return to_check.size > 0 && to_check[0] == ch; }
 bool str_ends_with(str to_check, char ch) { return to_check.size > 0 && to_check[to_check.size - 1] == ch; }
@@ -386,8 +374,6 @@ inline bool operator ==(str a, str b) {return str_matches(a,b);}
 StrBuilder, used to dinamically construct str.
 Since str is an array of bytes you can also use this to construct binary data (like files)
 */
-
-#if GYO_INCLUDE_STR_BUILDER
 
 // API(cogno): make this work automatically if make_str_builder is not called.
 struct StrBuilder {
@@ -688,217 +674,6 @@ void str_builder_remove_right(StrBuilder* b, u8 to_find) {
     auto size_found = str_builder_count_right(b, to_find);
     if (size_found > 0) str_builder_remove_last_bytes(b, size_found);
 }
-
-#endif
-
-
-
-#if GYO_INCLUDE_FIXED_STR_BUILDER
-
-// API(cogno): make this work automatically if make_str_builder is not called.
-struct FixedStrBuilder {
-    u8* ptr;
-    s32 size;
-    s32 reserved_size;
-    u8& operator[](s32 i) { ASSERT_BOUNDS(i, 0, size); return ptr[i]; }
-};
-
-
-void str_builder_clear(FixedStrBuilder* b) { b->size = 0; }
-str str_builder_get_str(FixedStrBuilder* b) { return {b->ptr, b->size}; }
-
-void str_builder_append(FixedStrBuilder* b, void* to_append, int to_append_size) {
-    ASSERT(to_append != NULL, "invalid ptr to append given (received NULL)");
-    ASSERT(b->size + to_append_size <= b->reserved_size, "not enough memory allocated, wanted % but only % are available", b->size + to_append_size, b->reserved_size);
-    memcpy(b->ptr + b->size, to_append, to_append_size);
-    b->size += to_append_size;
-}
-
-void str_builder_append(FixedStrBuilder* b, str to_append) { str_builder_append(b, (void*)to_append.ptr, to_append.size); }
-void str_builder_append(FixedStrBuilder* b, bool boolean) {
-    if (boolean) str_builder_append(b, (void*)"true",  4);
-    else         str_builder_append(b, (void*)"false", 5);
-}
-
-void str_builder_append(FixedStrBuilder* b, const char* to_append) { str_builder_append(b, (str)to_append); } // NOTE(cogno): if we don't add this then passing a const char* will call the bool overload instead... msvc bug?
-void str_builder_append(FixedStrBuilder* b, char c) { str_builder_append(b, (void*)&c, sizeof(char)); }
-
-void str_builder_append(FixedStrBuilder* b, u8 to_append) {
-    char buff[4];
-    int size = snprintf(buff, 4, "%u", to_append);
-    str_builder_append(b, (void*)buff, size);
-}
-
-void str_builder_append(FixedStrBuilder* b, u16 to_append) {
-    char buff[6];
-    int size = snprintf(buff, 6, "%u", to_append);
-    str_builder_append(b, (void*)buff, size);
-}
-
-void str_builder_append(FixedStrBuilder* b, u32 to_append) {
-    char buff[11];
-    int size = snprintf(buff, 11, "%lu", to_append);
-    str_builder_append(b, (void*)buff, size);
-}
-
-void str_builder_append(FixedStrBuilder* b, u64 to_append) {
-    char buff[21];
-    int size = snprintf(buff, 21, "%llu", to_append);
-    str_builder_append(b, (void*)buff, size);
-}
-
-void str_builder_append(FixedStrBuilder* b, s8 to_append) {
-    char buff[5];
-    int size = snprintf(buff, 5, "%d", to_append);
-    str_builder_append(b, (void*)buff, size);
-}
-
-void str_builder_append(FixedStrBuilder* b, s16 to_append) {
-    char buff[8];
-    int size = snprintf(buff, 8, "%d", to_append);
-    str_builder_append(b, (void*)buff, size);
-}
-
-void str_builder_append(FixedStrBuilder* b, s32 to_append) {
-    char buff[15];
-    int size = snprintf(buff, 15, "%ld", to_append);
-    str_builder_append(b, (void*)buff, size);
-}
-
-void str_builder_append(FixedStrBuilder* b, s64 to_append) {
-    char buff[25];
-    int size = snprintf(buff, 25, "%lld", to_append);
-    str_builder_append(b, (void*)buff, size);
-}
-
-void str_builder_append(FixedStrBuilder* b, f32 to_append) {
-    char buff[50];
-    int size = snprintf(buff, 50, "%.5f", to_append);
-    str_builder_append(b, (void*)buff, size);
-}
-
-void str_builder_append(FixedStrBuilder* b, f64 to_append) {
-    char buff[50];
-    int size = snprintf(buff, 50, "%.5f", to_append);
-    str_builder_append(b, (void*)buff, size);
-}
-
-void str_builder_append_hex(FixedStrBuilder* b, u64 to_append) {
-    char buff[20];
-    int size = snprintf(buff, 20, "%04X_%04X_%04X_%04X", (u32)(to_append >> 48) & 0xffff, (u32)(to_append >> 32) & 0xffff, (u32)(to_append >> 16) & 0xffff, (u32)to_append & 0xffff);
-    str_builder_append(b, (void*)buff, size);
-}
-
-void str_builder_append_hex(FixedStrBuilder* b, u32 to_append) {
-    char buff[12];
-    int size = snprintf(buff, 12, "%04X_%04X", (to_append >> 16) & 0xffff, to_append & 0xffff);
-    str_builder_append(b, (void*)buff, size);
-}
-
-// converts the ptr to hex text, it will NOT read the contents of the ptr itself
-template<typename T> 
-void str_builder_append_ptr(FixedStrBuilder* b, T* to_append) {
-    union Temp {
-        T* ptr;
-        u64 u64;
-    } t; // NOTE(cogno): if we cast T* to u64/u32 we might get a warning (which some projects turn into an error), so we use an union
-    t.ptr = to_append;
-    char buff[20];
-    int size = snprintf(buff, 20, "%04X_%04X_%04X", (u32)(t.u64 >> 32) & 0xffff, (u32)(t.u64 >> 16) & 0xffff, (u32)t.u64 & 0xffff);
-    str_builder_append(b, (void*)buff, size);
-}
-
-// custom str_builder variants, you can add yours too!
-#ifdef GYOMATH
-void str_builder_append(FixedStrBuilder* b, vec2 to_append) {
-    str_builder_append(b, '(');
-    str_builder_append(b, to_append.x);
-    str_builder_append(b, ',');
-    str_builder_append(b, to_append.y);
-    str_builder_append(b, ')');
-}
-
-void str_builder_append(FixedStrBuilder* b, vec3 to_append) {
-    str_builder_append(b, '(');
-    str_builder_append(b, to_append.x);
-    str_builder_append(b, ',');
-    str_builder_append(b, to_append.y);
-    str_builder_append(b, ',');
-    str_builder_append(b, to_append.z);
-    str_builder_append(b, ')');
-}
-
-void str_builder_append(FixedStrBuilder* b, vec4 to_append) {
-    str_builder_append(b, '(');
-    str_builder_append(b, to_append.x);
-    str_builder_append(b, ',');
-    str_builder_append(b, to_append.y);
-    str_builder_append(b, ',');
-    str_builder_append(b, to_append.z);
-    str_builder_append(b, ',');
-    str_builder_append(b, to_append.w);
-    str_builder_append(b, ')');
-}
-
-//API(cogno): str_builder append mat4, col, etc.
-#endif
-
-// NOTE(cogno): all append_raw are little-endian
-void str_builder_append_raw(FixedStrBuilder* b, u8 to_add) {
-    ASSERT(b->size + 1 <= b->reserved_size, "out of memory");
-    b->ptr[b->size++] = to_add;
-}
-
-void str_builder_append_raw(FixedStrBuilder* b, bool to_add) { str_builder_append_raw(b, (u8)to_add); }
-void str_builder_append_raw(FixedStrBuilder* b, u64 to_add) { str_builder_append(b, (void*)(&to_add), sizeof(to_add)); }
-void str_builder_append_raw(FixedStrBuilder* b, u32 to_add) { str_builder_append(b, (void*)(&to_add), sizeof(to_add)); }
-void str_builder_append_raw(FixedStrBuilder* b, u16 to_add) { str_builder_append(b, (void*)(&to_add), sizeof(to_add)); }
-void str_builder_append_raw(FixedStrBuilder* b, s64 to_add) { str_builder_append(b, (void*)(&to_add), sizeof(to_add)); }
-void str_builder_append_raw(FixedStrBuilder* b, s32 to_add) { str_builder_append(b, (void*)(&to_add), sizeof(to_add)); }
-void str_builder_append_raw(FixedStrBuilder* b, s16 to_add) { str_builder_append(b, (void*)(&to_add), sizeof(to_add)); }
-void str_builder_append_raw(FixedStrBuilder* b, f32 to_add) { str_builder_append(b, (void*)(&to_add), sizeof(to_add)); }
-void str_builder_append_raw(FixedStrBuilder* b, f64 to_add) { str_builder_append(b, (void*)(&to_add), sizeof(to_add)); }
-
-// custom str_builder variants, you can add yours too!
-#ifdef GYOMATH
-void str_builder_append_raw(FixedStrBuilder* b, vec2 to_add) {
-    str_builder_append_raw(b, to_add.x);
-    str_builder_append_raw(b, to_add.y);
-}
-void str_builder_append_raw(FixedStrBuilder* b, vec3 to_add) {
-    str_builder_append_raw(b, to_add.x);
-    str_builder_append_raw(b, to_add.y);
-    str_builder_append_raw(b, to_add.z);
-}
-void str_builder_append_raw(FixedStrBuilder* b, vec4 to_add) {
-    str_builder_append_raw(b, to_add.x);
-    str_builder_append_raw(b, to_add.y);
-    str_builder_append_raw(b, to_add.z);
-    str_builder_append_raw(b, to_add.w);
-}
-// API(cogno): str builder append raw mat4, col etc.
-#endif
-
-// API(cogno): string builder insert at index
-// API(cogno): string builder replace
-
-void str_builder_remove_last_bytes(FixedStrBuilder* b, s32 bytes_to_remove) { b->size -= bytes_to_remove; }
-
-// counts how many bytes are right of the last <to_find> character in the string,
-// returns -1 if <to_find> is not found
-int str_builder_count_right(FixedStrBuilder* b, u8 to_find) {
-    for(int i = b->size - 1; i >= 0; i--) {
-        if(b->ptr[i] == to_find) return b->size - i - 1;
-    }
-    return -1;
-}
-
-void str_builder_remove_right(FixedStrBuilder* b, u8 to_find) {
-    auto size_found = str_builder_count_right(b, to_find);
-    if (size_found > 0) str_builder_remove_last_bytes(b, size_found);
-}
-
-#endif
 
 
 
