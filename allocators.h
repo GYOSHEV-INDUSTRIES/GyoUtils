@@ -24,7 +24,7 @@ ENUM(AllocOp,
 // API(cogno): can we have an allocator type so it's easier to find it?
 // API(cogno): can we have an allocator name so it's easier to find it? maybe a name per allocator?
 // To aid in debugging, we can track each allocation, so we can know if there are memory leaks or how they are used.
-struct FlTracking {
+struct TrackingInfo {
     void* alloc_block;
     int block_size; // size of the whole memory block
     int start_offset;
@@ -35,48 +35,70 @@ struct FlTracking {
 #define TRACK_MEMORY_ALLOCATIONS true
 
 // NOTE(cogno): we don't hold the data because it would get duplicated between exe and dll (this file is shared!). So we just hold pointers to the data and set them on both exe and dll's side.
-FlTracking* fl_tracking_infos = NULL;
-int* current_fl_tracking_index = NULL;
+TrackingInfo* tracking_infos = NULL;
+int* current_tracking_index = NULL;
 #define MAX_FL_TRACKING_INFO 200000
 
 
-inline void maybe_add_fl_tracking_info(void* block_start, int block_size, int alloc_start, int alloc_size) {
+inline void maybe_add_tracking_info(void* block_start, int block_size, int alloc_start, int alloc_size) {
     #if TRACK_MEMORY_ALLOCATIONS
-    if (fl_tracking_infos != NULL) {
-        ASSERT(*current_fl_tracking_index + 1 < MAX_FL_TRACKING_INFO, "OUT OF TRACKING INFO MEMORY");
-        FlTracking t = {};
+    if (tracking_infos != NULL) {
+        ASSERT(*current_tracking_index + 1 < MAX_FL_TRACKING_INFO, "OUT OF TRACKING INFO MEMORY");
+        TrackingInfo t = {};
         t.alloc_block = block_start;
         t.block_size = block_size;
         t.start_offset = alloc_start;
         t.allocation_size = alloc_size;
-        fl_tracking_infos[*current_fl_tracking_index] = t;
-        *current_fl_tracking_index = *current_fl_tracking_index + 1;
+        tracking_infos[*current_tracking_index] = t;
+        *current_tracking_index = *current_tracking_index + 1;
     }
     #endif
 }
 
 
-inline void maybe_remove_all_fl_allocations(void* alloc_block_to_remove) {
+inline void maybe_remove_all_allocations(void* alloc_block_to_remove) {
     #if TRACK_MEMORY_ALLOCATIONS
-    if (fl_tracking_infos != NULL) {
+    if (tracking_infos != NULL) {
         // remove all useless allocations data from the array
         // PERF(cogno): I wonder if we can make this faster...
-        for(int i = *current_fl_tracking_index - 1; i >= 0; i--) {
-            auto data = fl_tracking_infos[i];
+        for(int i = *current_tracking_index - 1; i >= 0; i--) {
+            auto data = tracking_infos[i];
             if (data.alloc_block != alloc_block_to_remove) continue; // keep data on other allocators
             
             // this data is from this allocator, but we just reset it, so we should clear it off!
             // aka move everything from where we are to the end of the array back 1
-            for(s32 j = i; j < *current_fl_tracking_index - 1; j++) {
-                fl_tracking_infos[j] = fl_tracking_infos[j + 1];
+            for(s32 j = i; j < *current_tracking_index - 1; j++) {
+                tracking_infos[j] = tracking_infos[j + 1];
             }
             
-            *current_fl_tracking_index = *current_fl_tracking_index - 1; // new free spot!
+            *current_tracking_index = *current_tracking_index - 1; // new free spot!
             // we can have multiple allocations in the same block, check if we need to remove others.
         }
     }
     #endif
 }
+
+inline void maybe_remove_tracking_info(void* alloc_to_remove) {
+    #if TRACK_MEMORY_ALLOCATIONS
+    if (tracking_infos != NULL) {
+        for(int i = *current_tracking_index - 1; i >= 0; i--) {
+            auto data = tracking_infos[i];
+            void* previous_allocation = (void*)((u8*)data.alloc_block + data.start_offset);
+            if (previous_allocation != alloc_to_remove) continue; // keep data on other allocations
+            
+            // we have found the allocations to remove, do so!
+            // aka move everything from where we are to the end of the array back 1
+            for(s32 j = i; j < *current_tracking_index - 1; j++) {
+                tracking_infos[j] = tracking_infos[j + 1];
+            }
+            
+            *current_tracking_index = *current_tracking_index - 1; // new free spot!
+            break; // there cannot be 2 allocations on the same spot, so we're done.
+        }
+    }
+    #endif
+}
+
 
 #ifndef GYO_BUMP
     #include "bump.h"
@@ -117,6 +139,7 @@ void* default_handle(AllocOp op, void* allocator_data, s32 old_size, s32 size_re
         case AllocOp::GET_NAME: return (void*)"Default Allocator";
         case AllocOp::ALLOC: {
             auto* allocated = calloc(size_requested, sizeof(u8));
+            maybe_add_tracking_info(allocated, size_requested, 0, size_requested);
             return allocated;
         }
         case AllocOp::REALLOC: {
@@ -126,6 +149,7 @@ void* default_handle(AllocOp op, void* allocator_data, s32 old_size, s32 size_re
         }
         case AllocOp::FREE: {
             free(ptr_request);
+            maybe_remove_tracking_info(ptr_request);
             return NULL;
         }
         // API(cogno): maybe we can make a FREE_ALL if we track each allocation (we can make each block have a header or we can make a list of each allocation on the side..., I would go with the headers...)

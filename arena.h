@@ -34,6 +34,7 @@ void printsl_custom(Arena b) {
 void arena_reset(Arena* a) {
     a->curr_offset = 0;
     a->prev_offset = 0;
+    maybe_remove_all_allocations(a->data);
 }
 
 // TODO(cogno): test memory alignment at 0, 4 and 8 bytes
@@ -108,7 +109,7 @@ void* arena_handle(AllocOp op, void* alloc, s32 old_size, s32 size_requested, vo
                 memcpy(new_memory, ptr_request, amount_to_copy);
             }
             
-
+            maybe_add_tracking_info(allocator->data, allocator->size_available, allocator->curr_offset, size_requested);
             allocator->prev_offset = allocator->curr_offset;
             allocator->curr_offset += size_requested;
             return (void*)new_memory;
@@ -116,6 +117,8 @@ void* arena_handle(AllocOp op, void* alloc, s32 old_size, s32 size_requested, vo
         case AllocOp::FREE_ALL: {
             arena_reset(allocator);
             allocator->size_available = 0;
+            // TODO(cogno): this should NOT be free_all, this should be DEINIT!
+            // TODO(cogno): remove tracking of EACH block, not the current one
             // we need to go back every block until no more are left
             ArenaHeader* header_of_this_block = arena_get_header_before_data(allocator->data);
             while(header_of_this_block != NULL) {

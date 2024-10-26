@@ -34,6 +34,7 @@ void printsl_custom(Bump b) {
 void bump_reset(Bump* a) {
     a->curr_offset = 0;
     a->prev_offset = 0;
+    maybe_remove_all_allocations(a->data);
 }
 
 // TODO(cogno): test memory alignment at 0, 4 and 8 bytes
@@ -64,6 +65,7 @@ void* bump_handle(AllocOp op, void* alloc, s32 old_size, s32 size_requested, voi
             ASSERT(allocator->curr_offset + size_requested <= allocator->size_available, "Bump out of memory (currently at %, requested %, available %)", allocator->curr_offset, size_requested, allocator->size_available);
             
             auto* alloc_start = (char*)allocator->data + allocator->curr_offset;
+            maybe_add_tracking_info(allocator->data, allocator->size_available, allocator->curr_offset, size_requested);
             allocator->prev_offset = allocator->curr_offset;
             allocator->curr_offset += size_requested;
             return (void*)alloc_start;
