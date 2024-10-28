@@ -833,7 +833,7 @@ struct bivec { float yz, xz, xy; }; // NOTE(cogno): order of elements is importa
 struct trivec { float xyz; }; // API(cogno): wouldn't it be better to just use float so we don't have to convert back and forth?
 
 void printsl_custom(bivec b) {
-    printsl("(%, %, %)", b.xy, b.yz, b.xz);
+    printsl("(xy=%, yz=%, xz=%)", b.xy, b.yz, b.xz);
 }
 
 void printsl_custom(trivec t) {
@@ -841,13 +841,13 @@ void printsl_custom(trivec t) {
 }
 
 // API(cogno): add bivec + bivec, bivec * scalar and the rest as needed
-inline bivec operator+(bivec a, bivec b) { return {a.xy + b.xy, a.yz + b.yz, a.xz + b.xz}; }
-inline bivec operator-(bivec a, bivec b) { return {a.xy - b.xy, a.yz - b.yz, a.xz - b.xz}; }
-inline bivec operator-(bivec a)          { return {-a.xy, -a.yz, -a.xz}; }
-inline bivec operator*(bivec a, float b) { return {a.xy * b, a.yz * b, a.xz * b}; }
-inline bivec operator*(float a, bivec b) { return {b.xy * a, b.yz * a, b.xz * a}; }
-inline bivec operator/(bivec a, float b) { return {a.xy / b, a.yz / b, a.xz / b}; }
-inline bivec operator/(float a, bivec b) { return {a / b.xy, a / b.yz, a / b.xz}; }
+inline bivec operator+(bivec a, bivec b) { return {a.yz + b.yz, a.xz + b.xz, a.xy + b.xy}; }
+inline bivec operator-(bivec a, bivec b) { return {a.yz - b.yz, a.xz - b.xz, a.xy - b.xy}; }
+inline bivec operator-(bivec a)          { return {-a.yz, -a.xz, -a.xy}; }
+inline bivec operator*(bivec a, float b) { return {a.yz * b, a.xz * b, a.xy * b}; }
+inline bivec operator*(float a, bivec b) { return {b.yz * a, b.xz * a, b.xy * a}; }
+inline bivec operator/(bivec a, float b) { return {a.yz / b, a.xz / b, a.xy / b}; }
+inline bivec operator/(float a, bivec b) { return {a / b.yz, a / b.xz, a / b.xy}; }
 
 inline bivec& operator*=(bivec& a, float b) { a.xy *= b; a.yz *= b; a.xz *= b; return a; }
 
@@ -886,7 +886,7 @@ struct rotor {
 };
 
 void printsl_custom(rotor r) {
-    printsl("(%, %, %, %)", r.s, r.bivec.xy, r.bivec.yz, r.bivec.xz);
+    printsl("(%, xy=%, yz=%, xz=%)", r.s, r.bivec.xy, r.bivec.yz, r.bivec.xz);
 }
 
 // produces a rotation which rotates from one vector to another
@@ -950,8 +950,8 @@ rotor rotor_from_turns(bivec in) {
     rotor out = {};
     out.s        = cos_xy * cos_yz * cos_xz - sin_xy * sin_yz * sin_xz;
     out.bivec.xy = sin_xy * cos_yz * cos_xz + cos_xy * sin_yz * sin_xz;
-    out.bivec.yz = cos_xy * sin_yz * cos_xz + sin_xy * cos_yz * sin_xz;
-    out.bivec.xz = cos_xy * cos_yz * sin_xz - sin_xy * sin_yz * cos_xz;
+    out.bivec.yz = cos_xy * sin_yz * cos_xz - sin_xy * cos_yz * sin_xz;
+    out.bivec.xz = cos_xy * cos_yz * sin_xz + sin_xy * sin_yz * cos_xz;
     return out;
 }
 

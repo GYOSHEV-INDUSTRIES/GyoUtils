@@ -67,6 +67,9 @@ str.h:
 math.h:
     > Added checks to not override min/max macros if already defined.
     > Changed mat4_new to make an identity matrix by default if no input is provided.
+    > Changed how bivec and rotor print (they now show the planes of rotations).
+    > Fixed rotor_from_turns having wrong calculations, leading to wrong rotations along some axis
+    > Fixed bivector operator unintentionally reordering fields, leading to wrong rotations directions.
 
 win64_files.h:
     > Changed win64_read_entire_file to return the file as a str, always containg the bytes read.
