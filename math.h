@@ -177,6 +177,7 @@ struct mat4{
         return this->mat_f[idx];
     }
 };
+// NOTE(cogno): mat4 is a *row-major* matrix.
 
 
 inline void printsl_custom(vec2 v) {_buffer_append("(%.5f, %.5f)", v.x, v.y);}
@@ -515,7 +516,7 @@ inline vec2 vec2_project_point_on_line(vec2 point, vec2 line_start, vec2 line_di
 }
 
 
-inline mat4 mat4_new(float n){
+inline mat4 mat4_new(float n = 1){
     mat4 res;
     res.r1 = _mm_setr_ps(n, 0, 0, 0);
     res.r2 = _mm_setr_ps(0, n, 0, 0);
