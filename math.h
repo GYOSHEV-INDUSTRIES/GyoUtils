@@ -792,28 +792,33 @@ inline vec3 vec3_project_on_dir(vec3 to_project, vec3 dir) {
     
     we instead use another way from geometric algebra
     because it seems to be more efficient!
-    A•B / B (where A•B is the dot product)
-    
+    C = A•B / B (where A•B is the dot product).
+    C is just the vector projected on the plane's normal
+    If you then want the vector projected on the plane it's just A - C
+    Dividing by a vector is simply multiplying by it and dividing by it's length squared.
+    And since B is a unit direction, the division is skipped!
+    The final calculation is thus (A•B)*B. 
+    Since the dot makes a scalar this is just the input direction times a constant.
+
                     - Cogno 2023/07/21
     */
     
-    vec3 a = to_project;
-    vec3 b = dir;
-    float dot = vec3_dot(a, b);
-    float magn = vec3_length_squared(b);
-    float term = dot / magn;
-    vec3 perp = term * b;
+    vec3 b = vec3_normalize(dir, {});
+    float dot = vec3_dot(to_project, b);
+    vec3 perp = dot * b;
     return perp;
     /*
-    fallback just in case
-    TODO(cogno): compare performance:
-        Vec3 a = to_project;
-        Vec3 b = plane_norm;
+    fallback of an old version where this would project on a plane, not the plane normal,
+    kept here just in case
+    TODO(cogno): compare performance: 
+    (I don't think it's necessary anymore, GA is obviously faster)
+        vec3 a = to_project;
+        vec3 b = plane_norm;
         float bmag = vec3_magn(b);
-        Vec3 c1 = vec3_cross(a, b);
-        Vec3 c1_norm = c1 / bmag;
-        Vec3 c2 = vec3_cross(b, c1_norm);
-        Vec3 c2_norm = c2 / bmag;
+        vec3 c1 = vec3_cross(a, b);
+        vec3 c1_norm = c1 / bmag;
+        vec3 c2 = vec3_cross(b, c1_norm);
+        vec3 c2_norm = c2 / bmag;
         return c2_norm;
     */
 }
