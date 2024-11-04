@@ -5,6 +5,7 @@ In a nutshell:
     > Changed how ASSERTs work, by introducing ASSERT_ALWAYS, removing functionality to ASSERT and adding EXPECT.
     > Improvements to str_parser, making it more versatile.
     > Fixed common problems with min/max and For macros.
+    > Added new Circular allocator.
 
 BREAKING CHANGES:
     > In first.h, ASSERT cannot be used anymore inside an if statement (like if(!ASSERT(...)) {...} )
@@ -13,6 +14,7 @@ BREAKING CHANGES:
     > In str.h removed str_is_u32 function. You can use StrParser instead.
     > In str.h changed str_split_right if no split is performed, making it simpler to use.
     > In win64_files changed win64_read_entire_file to return the file as a str, always containg the bytes read.
+    > In allocators.h mem_free(...) needs to know how much you are deallocating.
 
 first.h:
     > Improved For macros to allow iteration of empty containers (instead of causing a out of bounds read / access violation exception).
@@ -73,6 +75,13 @@ math.h:
 
 win64_files.h:
     > Changed win64_read_entire_file to return the file as a str, always containg the bytes read.
+
+allocators.h:
+    > Added new Circular allocator, to handle allocations which would like to be freed in the same order they were allocated in.
+    > mem_free needs to know how much you want to deallocate.
+      This is to improve efficiency and usability of allocators.
+      It also fixes a problem were some deallocations were called correctly but not freed because the allocation size information was completely lost.
+      Some future allocators might automatically track it themselves, so they might not need to know every time.
 
 ---------------------------------
 Version: 0.3.0   2024/10/05

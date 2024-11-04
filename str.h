@@ -399,7 +399,7 @@ StrBuilder make_str_builder() { return make_str_builder(GYO_STR_BUILDER_DEFAULT_
 StrBuilder make_str_builder(s32 size) { return make_str_builder(size, default_allocator); }
 
 void str_builder_free(StrBuilder* b) {
-    b->ptr = (u8*)mem_free(b->alloc, b->ptr);
+    b->ptr = (u8*)mem_free(b->alloc, b->ptr, b->size);
     b->size = b->reserved_size = 0;
 }
 

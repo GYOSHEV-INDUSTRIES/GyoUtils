@@ -53,7 +53,6 @@ void* bump_handle(AllocOp op, void* alloc, s32 old_size, s32 size_requested, voi
         } break;
         // NOTE(cogno): we can make REALLOC work only in 1 case: if the last allocation wants more memory (and we have it available) then we can simply increase the size. Even though this might seem like a good idea, it's actually a BAD idea. Bump allocators are used to make arrays of FIXED size. If the fixed size array silently grows it's a problem...
         case AllocOp::ALLOC: {
-            char* top = (char*)allocator->data + allocator->curr_offset;
             // TODO(cogno): this assumes the initial pointer is aligned, is it so? should we better align this?
             int unaligned_by = allocator->curr_offset % DEFAULT_ALIGNMENT;
             int space_left_in_block = DEFAULT_ALIGNMENT - unaligned_by;
@@ -62,7 +61,8 @@ void* bump_handle(AllocOp op, void* alloc, s32 old_size, s32 size_requested, voi
             if(unaligned_by != 0 && space_left_in_block < size_requested) allocator->curr_offset += space_left_in_block;
             
             // bump allocators do NOT resize
-            ASSERT(allocator->curr_offset + size_requested <= allocator->size_available, "Bump out of memory (currently at %, requested %, available %)", allocator->curr_offset, size_requested, allocator->size_available);
+            // TODO(cogno): do we *always* assert or do we return NULL if it's not available? I think we should return NULL and never assert (whatever uses the allocator should check if it got any useful memory!)
+            ASSERT_ALWAYS(allocator->curr_offset + size_requested <= allocator->size_available, "Bump out of memory (currently at %, requested %, available %)", allocator->curr_offset, size_requested, allocator->size_available);
             
             auto* alloc_start = (char*)allocator->data + allocator->curr_offset;
             maybe_add_tracking_info(allocator->data, allocator->size_available, allocator->curr_offset, size_requested);
