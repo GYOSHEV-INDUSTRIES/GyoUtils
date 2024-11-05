@@ -166,9 +166,10 @@ void array_insert(Array<T>* array, T data, s32 index) {
 }
 
 template<typename T>
-void array_append(Array<T>* array, T data) {
+int array_append(Array<T>* array, T data) {
     array_reserve(array, 1);
     array->ptr[array->size++] = data;
+    return array->size - 1; // return the index we just inserted in
 }
 
 template<typename T> void array_remove_at(Array<T>* array, s32 index) { array_remove_at(array->ptr, array->size--, index); }

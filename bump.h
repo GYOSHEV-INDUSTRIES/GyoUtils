@@ -53,17 +53,18 @@ void* bump_handle(AllocOp op, void* alloc, s32 old_size, s32 size_requested, voi
         } break;
         // NOTE(cogno): we can make REALLOC work only in 1 case: if the last allocation wants more memory (and we have it available) then we can simply increase the size. Even though this might seem like a good idea, it's actually a BAD idea. Bump allocators are used to make arrays of FIXED size. If the fixed size array silently grows it's a problem...
         case AllocOp::ALLOC: {
+            if(size_requested <= 0) return NULL; // obviously, but maybe we should just ASSERT_ALWAYS?
             // TODO(cogno): this assumes the initial pointer is aligned, is it so? should we better align this?
             int unaligned_by = allocator->curr_offset % DEFAULT_ALIGNMENT;
             int space_left_in_block = DEFAULT_ALIGNMENT - unaligned_by;
             
             // NOTE(cogno): since the processor retrives data in chunks, if an allocation crosses a word boundary, you will require 1 extra access, which is slow! If we can fit the new allocation in the space remaining we do so, else we align to avoid being slow.
+            // PERF(cogno): does this actually work? experimentally show it!
             if(unaligned_by != 0 && space_left_in_block < size_requested) allocator->curr_offset += space_left_in_block;
             
             // bump allocators do NOT resize
-            // TODO(cogno): do we *always* assert or do we return NULL if it's not available? I think we should return NULL and never assert (whatever uses the allocator should check if it got any useful memory!)
-            ASSERT_ALWAYS(allocator->curr_offset + size_requested <= allocator->size_available, "Bump out of memory (currently at %, requested %, available %)", allocator->curr_offset, size_requested, allocator->size_available);
-            
+            if(allocator->curr_offset + size_requested > allocator->size_available) return NULL; // no more space in this Bump
+
             auto* alloc_start = (char*)allocator->data + allocator->curr_offset;
             maybe_add_tracking_info(allocator->data, allocator->size_available, allocator->curr_offset, size_requested);
             allocator->prev_offset = allocator->curr_offset;

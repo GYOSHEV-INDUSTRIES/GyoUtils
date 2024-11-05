@@ -117,8 +117,7 @@ void map_insert(HashMap<T, U>* map, T key, U value) {
         // simple case, no hash conflict, replace finder
         current_finder->key = key;
         current_finder->value = value;
-        array_append(&map->solver, {}); // start an empty collision chain for successive insertions
-        current_finder->next_finder_index = map->solver.size - 1; // the one we just added
+        current_finder->next_finder_index = array_append(&map->solver, {}); // start an empty collision chain for successive insertions
     } else {
         // complex case, either we have the key and we need to replace the value, or we have to use solver to set a new key
         while(true) {
@@ -137,8 +136,7 @@ void map_insert(HashMap<T, U>* map, T key, U value) {
         // value is new, add to collision queue in the solver
         current_finder->key = key;
         current_finder->value = value;
-        array_append(&map->solver, {}); // extend collision chain by 1
-        current_finder->next_finder_index = map->solver.size - 1; // the one we just added
+        current_finder->next_finder_index = array_append(&map->solver, {}); // extend collision chain by 1
     }
 }
 

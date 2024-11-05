@@ -15,6 +15,7 @@ BREAKING CHANGES:
     > In str.h changed str_split_right if no split is performed, making it simpler to use.
     > In win64_files changed win64_read_entire_file to return the file as a str, always containg the bytes read.
     > In allocators.h mem_free(...) needs to know how much you are deallocating.
+    > In arena.h removed mem_realloc variant that looses some informations, leading to potential errors down the line.
 
 first.h:
     > Improved For macros to allow iteration of empty containers (instead of causing a out of bounds read / access violation exception).
@@ -26,6 +27,7 @@ first.h:
 array.h:
     > Added pointer+size versions of many functions, to aid in C-style programming.
       These are: print_as_array, array_insert, array_remove_at, array_pop, array_dequeue, array_get_data, array_set and array_get_ptr.
+    > array_append now returns the index at which it just appended the element, so you don't have to calculate it yourself
 
 str.h:
     > Added str_contains.
@@ -82,6 +84,13 @@ allocators.h:
       This is to improve efficiency and usability of allocators.
       It also fixes a problem were some deallocations were called correctly but not freed because the allocation size information was completely lost.
       Some future allocators might automatically track it themselves, so they might not need to know every time.
+
+arena.h:
+    > Removed mem_realloc variant that looses some informations, leading to potential errors down the line.
+
+bump.h:
+    > Fixed out of memory writes being possible when ASSERTS are deactivated
+    > Fixed allocations being made when size requested is 0 or less
 
 ---------------------------------
 Version: 0.3.0   2024/10/05
