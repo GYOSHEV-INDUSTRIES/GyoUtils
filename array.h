@@ -128,7 +128,7 @@ template<typename T> Array<T> make_array(s32 size) { return make_array<T>(size, 
 // will free from the allocator only the space used by the array
 template<typename T>
 void array_free(Array<T>* array) {
-    if(array->alloc.handle != NULL) array->ptr = (T*)mem_free(array->alloc, array->ptr);
+    if(array->alloc.handle != NULL) array->ptr = (T*)mem_free(array->alloc, array->ptr, array->size * sizeof(T));
     array->size = 0;
     array->reserved_size = 0;
 }

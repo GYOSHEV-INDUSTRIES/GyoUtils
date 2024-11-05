@@ -167,7 +167,8 @@ bool map_find(HashMap<T, U>* map, T key, U* out_value) {
 
 template<typename T, typename U>
 void map_free(HashMap<T, U>* map) {
-    // TODO(cogno): free memory here
+    array_free(&map->solver);
+    mem_free(map->alloc, map->matrix_ptr, map->matrix_size * sizeof(map->matrix_ptr[0]));
 }
 
 template<typename T, typename U>

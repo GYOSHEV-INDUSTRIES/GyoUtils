@@ -92,6 +92,9 @@ bump.h:
     > Fixed out of memory writes being possible when ASSERTS are deactivated
     > Fixed allocations being made when size requested is 0 or less
 
+hashmap.h:
+    > Implemented basic map_free.
+
 ---------------------------------
 Version: 0.3.0   2024/10/05
 The Allocators Revolution
