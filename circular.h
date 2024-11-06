@@ -33,7 +33,7 @@ void printsl_custom(Circular c) {
     printsl("Circular Allocator of % bytes (%\\% full), last allocation of % bytes (%\\%)", c.size_available, fill_percentage, last_alloc_size, last_alloc_percentage);
 }
 
-#define DEFAULT_ALIGNMENT (sizeof(char*))
+#define GYO_CIRC_DEFAULT_ALIGNMENT (16) // read in bump.h
 
 
 void circular_reset(Circular* a) {
@@ -70,8 +70,8 @@ void* circular_handle(AllocOp op, void* alloc, s32 old_size, s32 size_requested,
         // NOTE(cogno): we can make REALLOC work only in 1 case: if the last allocation wants more memory (and we have it available) then we can simply increase the size. Is this a good idea? (I think it is because it might screw up deallocations) - Cogno 2024/11/04
         case AllocOp::ALLOC: {
             // TODO(cogno): this assumes the initial pointer is aligned, is it so? should we better align this?
-            int unaligned_by = allocator->top_offset % DEFAULT_ALIGNMENT;
-            int space_left_in_block = DEFAULT_ALIGNMENT - unaligned_by;
+            int unaligned_by = allocator->top_offset % GYO_CIRC_DEFAULT_ALIGNMENT;
+            int space_left_in_block = GYO_CIRC_DEFAULT_ALIGNMENT - unaligned_by;
             
             // NOTE(cogno): since the processor retrives data in chunks, if an allocation crosses a word boundary, you will require 1 extra access, which is slow! If we can fit the new allocation in the space remaining we do so, else we align to avoid being slow.
             // if(unaligned_by != 0 && space_left_in_block < size_requested) allocator->top_offset += space_left_in_block;
@@ -112,8 +112,8 @@ void* circular_handle(AllocOp op, void* alloc, s32 old_size, s32 size_requested,
             }
 
             // first align so we hit the proper boundary
-            int unaligned_by = allocator->bot_offset % DEFAULT_ALIGNMENT;
-            int space_left_in_block = DEFAULT_ALIGNMENT - unaligned_by;
+            int unaligned_by = allocator->bot_offset % GYO_CIRC_DEFAULT_ALIGNMENT;
+            int space_left_in_block = GYO_CIRC_DEFAULT_ALIGNMENT - unaligned_by;
             if(unaligned_by != 0) allocator->bot_offset += space_left_in_block;
 
             // then maybe deallocate

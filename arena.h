@@ -28,7 +28,7 @@ void printsl_custom(Arena b) {
     printsl("Arena Allocator of % bytes (%\\% full), last allocation of % bytes (%\\%)", b.size_available, fill_percentage, last_alloc_size, last_alloc_percentage);
 }
 
-#define DEFAULT_ALIGNMENT (sizeof(char*))
+#define GYO_ARENA_DEFAULT_ALIGNMENT (16) // read in bump.h
 
 
 void arena_reset(Arena* a) {
@@ -41,13 +41,13 @@ void arena_reset(Arena* a) {
 
 ArenaHeader* arena_get_header_before_data(void* arena_data) {
     if(arena_data == NULL) return NULL; // no header before no block duh
-    int header_size = sizeof(ArenaHeader) + DEFAULT_ALIGNMENT % sizeof(ArenaHeader);
+    int header_size = sizeof(ArenaHeader) + GYO_ARENA_DEFAULT_ALIGNMENT % sizeof(ArenaHeader);
     u8* header_start = (u8*)arena_data - header_size;
     return (ArenaHeader*)header_start;
 }
 
 void* arena_prepare_new_memory_block(Arena* arena, s32 size_requested, ArenaHeader* old_block) {
-    int header_size = sizeof(ArenaHeader) + DEFAULT_ALIGNMENT % sizeof(ArenaHeader);
+    int header_size = sizeof(ArenaHeader) + GYO_ARENA_DEFAULT_ALIGNMENT % sizeof(ArenaHeader);
     int alloc_size = size_requested + header_size; // TODO(cogno): default min size
     void* memory = calloc(alloc_size, sizeof(u8)); // TAG: MaybeWeShouldDoThisBetter
     
@@ -85,8 +85,8 @@ void* arena_handle(AllocOp op, void* alloc, s32 old_size, s32 size_requested, vo
         case AllocOp::ALLOC: {
             char* top = (char*)allocator->data + allocator->curr_offset;
             // TODO(cogno): this assumes the initial pointer is aligned, is it so? should we better align this?
-            int unaligned_by = allocator->curr_offset % DEFAULT_ALIGNMENT;
-            int space_left_in_block = DEFAULT_ALIGNMENT - unaligned_by;
+            int unaligned_by = allocator->curr_offset % GYO_ARENA_DEFAULT_ALIGNMENT;
+            int space_left_in_block = GYO_ARENA_DEFAULT_ALIGNMENT - unaligned_by;
             
             // NOTE(cogno): since the processor retrives data in chunks, if an allocation crosses a word boundary, you will require 1 extra access, which is slow! If we can fit the new allocation in the space remaining we do so, else we align to avoid being slow.
             if(unaligned_by != 0 && space_left_in_block < size_requested) allocator->curr_offset += space_left_in_block;
@@ -124,7 +124,7 @@ void* arena_handle(AllocOp op, void* alloc, s32 old_size, s32 size_requested, vo
             while(header_of_this_block != NULL) {
                 ArenaHeader* header_of_prev_block = header_of_this_block->previous_block;
                 free((void*)header_of_this_block); // TAG: MaybeWeShouldDoThisBetter
-                int header_size = sizeof(ArenaHeader) + DEFAULT_ALIGNMENT % sizeof(ArenaHeader);
+                int header_size = sizeof(ArenaHeader) + GYO_ARENA_DEFAULT_ALIGNMENT % sizeof(ArenaHeader);
                 header_of_this_block = header_of_prev_block;
             }
             return NULL;

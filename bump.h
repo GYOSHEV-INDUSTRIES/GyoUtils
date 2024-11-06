@@ -23,7 +23,8 @@ void printsl_custom(Bump b) {
     printsl("Bump Allocator of % bytes (%\\% full), last allocation of % bytes (%\\%)", b.size_available, fill_percentage, last_alloc_size, last_alloc_percentage);
 }
 
-#define DEFAULT_ALIGNMENT (sizeof(char*))
+#define GYO_BUMP_DEFAULT_ALIGNMENT (16) // SIMD is 16-bytes aligned, so vec4 might break if we don't align by 16 at a time
+// API(cogno): we should probably have a way to align type-per-type instead of forcing it on everyone, right? Because some stuff might want more than 16-byte alignment and most likely break...
 
 // TAG: MaybeWeShouldDoThisBetter
 // Using malloc/realloc/free works but makes us very slow. Allocators are to control memory, and malloc is one of them.
@@ -55,11 +56,12 @@ void* bump_handle(AllocOp op, void* alloc, s32 old_size, s32 size_requested, voi
         case AllocOp::ALLOC: {
             if(size_requested <= 0) return NULL; // obviously, but maybe we should just ASSERT_ALWAYS?
             // TODO(cogno): this assumes the initial pointer is aligned, is it so? should we better align this?
-            int unaligned_by = allocator->curr_offset % DEFAULT_ALIGNMENT;
-            int space_left_in_block = DEFAULT_ALIGNMENT - unaligned_by;
+            int unaligned_by = allocator->curr_offset % GYO_BUMP_DEFAULT_ALIGNMENT;
+            int space_left_in_block = GYO_BUMP_DEFAULT_ALIGNMENT - unaligned_by;
             
             // NOTE(cogno): since the processor retrives data in chunks, if an allocation crosses a word boundary, you will require 1 extra access, which is slow! If we can fit the new allocation in the space remaining we do so, else we align to avoid being slow.
             // PERF(cogno): does this actually work? experimentally show it!
+            // UPDATE(2024/11/16): since stuff wants to be aligned, this might go against it and potentially break (for example simd!)
             if(unaligned_by != 0 && space_left_in_block < size_requested) allocator->curr_offset += space_left_in_block;
             
             // bump allocators do NOT resize
