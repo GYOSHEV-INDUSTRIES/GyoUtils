@@ -142,7 +142,6 @@ void array_clear(Array<T>* array) {
 
 template<typename T>
 void array_resize(Array<T>* array, s32 new_size) {
-    if(array->alloc.handle == NULL) array->alloc = default_allocator;
     array->ptr = (T*)mem_realloc(array->alloc, array->reserved_size * sizeof(T), new_size * sizeof(T), array->ptr);
     ASSERT(array->ptr != NULL, "couldn't allocate new memory (array is full! it's size is %)", array->reserved_size);
     array->reserved_size = new_size;

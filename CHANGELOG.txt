@@ -5,6 +5,7 @@ In a nutshell:
     > Changed how ASSERTs work, by introducing ASSERT_ALWAYS, removing functionality to ASSERT and adding EXPECT.
     > Improvements to str_parser, making it more versatile.
     > Fixed common problems with min/max and For macros.
+    > Restructured Allocators to be more efficient, convenient and useful.
     > Added new Circular allocator.
 
 BREAKING CHANGES:
@@ -14,6 +15,7 @@ BREAKING CHANGES:
     > In str.h removed str_is_u32 function. You can use StrParser instead.
     > In str.h changed str_split_right if no split is performed, making it simpler to use.
     > In win64_files changed win64_read_entire_file to return the file as a str, always containg the bytes read.
+    > Bump allocators and Arena allocators are now floating (you don't have to store the data yourself, we do it for you!).
     > In allocators.h mem_free(...) needs to know how much you are deallocating.
     > In arena.h removed mem_realloc variant that looses some informations, leading to potential errors down the line.
 
@@ -78,8 +80,12 @@ math.h:
 win64_files.h:
     > Changed win64_read_entire_file to return the file as a str, always containg the bytes read.
 
-allocators.h:
+NEW | circular.h:
     > Added new Circular allocator, to handle allocations which would like to be freed in the same order they were allocated in.
+
+allocators.h:
+    > Changed how allocators data is stored, instead of a function pointer we know use an Enum, making it more useful to use and producing faster code in many cases.
+    > Since we changed Bump allocators to be floating it's now easier to construct and use them.
     > mem_free needs to know how much you want to deallocate.
       This is to improve efficiency and usability of allocators.
       It also fixes a problem were some deallocations were called correctly but not freed because the allocation size information was completely lost.
@@ -89,6 +95,7 @@ arena.h:
     > Removed mem_realloc variant that looses some informations, leading to potential errors down the line.
 
 bump.h:
+    > Changed Bump allocator to be floating, you don't have to store the data yourself, we do it for you!
     > Fixed out of memory writes being possible when ASSERTS are deactivated
     > Fixed allocations being made when size requested is 0 or less
 

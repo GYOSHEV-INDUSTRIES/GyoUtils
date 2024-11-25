@@ -111,36 +111,36 @@ inline void maybe_remove_tracking_info(void* alloc_to_remove) {
 #endif
 // TODO(cogno): Stack Allocator
 
+ENUM(AllocatorType,
+    DEFAULT,
+    BUMP,
+    ARENA,
+    CIRCULAR
+);
+
+// TODO(cogno): make Arena floating (like Bump, the header of the memory is the Arena data)
+// TODO(cogno): make Circular floating (like Bump, the header of the memory is the Circular data)
+
 // if you want to create your custom allocator compatible with gyoutils simply implement the handle_function (look at other allocator files for more info)
 struct Allocator {
     void* data = NULL;
-    void* (*handle)(AllocOp op, void* allocator_data, s32 old_size, s32 size_requested, void* ptr_request) = NULL;
+    AllocatorType type;
 };
 // TODO(cogno): pass to s64/u64, an allocator of 4gb of data is kind of bad...
 
-void printsl_custom(Allocator alloc) {
-    if(alloc.handle == NULL) printsl("Null Allocator");
-    else printsl((const char*)alloc.handle(AllocOp::GET_NAME, &alloc, 0, 0, NULL));
-}
-
-Allocator make_allocator(Bump* allocator) {
-    Allocator out = {};
-    out.data = (void*)allocator;
-    out.handle = bump_handle;
-    return out;
-}
+void printsl_custom(Allocator alloc) { printsl(alloc.type); }
 
 Allocator make_allocator(Arena* allocator) {
     Allocator out = {};
     out.data = (void*)allocator;
-    out.handle = arena_handle;
+    out.type = AllocatorType::ARENA;
     return out;
 }
 
 Allocator make_allocator(Circular* allocator) {
     Allocator out = {};
     out.data = (void*)allocator;
-    out.handle = circular_handle;
+    out.type = AllocatorType::CIRCULAR;
     return out;
 }
 
@@ -168,20 +168,41 @@ void* default_handle(AllocOp op, void* allocator_data, s32 old_size, s32 size_re
 }
 
 inline void* mem_alloc(Allocator alloc, s32 size) {
-    ASSERT(alloc.handle != NULL, "Invalid Allocator (handle function missing!)");
-    return alloc.handle(AllocOp::ALLOC, alloc.data, 0, size, NULL);
+    switch(alloc.type) {
+        case AllocatorType::DEFAULT:  return default_handle(AllocOp::ALLOC, alloc.data, 0, size, NULL);
+        case AllocatorType::BUMP:     return fbump_handle(AllocOp::ALLOC, alloc.data, 0, size, NULL);
+        case AllocatorType::CIRCULAR: return circular_handle(AllocOp::ALLOC, alloc.data, 0, size, NULL);
+        case AllocatorType::ARENA:    return arena_handle(AllocOp::ALLOC, alloc.data, 0, size, NULL);
+        default: ASSERT(false, "Unkwnown allocator type %", alloc.type); return NULL;
+    }
 }
+
 inline void* mem_realloc(Allocator alloc, s32 old_size, s32 new_size, void* to_realloc) {
-    ASSERT(alloc.handle != NULL, "Invalid Allocator (handle function missing!)");
-    return alloc.handle(AllocOp::REALLOC, alloc.data, old_size, new_size, to_realloc);
+    switch(alloc.type) {
+        case AllocatorType::DEFAULT:  return default_handle(AllocOp::REALLOC, alloc.data, old_size, new_size, to_realloc);
+        case AllocatorType::BUMP:     return fbump_handle(AllocOp::REALLOC, alloc.data, old_size, new_size, to_realloc);
+        case AllocatorType::CIRCULAR: return circular_handle(AllocOp::REALLOC, alloc.data, old_size, new_size, to_realloc);
+        case AllocatorType::ARENA:    return arena_handle(AllocOp::REALLOC, alloc.data, old_size, new_size, to_realloc);
+        default: ASSERT(false, "Unkwnown allocator type %", alloc.type); return NULL;
+    }
 }
 inline void* mem_free(Allocator alloc, void* to_free, s32 size_to_free) {
-    ASSERT(alloc.handle != NULL, "Invalid Allocator (handle function missing!)");
-    return alloc.handle(AllocOp::FREE, alloc.data, size_to_free, 0, to_free);
+    switch(alloc.type) {
+        case AllocatorType::DEFAULT:  return default_handle(AllocOp::FREE, alloc.data, size_to_free, 0, to_free);
+        case AllocatorType::BUMP:     return fbump_handle(AllocOp::FREE, alloc.data, size_to_free, 0, to_free);
+        case AllocatorType::CIRCULAR: return circular_handle(AllocOp::FREE, alloc.data, size_to_free, 0, to_free);
+        case AllocatorType::ARENA:    return arena_handle(AllocOp::FREE, alloc.data, size_to_free, 0, to_free);
+        default: ASSERT(false, "Unkwnown allocator type %", alloc.type); return NULL;
+    }
 }
 inline void* mem_free_all(Allocator alloc) {
-    ASSERT(alloc.handle != NULL, "Invalid Allocator (handle function missing!)");
-    return alloc.handle(AllocOp::FREE_ALL, alloc.data, 0, 0, NULL);
+    switch(alloc.type) {
+        case AllocatorType::DEFAULT:  return default_handle(AllocOp::FREE_ALL, alloc.data, 0, 0, NULL);
+        case AllocatorType::BUMP:     return fbump_handle(AllocOp::FREE_ALL, alloc.data, 0, 0, NULL);
+        case AllocatorType::CIRCULAR: return circular_handle(AllocOp::FREE_ALL, alloc.data, 0, 0, NULL);
+        case AllocatorType::ARENA:    return arena_handle(AllocOp::FREE_ALL, alloc.data, 0, 0, NULL);
+        default: ASSERT(false, "Unkwnown allocator type %", alloc.type); return NULL;
+    }
 }
 
 
@@ -192,26 +213,11 @@ inline void* mem_free_all(Allocator alloc) {
 // If you want to use something else you can overwrite this with another allocator,
 // or control on a case per case basis (for example everything uses default allocator
 // except this specific array because when I constructed the array I gave it a different one).
-Allocator default_allocator = {NULL, default_handle}; // points to default handle
+Allocator default_allocator = {NULL, AllocatorType::DEFAULT}; // points to default handle
 
 // will allocate a block of memory from a given allocator, and control that
-Bump     make_bump_allocator(    Allocator alloc, int min_size) { return make_bump_allocator(    mem_alloc(alloc, min_size), min_size); }
 Circular make_circular_allocator(Allocator alloc, int min_size) { return make_circular_allocator(mem_alloc(alloc, min_size), min_size); }
 
-
-Allocator make_allocator(Allocator parent, Bump* out_allocator, s32 size) {
-    ASSERT(out_allocator != NULL, "Invalid input given, cannot build an allocator (was NULL)");
-    *out_allocator = make_bump_allocator(parent, size);
-    return make_allocator(out_allocator);
-}
-
-// Construct an allocator with the given input, initializing it in the process.
-// This is just a shortcut so you don't have to make_bump and then make_allocator
-Allocator make_allocator(Bump* out_allocator, s32 size) {
-    ASSERT(out_allocator != NULL, "Invalid input given, cannot build an allocator (was NULL)");
-    *out_allocator = make_bump_allocator(size);
-    return make_allocator(out_allocator);
-}
 
 Allocator make_allocator(Allocator parent, Circular* out_allocator, s32 size) {
     ASSERT(out_allocator != NULL, "Invalid input given, cannot build an allocator (was NULL)");
@@ -225,4 +231,19 @@ Allocator make_allocator(Circular* out_allocator, s32 size) {
     ASSERT(out_allocator != NULL, "Invalid input given, cannot build an allocator (was NULL)");
     *out_allocator = make_circular_allocator(size);
     return make_allocator(out_allocator);
+}
+
+Allocator make_fbump_allocator(s32 size) {
+    Allocator out = {};
+    out.type = AllocatorType::BUMP;
+    out.data = fbump_handle(AllocOp::INIT, NULL, 0, size, NULL);
+    return out;
+}
+
+Allocator make_fbump_allocator(Allocator alloc, s32 size) {
+    Allocator out = {};
+    out.type = AllocatorType::BUMP;
+    s32 alloc_size = fbump_header_size() + size;
+    out.data = fbump_handle(AllocOp::INIT, mem_alloc(alloc, alloc_size), 0, size, NULL);
+    return out;
 }

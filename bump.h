@@ -40,17 +40,39 @@ void bump_reset(Bump* a) {
 
 // TODO(cogno): test memory alignment at 0, 4 and 8 bytes
 
+inline s32 fbump_header_size() {
+    s32 bump_size = sizeof(Bump);
+    s32 extra = bump_size % GYO_BUMP_DEFAULT_ALIGNMENT;
+    if(extra != 0) bump_size += GYO_BUMP_DEFAULT_ALIGNMENT - extra;
+    return bump_size;
+}
+
+void* init_fbump(void* mem_block, s32 mem_block_size) {
+    s32 bump_size = fbump_header_size();
+    if(mem_block == NULL) { // we need a NEW block
+        s32 actual_size = mem_block_size + bump_size;
+        // TODO(cogno): overflow check
+
+        // bump is floating, aka stored as the header of the block
+        mem_block = calloc(actual_size, sizeof(u8)); // TAG: MaybeWeShouldDoThisBetter
+    }
+
+    Bump* bump_data = (Bump*)mem_block;
+    bump_reset(bump_data);
+    bump_data->data = (void*)((u8*)mem_block + bump_size);
+    bump_data->size_available = mem_block_size; // don't count yourself
+    return mem_block;
+}
+
 // generic functionality used by Allocator in allocators.h, you can use the functions below for ease of use
-void* bump_handle(AllocOp op, void* alloc, s32 old_size, s32 size_requested, void* to_free) {
-    ASSERT(alloc != NULL, "Invalid allocator data given (was NULL)");
+void* fbump_handle(AllocOp op, void* alloc, s32 old_size, s32 size_requested, void* to_free) {
+    if(op != AllocOp::INIT) ASSERT(alloc != NULL, "Invalid allocator data given (was NULL)");
+
     Bump* allocator = (Bump*)alloc;
     switch(op) {
         case AllocOp::GET_NAME: return (void*)"Bump Allocator";
         case AllocOp::INIT: {
-            bump_reset(allocator);
-            allocator->data = calloc(size_requested, sizeof(u8)); // TAG: MaybeWeShouldDoThisBetter
-            allocator->size_available = size_requested;
-            return allocator->data;
+            return init_fbump(alloc, size_requested);
         } break;
         // NOTE(cogno): we can make REALLOC work only in 1 case: if the last allocation wants more memory (and we have it available) then we can simply increase the size. Even though this might seem like a good idea, it's actually a BAD idea. Bump allocators are used to make arrays of FIXED size. If the fixed size array silently grows it's a problem...
         case AllocOp::ALLOC: {
@@ -85,21 +107,5 @@ void* bump_handle(AllocOp op, void* alloc, s32 old_size, s32 size_requested, voi
         } break;
         default: return NULL; // not implemented
     }
-}
-
-// will use and control pre-allocated memory for you
-Bump make_bump_allocator(void* buffer, int buffer_length) {
-    ASSERT(buffer != NULL, "Invalid input buffer given");
-    Bump a = {};
-    a.data = (char*)buffer;
-    a.size_available = buffer_length;
-    return a;
-}
-
-// will allocate its memory automatically
-Bump make_bump_allocator(int min_size) {
-    Bump b = {};
-    bump_handle(AllocOp::INIT, &b, 0, min_size, NULL);
-    return b;
 }
 
