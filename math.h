@@ -905,7 +905,7 @@ rotor rotor_from_to(vec3 from, vec3 to) {
     // if the 2 vectors point opposite to each other the half will be 0, because we can
     // rotate in ANY direction perpendicular to the input 2
     vec3 half = vec3_normalize(from_dir + to_dir, vec3{0, 0, 0});
-    ASSERT(half.x != 0 && half.y != 0 and half.z != 0, "attempted to create a rotation between vectors opposite of each other. There are INFINITELY many rotations, so we don't know which one to choose. You should handle this case separately. Rotation was from % to %", from_dir, to_dir);
+    ASSERT(half.x != 0 || half.y != 0 || half.z != 0, "attempted to create a rotation between vectors opposite of each other. There are INFINITELY many rotations, so we don't know which one to choose. You should handle this case separately. Rotation was from % to %", from_dir, to_dir);
     
     // the product of 2 vectors ab is the dot + the wedge
     // ab = a . b + a ^ b;
@@ -992,31 +992,34 @@ rotor rotor_reverse(rotor in) {
 // rotates a vector based on a rotor
 vec3 vec3_rotate(vec3 v, rotor r) {
     // again, tedious paper calculations, not much to do
-    // it's the sandwich product R v R^-1, where R^-1 is reverse(R) which just
+    // it's the sandwich product R^-1 v R, where R^-1 is reverse(R) which just
     // flips the sign of the bivec, so I did it here in one go to make it faster
+    // NOTE(cogno): Almost every resource says R v R^-1, but that's wrong,
+    // if you do it like that you will have *clockwise* rotations, not counter-clockwise!
+    // the proper rotation is seen in https://marctenbosch.com/quaternions/
     
     float r0 = r.s;
     float r1 = r.bivec.xy;
     float r2 = r.bivec.yz;
     float r3 = r.bivec.xz;
     
-    // s = R * v
-    float s1 = v.x*r0 + v.y*r1 + v.z*r3;
-    float s2 = v.y*r0 - v.x*r1 + v.z*r2;
-    float s3 = v.z*r0 - v.x*r3 - v.y*r2;
-    float s4 = v.z*r1 + v.x*r2 - v.y*r3;
+    // S = R^-1 * v
+    float s1 =   v.x*r0 - v.y*r1 - v.z*r3;
+    float s2 =   v.y*r0 + v.x*r1 - v.z*r2;
+    float s3 =   v.z*r0 + v.x*r3 + v.y*r2;
+    float s4 = - v.z*r1 - v.x*r2 + v.y*r3;
     
     // as a check, when finishing the calculations, the trivector component should disappear (aka be zero)
     #if !NO_ASSERT
-    float trivec = r0*s4 - r1*s3 - r2*s1 + r3*s2;
+    float trivec = r0*s4 + r1*s3 + r2*s1 - r3*s2;
     ASSERT(abs(trivec) <= 0.01f, "WRONG ROTOR CALCULATIONS. We expected the trivector component to disappear but it remained (was %).", trivec);
     #endif
     
-    // out = s * R^-1
+    // out = S * R
     vec3 out = {};
-    out.x = r0*s1 + r1*s2 + r2*s4 + r3*s3;
-    out.y = r0*s2 - r1*s1 + r2*s3 - r3*s4;
-    out.z = r0*s3 + r1*s4 - r2*s2 - r3*s1;
+    out.x = r0*s1 - r1*s2 - r2*s4 - r3*s3;
+    out.y = r0*s2 + r1*s1 - r2*s3 + r3*s4;
+    out.z = r0*s3 - r1*s4 + r2*s2 + r3*s1;
     return out;
 }
 

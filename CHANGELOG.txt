@@ -25,6 +25,7 @@ first.h:
     > Changed how ASSERT and ASSERT_BOUNDS work when deactivated, now they can't be used inside an if anymore.
     > Added EXPECT macro, an alternative to ASSERT with automatic quick message in case it's called.
       In other words EXPECT(a, true) is a quick way to write ASSERT(a == true, "excepted 'a' to be 'true' but was actually '%'", a)
+    > Increased printing buffer size to avoid common out of bounds errors.
 
 array.h:
     > Added pointer+size versions of many functions, to aid in C-style programming.
@@ -74,8 +75,10 @@ math.h:
     > Added checks to not override min/max macros if already defined.
     > Changed mat4_new to make an identity matrix by default if no input is provided.
     > Changed how bivec and rotor print (they now show the planes of rotations).
+    > Fixed vec3_rotate rotating elements clockwise instead of counter-clockwise (as you normally should).
     > Fixed rotor_from_turns having wrong calculations, leading to wrong rotations along some axis
     > Fixed bivector operator unintentionally reordering fields, leading to wrong rotations directions.
+    > Fixed rotor_from_to reporting that directions are parallel when they are not.
 
 win64_files.h:
     > Changed win64_read_entire_file to return the file as a str, always containg the bytes read.

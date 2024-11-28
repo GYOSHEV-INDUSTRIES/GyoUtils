@@ -93,7 +93,7 @@ typedef double   f64;
 #define _buffer_append(fmt, ...) __buffer_index += snprintf(__print_buff + __buffer_index, __BUFF_SIZE - __buffer_index, fmt, __VA_ARGS__)
 
 int __buffer_index = 0;
-const int __BUFF_SIZE = 0xFF;
+const int __BUFF_SIZE = 0xFFF;
 char __print_buff[__BUFF_SIZE] = "";
 inline void flush_to_stdout() {
     fwrite(__print_buff, 1, __buffer_index, stdout);
