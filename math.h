@@ -126,7 +126,8 @@ struct vec2 {
 
 struct vec3 {
     union {
-        struct {float x, y, z;};
+        struct {float x,  y,  z;};
+        struct {float yz, xz, xy;}; // geometric algebra's bivector (can be interpreted as a plane of rotation. The x axis is the yz plane, the y axis is the xz plane and the z axis is the xy plane). NOTE(cogno): the order of these elements is important, since the x axis is the yz plane, if x is the first float then so is yz. Also since convertion is trivial, bivector_dual is now an useless operation. Turning a vector into a bivector is as simple as calling obj.yz instead of obj.x, making them VERY fast.
         float ptr[3];
     };
 };
@@ -833,61 +834,20 @@ inline vec3 vec3_project_on_plane(vec3 to_project, vec3 plane_norm) {
 // 3D Geometric Algebra
 //
 
-// API(cogno): wouldn't it be better if we use vec3 so we don't have to convert back and forth?
-struct bivec { float yz, xz, xy; }; // NOTE(cogno): order of elements is important for conversion (x becomes yz, since both are first elements don't have to be moved in memory, which is faster)
-struct trivec { float xyz; }; // API(cogno): wouldn't it be better to just use float so we don't have to convert back and forth?
-
-void printsl_custom(bivec b) {
-    printsl("(xy=%, yz=%, xz=%)", b.xy, b.yz, b.xz);
-}
-
-void printsl_custom(trivec t) {
-    printsl("%", t.xyz);
-}
-
-// API(cogno): add bivec + bivec, bivec * scalar and the rest as needed
-inline bivec operator+(bivec a, bivec b) { return {a.yz + b.yz, a.xz + b.xz, a.xy + b.xy}; }
-inline bivec operator-(bivec a, bivec b) { return {a.yz - b.yz, a.xz - b.xz, a.xy - b.xy}; }
-inline bivec operator-(bivec a)          { return {-a.yz, -a.xz, -a.xy}; }
-inline bivec operator*(bivec a, float b) { return {a.yz * b, a.xz * b, a.xy * b}; }
-inline bivec operator*(float a, bivec b) { return {b.yz * a, b.xz * a, b.xy * a}; }
-inline bivec operator/(bivec a, float b) { return {a.yz / b, a.xz / b, a.xy / b}; }
-inline bivec operator/(float a, bivec b) { return {a / b.yz, a / b.xz, a / b.xy}; }
-
-inline bivec& operator*=(bivec& a, float b) { a.xy *= b; a.yz *= b; a.xz *= b; return a; }
-
 // basic operations:
 // we already have vec3 dot vec3
-bivec vec3_wedge(vec3 a, vec3 b) {
-    bivec out = {};
+vec3 vec3_wedge(vec3 a, vec3 b) {
+    vec3 out = {};
     out.xy = a.x * b.y - a.y * b.x;
     out.yz = a.y * b.z - a.z * b.y;
     out.xz = a.x * b.z - a.z * b.x;
     return out;
 }
 
-vec3 bivec_dual(bivec in) {
-    // API(cogno): if bivec is a union of vec3 we don't need this
-    vec3 out = {};
-    out.x = in.yz;
-    out.y = in.xz;
-    out.z = in.xy;
-    return out;
-}
-
-bivec bivec_dual(vec3 in) {
-    // API(cogno): if bivec is a union of vec3 we don't need this
-    bivec out = {};
-    out.xy = in.z;
-    out.yz = in.x;
-    out.xz = in.y;
-    return out;
-}
-
 // now we use GA for real work, to substitute Quaternions!
 struct rotor {
     float s = 1;
-    bivec bivec;
+    vec3 bivec;
 };
 
 void printsl_custom(rotor r) {
@@ -924,18 +884,17 @@ rotor rotor_from_axis_angle(vec3 rot_axis, float angle) {
     // a rotation around the x axis is a rotation on the yz plane.
     // then we embed the angle into each component following this post: 
     // https://jacquesheunis.com/post/rotors/#axis-angle-representation-for-rotors
-    
-    auto rotation_plane = bivec_dual(rot_axis);
-    rotor r;
+
+    rotor r = {};
     r.s        = c;
-    r.bivec.xy =  rotation_plane.xy * s;
-    r.bivec.yz =  rotation_plane.yz * s;
-    r.bivec.xz = -rotation_plane.xz * s;
+    r.bivec.xy =  rot_axis.xy * s;
+    r.bivec.yz =  rot_axis.yz * s;
+    r.bivec.xz = -rot_axis.xz * s;
     return r;
 }
 
-// return a rotation of in.xy turns on the xy plane, in.yz turns in the yz plane and in.xz turns in the xz plane 
-rotor rotor_from_turns(bivec in) {
+// return a rotation of in.xy turns on the xy plane, in.yz turns in the yz plane and in.xz turns in the xz plane
+rotor rotor_from_turns(vec3 in) {
     // converting from turns to rotors is really easy,
     // you just split the full rotation into 3 separate ones one after another!
     // first rotate on the xy plane, then the yz plane then the xz plane.
@@ -943,7 +902,7 @@ rotor rotor_from_turns(bivec in) {
     // that would be more expensive than what we need
     // since we only rotate on 1 plane at a time we can avoid most calculations
     
-    bivec angles = in / 2; // rotors move by half the angle
+    vec3 angles = in / 2; // rotors move by half the angle
     float cos_xy = cos_turns(angles.xy);
     float cos_yz = cos_turns(angles.yz);
     float cos_xz = cos_turns(angles.xz);

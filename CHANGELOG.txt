@@ -18,6 +18,7 @@ BREAKING CHANGES:
     > Bump allocators and Arena allocators are now floating (you don't have to store the data yourself, we do it for you!).
     > In allocators.h mem_free(...) needs to know how much you are deallocating.
     > In arena.h removed mem_realloc variant that looses some informations, leading to potential errors down the line.
+    > Removed bivec and trivec structs in favor of vec3 and float.
 
 first.h:
     > Improved For macros to allow iteration of empty containers (instead of causing a out of bounds read / access violation exception).
@@ -74,7 +75,8 @@ str.h:
 math.h:
     > Added checks to not override min/max macros if already defined.
     > Changed mat4_new to make an identity matrix by default if no input is provided.
-    > Changed how bivec and rotor print (they now show the planes of rotations).
+    > Changed how rotor prints (it now shows the plane of rotation).
+    > Removed bivec and trivec structs in favor of vec3 and float. Bivector is now a union of vec3, leading to less code and easier to understand operations.
     > Fixed vec3_rotate rotating elements clockwise instead of counter-clockwise (as you normally should).
     > Fixed rotor_from_turns having wrong calculations, leading to wrong rotations along some axis
     > Fixed bivector operator unintentionally reordering fields, leading to wrong rotations directions.
