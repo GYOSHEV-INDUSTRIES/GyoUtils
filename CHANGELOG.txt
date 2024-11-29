@@ -27,7 +27,7 @@ first.h:
     > Added ASSERT_BOUNDS_ALWAYS, a variant of ASSERT_BOUNDS which can never be deactivated, useful for important/security checks.
     > Changed how ASSERT and ASSERT_BOUNDS work when deactivated, now they can't be used inside an if anymore.
     > Added EXPECT macro, an alternative to ASSERT with automatic quick message in case it's called.
-      In other words EXPECT(a, true) is a quick way to write ASSERT(a == true, "excepted 'a' to be 'true' but was actually '%'", a)
+      In other words EXPECT(a, true) is a quick way to write ASSERT(a == true, "expected 'a' to be 'true' but was actually '%'", a)
     > Increased printing buffer size to avoid common out of bounds errors.
 
 array.h:
