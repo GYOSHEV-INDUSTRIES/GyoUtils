@@ -2,11 +2,12 @@
 Version: 0.3.1
 ---------------------------------
 In a nutshell:
-    > Changed how ASSERTs work, by introducing ASSERT_ALWAYS, removing functionality to ASSERT and adding EXPECT.
+    > Changed how ASSERTs work, by introducing ASSERT_ALWAYS and ASSERT_BOUNDS_ALWAYS, removing functionality to ASSERT and adding EXPECT.
     > Improvements to str_parser, making it more versatile.
     > Fixed common problems with min/max and For macros.
     > Restructured Allocators to be more efficient, convenient and useful.
     > Added new Circular allocator.
+    > Removed bivectors, making working with rotations faster to execute, to write and also more useful in general.
 
 BREAKING CHANGES:
     > In first.h, ASSERT cannot be used anymore inside an if statement (like if(!ASSERT(...)) {...} )
@@ -23,6 +24,7 @@ BREAKING CHANGES:
 first.h:
     > Improved For macros to allow iteration of empty containers (instead of causing a out of bounds read / access violation exception).
     > Added ASSERT_ALWAYS, a variant of ASSERT which can never be deactivated, useful for important/security checks.
+    > Added ASSERT_BOUNDS_ALWAYS, a variant of ASSERT_BOUNDS which can never be deactivated, useful for important/security checks.
     > Changed how ASSERT and ASSERT_BOUNDS work when deactivated, now they can't be used inside an if anymore.
     > Added EXPECT macro, an alternative to ASSERT with automatic quick message in case it's called.
       In other words EXPECT(a, true) is a quick way to write ASSERT(a == true, "excepted 'a' to be 'true' but was actually '%'", a)
@@ -31,7 +33,8 @@ first.h:
 array.h:
     > Added pointer+size versions of many functions, to aid in C-style programming.
       These are: print_as_array, array_insert, array_remove_at, array_pop, array_dequeue, array_get_data, array_set and array_get_ptr.
-    > array_append now returns the index at which it just appended the element, so you don't have to calculate it yourself
+    > array_append now returns the index at which it just appended the element, so you don't have to calculate it yourself.
+    > Improved security of common array operations by always checking for out of bounds accesses/reads/writes (using new macros ASSERT_ALWAYS and ASSERT_BOUNDS_ALWAYS).
 
 str.h:
     > Added str_contains.

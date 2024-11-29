@@ -61,7 +61,7 @@ void array_remove_at(T* ptr, int array_size, int index) {
 // so you can use this as a stack (push=append)
 template<typename T>
 T array_pop(T* ptr, int array_size) {
-    ASSERT(array_size > 0, "cannot pop from an empty stack/array");
+    ASSERT_ALWAYS(array_size > 0, "cannot pop from an empty stack/array");
     T element = ptr[array_size - 1];
     memset(ptr + array_size - 1, 0, sizeof(T));
     return element;
@@ -70,7 +70,7 @@ T array_pop(T* ptr, int array_size) {
 // so you can use this as a queue (queue=append)
 template<typename T>
 T array_dequeue(T* ptr, int array_size) {
-    ASSERT(array_size > 0, "cannot dequeue from an empty queue/array");
+    ASSERT_ALWAYS(array_size > 0, "cannot dequeue from an empty queue/array");
     T element = ptr[0];
     array_remove_at(ptr, array_size, 0);
     return element;
@@ -78,19 +78,19 @@ T array_dequeue(T* ptr, int array_size) {
 
 template<typename T>
 T array_get_data(T* ptr, int array_size, int index) {
-    ASSERT_BOUNDS(index, 0, array_size);
+    ASSERT_BOUNDS_ALWAYS(index, 0, array_size);
     return ptr[index];
 }
 
 template<typename T>
 void array_set(T* ptr, int array_size, int index, T value) {
-    ASSERT_BOUNDS(index, 0, array_size);
+    ASSERT_BOUNDS_ALWAYS(index, 0, array_size);
     ptr[index] = value;
 }
 
 template<typename T>
 T* array_get_ptr(T* ptr, int array_size, int index) {
-    ASSERT_BOUNDS(index, 0, array_size);
+    ASSERT_BOUNDS_ALWAYS(index, 0, array_size);
     return &ptr[index];
 }
 
@@ -101,7 +101,7 @@ struct Array {
     s32 reserved_size = 0; // TODO(cogno): pass to s64/u64, an array of 4gb of data is kind of bad...
     T* ptr = NULL;
     Allocator alloc;
-    T& operator[](s32 i) { ASSERT_BOUNDS(i, 0, size); return ptr[i]; }
+    T& operator[](s32 i) { ASSERT_BOUNDS_ALWAYS(i, 0, size); return ptr[i]; }
 };
 
 

@@ -267,6 +267,7 @@ inline bool assert_func(bool expr, const char* expression_as_string, const char*
 }
 
 #define ASSERT_ALWAYS(expr, ...) (assert_func(expr, #expr, __FILE__, __LINE__, __FUNCTION__,##__VA_ARGS__))
+#define ASSERT_BOUNDS_ALWAYS(var, start, length) ASSERT_ALWAYS(((var) >= (start)) && ((var) < ((start) + (length))), "OUT OF BOUNDS! expected between % and % but was %", (start), ((start) + (length)), (var))
 
 #ifndef NO_ASSERT
 #define ASSERT(expr, ...) ASSERT_ALWAYS(expr, __VA_ARGS__)
