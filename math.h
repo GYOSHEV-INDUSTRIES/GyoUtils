@@ -1000,3 +1000,14 @@ mat4 make_matrix_from_rotor(rotor r){
     out.m44 = 1;
     return out;
 }
+
+rotor rotor_normalize(rotor to_norm) {
+    auto reverse = rotor_reverse(to_norm);
+    auto result = rotor_combine(to_norm, reverse);
+    ASSERT(result.bivec.xz == 0 && result.bivec.xy == 0 && result.bivec.yz == 0, "wrong math!, expected float only but got %", result);
+    rotor out = {};
+    out.s = to_norm.s / result.s;
+    out.bivec = to_norm.bivec / result.s;
+    return out;
+}
+
