@@ -35,6 +35,7 @@ array.h:
       These are: print_as_array, array_insert, array_remove_at, array_pop, array_dequeue, array_get_data, array_set and array_get_ptr.
     > array_append now returns the index at which it just appended the element, so you don't have to calculate it yourself.
     > Improved security of common array operations by always checking for out of bounds accesses/reads/writes (using new macros ASSERT_ALWAYS and ASSERT_BOUNDS_ALWAYS).
+    > Added ASSERT to check if memory was available when constructing an array.
 
 str.h:
     > Added str_contains.

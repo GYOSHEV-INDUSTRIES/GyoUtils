@@ -116,6 +116,7 @@ Array<T> make_array(s32 size, Allocator alloc) {
     array.size = 0;
     array.alloc = alloc;
     array.ptr = (T*)mem_alloc(alloc, size * sizeof(T));
+    ASSERT(array.ptr != NULL, "OUT OF MEMORY! Couldn't allocate the array of size % (% bytes) inside allocator %", size, size * sizeof(T), alloc);
     return array;
 }
 
