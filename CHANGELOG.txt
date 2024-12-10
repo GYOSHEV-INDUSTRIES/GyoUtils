@@ -81,6 +81,7 @@ math.h:
     > Changed mat4_new to make an identity matrix by default if no input is provided.
     > Changed how rotor prints (it now shows the plane of rotation).
     > Added rotor_normalize to normalize rotations.
+    > Added vec3_inverse, to invert vectors (from geometric algebra).
     > Removed bivec and trivec structs in favor of vec3 and float. Bivector is now a union of vec3, leading to less code and easier to understand operations.
     > Fixed vec3_rotate rotating elements clockwise instead of counter-clockwise (as you normally should).
     > Fixed rotor_from_turns having wrong calculations, leading to wrong rotations along some axis

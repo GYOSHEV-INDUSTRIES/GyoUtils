@@ -1013,5 +1013,6 @@ rotor rotor_normalize(rotor to_norm) {
 
 // thanks to GA we can invert vectors!
 vec3 vec3_inverse(vec3 v) {
+    if(v == vec3{0, 0, 0}) return v;
     return v / vec3_length_squared(v);
 }
