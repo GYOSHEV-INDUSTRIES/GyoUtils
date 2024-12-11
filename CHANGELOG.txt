@@ -29,6 +29,7 @@ first.h:
     > Added EXPECT macro, an alternative to ASSERT with automatic quick message in case it's called.
       In other words EXPECT(a, true) is a quick way to write ASSERT(a == true, "expected 'a' to be 'true' but was actually '%'", a)
     > Increased printing buffer size to avoid common out of bounds errors.
+    > Changed how out of range enums are printed (so they don't cause an ASSERT/crash anymore).
 
 array.h:
     > Added pointer+size versions of many functions, to aid in C-style programming.

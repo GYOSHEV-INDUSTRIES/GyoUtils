@@ -430,11 +430,12 @@ const int EnumName##Size = NUM_ARGS(__VA_ARGS__); \
 const char* EnumName##Strings[] = { STRINGIFY(__VA_ARGS__) }; \
 const char* to_string(EnumName to_convert) { \
     int index = (s32)to_convert; \
-    ASSERT_BOUNDS(index, 0, EnumName##Size); \
+    if(index >= EnumName##Size || index < 0) return "(out of range)"; \
     return EnumName##Strings[index]; \
 } \
 void printsl_custom(EnumName to_print) { \
     printsl("%::%", #EnumName, to_string(to_print)); \
+    if((s32)to_print >= EnumName##Size || (s32)to_print < 0) printsl("=>%", (s32)to_print); \
 }
 
 // 
