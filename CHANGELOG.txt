@@ -20,6 +20,7 @@ BREAKING CHANGES:
     > In allocators.h mem_free(...) needs to know how much you are deallocating.
     > In arena.h removed mem_realloc variant that looses some informations, leading to potential errors down the line.
     > Removed bivec and trivec structs in favor of vec3 and float.
+    > In math.h renamed vec3.xz in vec3.zx, to fix math inconsistencies.
 
 first.h:
     > Improved For macros to allow iteration of empty containers (instead of causing a out of bounds read / access violation exception).
@@ -84,11 +85,11 @@ math.h:
     > Added rotor_normalize to normalize rotations.
     > Added vec3_inverse, to invert vectors (from geometric algebra).
     > Removed bivec and trivec structs in favor of vec3 and float. Bivector is now a union of vec3, leading to less code and easier to understand operations.
-    > Fixed vec3_rotate rotating elements clockwise instead of counter-clockwise (as you normally should).
-    > Fixed rotor_from_turns having wrong calculations, leading to wrong rotations along some axis.
-    > Fixed rotor_from_axis_angle leading to wrong rotations along the xz plane.
-    > Fixed bivector operator unintentionally reordering fields, leading to wrong rotations directions.
+    > Renamed vec3.xz to vec3.zx to more clearly state the change of convention used throught geometric algebra and rotors.
+    > Fixed rotor maths to correctly rotate elements on the zx plane (rotations from the z axis to the x axis).
+    > Fixed vec3_wedge having wrong calculations on the zx plane (vec3_cross should be equal to vec3_wedge, previously it wasn't).
     > Fixed rotor_from_to reporting that directions are parallel when they are not.
+    > Improved rotor_from_to to ask a proper direction of rotation when trying to rotate 180°. This gives the possibility to rotate as you want every time instead of having to deal with edge cases on your side.
 
 win64_files.h:
     > Changed win64_read_entire_file to return the file as a str, always containg the bytes read.

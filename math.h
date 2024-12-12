@@ -127,7 +127,7 @@ struct vec2 {
 struct vec3 {
     union {
         struct {float x,  y,  z;};
-        struct {float yz, xz, xy;}; // geometric algebra's bivector (can be interpreted as a plane of rotation. The x axis is the yz plane, the y axis is the xz plane and the z axis is the xy plane). NOTE(cogno): the order of these elements is important, since the x axis is the yz plane, if x is the first float then so is yz. Also since convertion is trivial, bivector_dual is now an useless operation. Turning a vector into a bivector is as simple as calling obj.yz instead of obj.x, making them VERY fast.
+        struct {float yz, zx, xy;}; // geometric algebra's bivector (can be interpreted as a plane of rotation. The x axis is the yz plane, the y axis is the zx plane and the z axis is the xy plane). NOTE(cogno): the order of these elements is important, since the x axis is the yz plane, if x is the first float then so is yz. Also since convertion is trivial, bivector_dual is now an useless operation. Turning a vector into a bivector is as simple as calling obj.yz instead of obj.x, making them VERY fast.
         float ptr[3];
     };
 };
@@ -494,7 +494,7 @@ inline float vec4_dot(vec4 a, vec4 b){ return _mm_cvtss_f32(_mm_dp_ps(a.v, b.v, 
 inline vec3 vec3_cross(vec3 a, vec3 b){
     vec3 res;
     res.x = a.y * b.z - b.y * a.z;
-    res.y = b.x * a.z - a.x * b.z;
+    res.y = a.z * b.x - b.z * a.x;
     res.z = a.x * b.y - b.x * a.y;
     return res;
 }
@@ -840,7 +840,7 @@ vec3 vec3_wedge(vec3 a, vec3 b) {
     vec3 out = {};
     out.xy = a.x * b.y - a.y * b.x;
     out.yz = a.y * b.z - a.z * b.y;
-    out.xz = a.x * b.z - a.z * b.x;
+    out.zx = a.z * b.x - a.x * b.z;
     return out;
 }
 
@@ -851,11 +851,11 @@ struct rotor {
 };
 
 void printsl_custom(rotor r) {
-    printsl("(%, xy=%, yz=%, xz=%)", r.s, r.bivec.xy, r.bivec.yz, r.bivec.xz);
+    printsl("(%, xy=%, yz=%, zx=%)", r.s, r.bivec.xy, r.bivec.yz, r.bivec.zx);
 }
 
 // produces a rotation which rotates from one vector to another
-rotor rotor_from_to(vec3 from, vec3 to) {
+rotor rotor_from_to(vec3 from, vec3 to, vec3 backup) {
     vec3 from_dir = vec3_normalize(from, vec3{0, 0, 0});
     vec3 to_dir   = vec3_normalize(to, vec3{0, 0, 0});
     
@@ -864,7 +864,7 @@ rotor rotor_from_to(vec3 from, vec3 to) {
     // between the 2 input ones and use that.
     // if the 2 vectors point opposite to each other the half will be 0, because we can
     // rotate in ANY direction perpendicular to the input 2
-    vec3 half = vec3_normalize(from_dir + to_dir, vec3{0, 0, 0});
+    vec3 half = vec3_normalize(from_dir + to_dir, backup);
     ASSERT(half.x != 0 || half.y != 0 || half.z != 0, "attempted to create a rotation between vectors opposite of each other. There are INFINITELY many rotations, so we don't know which one to choose. You should handle this case separately. Rotation was from % to %", from_dir, to_dir);
     
     // the product of 2 vectors ab is the dot + the wedge
@@ -889,15 +889,15 @@ rotor rotor_from_axis_angle(vec3 rot_axis, float angle) {
     r.s        = c;
     r.bivec.xy = rot_axis.xy * s;
     r.bivec.yz = rot_axis.yz * s;
-    r.bivec.xz = rot_axis.xz * s;
+    r.bivec.zx = rot_axis.zx * s;
     return r;
 }
 
-// return a rotation of in.xy turns on the xy plane, in.yz turns in the yz plane and in.xz turns in the xz plane
+// return a rotation of in.xy turns on the xy plane, in.yz turns in the yz plane and in.zx turns in the zx plane
 rotor rotor_from_turns(vec3 in) {
     // converting from turns to rotors is really easy,
     // you just split the full rotation into 3 separate ones one after another!
-    // first rotate on the xy plane, then the yz plane then the xz plane.
+    // first rotate on the xy plane, then the yz plane then the zx plane.
     // we could just use rotor_from_axis_angle and rotor_combine to do so, but 
     // that would be more expensive than what we need
     // since we only rotate on 1 plane at a time we can avoid most calculations
@@ -905,17 +905,17 @@ rotor rotor_from_turns(vec3 in) {
     vec3 angles = in / 2; // rotors move by half the angle
     float cos_xy = cos_turns(angles.xy);
     float cos_yz = cos_turns(angles.yz);
-    float cos_xz = cos_turns(angles.xz);
+    float cos_zx = cos_turns(angles.zx);
     float sin_xy = sin_turns(angles.xy);
     float sin_yz = sin_turns(angles.yz);
-    float sin_xz = sin_turns(angles.xz);
+    float sin_zx = sin_turns(angles.zx);
     
     // again, paper calculations
     rotor out = {};
-    out.s        = cos_xy * cos_yz * cos_xz - sin_xy * sin_yz * sin_xz;
-    out.bivec.xy = sin_xy * cos_yz * cos_xz + cos_xy * sin_yz * sin_xz;
-    out.bivec.yz = cos_xy * sin_yz * cos_xz - sin_xy * cos_yz * sin_xz;
-    out.bivec.xz = cos_xy * cos_yz * sin_xz + sin_xy * sin_yz * cos_xz;
+    out.s        = cos_xy * cos_yz * cos_zx - sin_xy * sin_yz * sin_zx;
+    out.bivec.xy = sin_xy * cos_yz * cos_zx + cos_xy * sin_yz * sin_zx;
+    out.bivec.yz = cos_xy * sin_yz * cos_zx - sin_xy * cos_yz * sin_zx;
+    out.bivec.zx = cos_xy * cos_yz * sin_zx + sin_xy * sin_yz * cos_zx;
     return out;
 }
 
@@ -926,18 +926,18 @@ rotor rotor_combine(rotor a, rotor b) {
     float a0 = a.s;
     float a1 = a.bivec.xy;
     float a2 = a.bivec.yz;
-    float a3 = a.bivec.xz;
+    float a3 = a.bivec.zx;
     float b0 = b.s;
     float b1 = b.bivec.xy;
     float b2 = b.bivec.yz;
-    float b3 = b.bivec.xz;
+    float b3 = b.bivec.zx;
     
     // just tedious paper calculations, nothing exciting
     rotor out = {};
     out.s        = a0*b0 - a1*b1 - a2*b2 - a3*b3;
-    out.bivec.xy = a0*b1 + a1*b0 + a2*b3 - a3*b2;
-    out.bivec.yz = a0*b2 + a2*b0 - a1*b3 + a3*b1;
-    out.bivec.xz = a0*b3 + a3*b0 + a1*b2 - a2*b1;
+    out.bivec.xy = a0*b1 + a1*b0 - a2*b3 + a3*b2;
+    out.bivec.yz = a0*b2 + a2*b0 + a1*b3 - a3*b1;
+    out.bivec.zx = a0*b3 + a3*b0 - a1*b2 + a2*b1;
     return out;
 }
 
@@ -960,25 +960,25 @@ vec3 vec3_rotate(vec3 v, rotor r) {
     float r0 = r.s;
     float r1 = r.bivec.xy;
     float r2 = r.bivec.yz;
-    float r3 = r.bivec.xz;
+    float r3 = r.bivec.zx;
     
     // S = R^-1 * v
-    float s1 =   v.x*r0 - v.y*r1 - v.z*r3;
+    float s1 =   v.x*r0 - v.y*r1 + v.z*r3;
     float s2 =   v.y*r0 + v.x*r1 - v.z*r2;
-    float s3 =   v.z*r0 + v.x*r3 + v.y*r2;
-    float s4 = - v.z*r1 - v.x*r2 + v.y*r3;
+    float s3 =   v.z*r0 - v.x*r3 + v.y*r2;
+    float s4 = - v.z*r1 - v.x*r2 - v.y*r3;
     
     // as a check, when finishing the calculations, the trivector component should disappear (aka be zero)
     #if !NO_ASSERT
-    float trivec = r0*s4 + r1*s3 + r2*s1 - r3*s2;
+    float trivec = r0*s4 + r1*s3 + r2*s1 + r3*s2;
     ASSERT(abs(trivec) <= 0.01f, "WRONG ROTOR CALCULATIONS. We expected the trivector component to disappear but it remained (was %).", trivec);
     #endif
     
     // out = S * R
     vec3 out = {};
-    out.x = r0*s1 - r1*s2 - r2*s4 - r3*s3;
-    out.y = r0*s2 + r1*s1 - r2*s3 + r3*s4;
-    out.z = r0*s3 - r1*s4 + r2*s2 + r3*s1;
+    out.x = r0*s1 - r1*s2 - r2*s4 + r3*s3;
+    out.y = r0*s2 + r1*s1 - r2*s3 - r3*s4;
+    out.z = r0*s3 - r1*s4 + r2*s2 - r3*s1;
     return out;
 }
 
@@ -1004,7 +1004,7 @@ mat4 make_matrix_from_rotor(rotor r){
 rotor rotor_normalize(rotor to_norm) {
     auto reverse = rotor_reverse(to_norm);
     auto result = rotor_combine(to_norm, reverse);
-    ASSERT(result.bivec.xz == 0 && result.bivec.xy == 0 && result.bivec.yz == 0, "wrong math!, expected float only but got %", result);
+    ASSERT(result.bivec.zx == 0 && result.bivec.xy == 0 && result.bivec.yz == 0, "wrong math!, expected float only but got %", result);
     rotor out = {};
     out.s = to_norm.s / result.s;
     out.bivec = to_norm.bivec / result.s;
