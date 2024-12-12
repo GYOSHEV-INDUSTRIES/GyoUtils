@@ -887,9 +887,9 @@ rotor rotor_from_axis_angle(vec3 rot_axis, float angle) {
 
     rotor r = {};
     r.s        = c;
-    r.bivec.xy =  rot_axis.xy * s;
-    r.bivec.yz =  rot_axis.yz * s;
-    r.bivec.xz = -rot_axis.xz * s;
+    r.bivec.xy = rot_axis.xy * s;
+    r.bivec.yz = rot_axis.yz * s;
+    r.bivec.xz = rot_axis.xz * s;
     return r;
 }
 

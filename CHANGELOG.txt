@@ -85,7 +85,8 @@ math.h:
     > Added vec3_inverse, to invert vectors (from geometric algebra).
     > Removed bivec and trivec structs in favor of vec3 and float. Bivector is now a union of vec3, leading to less code and easier to understand operations.
     > Fixed vec3_rotate rotating elements clockwise instead of counter-clockwise (as you normally should).
-    > Fixed rotor_from_turns having wrong calculations, leading to wrong rotations along some axis
+    > Fixed rotor_from_turns having wrong calculations, leading to wrong rotations along some axis.
+    > Fixed rotor_from_axis_angle leading to wrong rotations along the xz plane.
     > Fixed bivector operator unintentionally reordering fields, leading to wrong rotations directions.
     > Fixed rotor_from_to reporting that directions are parallel when they are not.
 
