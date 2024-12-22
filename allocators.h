@@ -124,7 +124,7 @@ ENUM(AllocatorType,
 // if you want to create your custom allocator compatible with gyoutils simply implement the handle_function (look at other allocator files for more info)
 struct Allocator {
     void* data = NULL;
-    AllocatorType type;
+    AllocatorType type = AllocatorType::DEFAULT;
 };
 // TODO(cogno): pass to s64/u64, an allocator of 4gb of data is kind of bad...
 

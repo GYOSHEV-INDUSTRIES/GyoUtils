@@ -100,7 +100,7 @@ struct Array {
     s32 size = 0;
     s32 reserved_size = 0; // TODO(cogno): pass to s64/u64, an array of 4gb of data is kind of bad...
     T* ptr = NULL;
-    Allocator alloc;
+    Allocator alloc = {};
     T& operator[](s32 i) { ASSERT_BOUNDS_ALWAYS(i, 0, size); return ptr[i]; }
 };
 

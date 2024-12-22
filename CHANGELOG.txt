@@ -21,6 +21,7 @@ BREAKING CHANGES:
     > In arena.h removed mem_realloc variant that looses some informations, leading to potential errors down the line.
     > Removed bivec and trivec structs in favor of vec3 and float.
     > In math.h renamed vec3.xz in vec3.zx, to fix math inconsistencies.
+    > Removed useless INFINITY and NAN macros (you can find them in the c std)
 
 first.h:
     > Improved For macros to allow iteration of empty containers (instead of causing a out of bounds read / access violation exception).
@@ -38,6 +39,7 @@ array.h:
     > array_append now returns the index at which it just appended the element, so you don't have to calculate it yourself.
     > Improved security of common array operations by always checking for out of bounds accesses/reads/writes (using new macros ASSERT_ALWAYS and ASSERT_BOUNDS_ALWAYS).
     > Added ASSERT to check if memory was available when constructing an array.
+    > Fixed non-setupped arrays resulting into crashes due to asserts and general misbehaviours.
 
 str.h:
     > Added str_contains.
