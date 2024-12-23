@@ -66,7 +66,7 @@ void* init_fbump(void* mem_block, s32 mem_block_size) {
 
 // generic functionality used by Allocator in allocators.h, you can use the functions below for ease of use
 void* fbump_handle(AllocOp op, void* alloc, s32 old_size, s32 size_requested, void* to_free) {
-    if(op != AllocOp::INIT) ASSERT(alloc != NULL, "Invalid allocator data given (was NULL)");
+    if(op != AllocOp::INIT) { ASSERT(alloc != NULL, "Invalid allocator data given (was NULL)"); }
 
     Bump* allocator = (Bump*)alloc;
     switch(op) {
