@@ -312,6 +312,7 @@ inline vec4 hsv_normalize(hsv in) { return rgb_normalize(rgb_from_hsv(in)); }
 inline hsv hsv_denormalize(vec4 in) { return hsv_from_rgb(rgb_denormalize(in)); }
 
 // colors from raylib
+#ifndef GYO_NO_COLORS
 #define LIGHTGRAY  rgb_normalize({ 200, 200, 200, 255 })   // Light Gray
 #define GRAY       rgb_normalize({ 130, 130, 130, 255 })   // Gray
 #define DARKGRAY   rgb_normalize({ 80, 80, 80, 255 })      // Dark Gray
@@ -392,7 +393,7 @@ inline hsv hsv_denormalize(vec4 in) { return hsv_from_rgb(rgb_denormalize(in)); 
 #define HSV_BLANK      hsv_from_rgb({ 0, 0, 0, 0 })           // Blank (Transparent)
 #define HSV_MAGENTA    hsv_from_rgb({ 255, 0, 255, 255 })     // Magenta
 #define HSV_RAYWHITE   hsv_from_rgb({ 245, 245, 245, 255 })   // My own White (raylib logo)
-
+#endif
 
 
 inline vec2 vec2_round(vec2 v) {return {round(v.x), round(v.y)};}
