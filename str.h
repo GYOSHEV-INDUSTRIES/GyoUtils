@@ -407,14 +407,16 @@ void str_builder_clear(StrBuilder* b) {
     b->size = 0;
 }
 
-StrBuilder str_builder_copy(StrBuilder* b) {
+StrBuilder str_builder_copy(StrBuilder* b, Allocator alloc) {
     StrBuilder copy;
-    copy.ptr = (u8*)mem_alloc(b->alloc, b->reserved_size * sizeof(u8));
+    copy.ptr = (u8*)mem_alloc(alloc, b->reserved_size * sizeof(u8));
     copy.size = b->size;
     copy.reserved_size = b->reserved_size;
+    copy.alloc = alloc;
     memcpy(copy.ptr, b->ptr, b->size);
     return copy;
 }
+StrBuilder str_builder_copy(StrBuilder* b) { return str_builder_copy(b, b->alloc); }
 
 str str_builder_get_str(StrBuilder* b) {
     str s = {};
