@@ -86,6 +86,7 @@ math.h:
     > Changed how rotor prints (it now shows the plane of rotation).
     > Added rotor_normalize to normalize rotations.
     > Added vec3_inverse, to invert vectors (from geometric algebra).
+    > Added vec3_angle_between to know an angle between 2 vectors.
     > Removed bivec and trivec structs in favor of vec3 and float. Bivector is now a union of vec3, leading to less code and easier to understand operations.
     > Renamed vec3.xz to vec3.zx to more clearly state the change of convention used throught geometric algebra and rotors.
     > Fixed rotor maths to correctly rotate elements on the zx plane (rotations from the z axis to the x axis).

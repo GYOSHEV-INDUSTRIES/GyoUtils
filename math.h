@@ -845,6 +845,34 @@ vec3 vec3_wedge(vec3 a, vec3 b) {
     return out;
 }
 
+inline float vec3_angle_between(vec3 a, vec3 b) {
+    float dot = vec3_dot(a, b);
+    float det = vec3_length(vec3_wedge(a, b));
+    float angle = atan2f(det, dot) * RAD2DEG;
+    return angle;
+    /*
+    TODO(cogno): code from this link:
+    https://it.mathworks.com/matlabcentral/answers/2092961-how-to-calculate-the-angle-between-two-3d-vectors
+
+    // most robust, most accurate, recovers tiny angles very well, slowest
+    atan2(norm(cross(u,v)), dot(u,v)) 
+
+    // robust, does not recover tiny angles, faster
+    max(min(dot(u,v)/(norm(u)*norm(v)),1),-1)
+
+    // not robust (may get domain error), does not recover tiny angles, fasterer
+    acos(dot(u,v)/(norm(u)*norm(v)))
+
+    // not robust (may get domain error), does not recover tiny angles, fasterer
+    acos(dot(u/norm(u),v/norm(v)))
+
+    // not robust (may get domain error), does not recover tiny angles, fastest
+    acos(dot(u,v)/sqrt(dot(u,u)*dot(v,v)))
+
+    we should try them out and see, maybe we can use the second one and the precision loss is not a problem...
+    */
+}
+
 // now we use GA for real work, to substitute Quaternions!
 struct rotor {
     float s = 1;
