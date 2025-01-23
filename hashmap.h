@@ -122,6 +122,7 @@ void map_insert(HashMap<T, U>* map, T key, U value) {
         // complex case, either we have the key and we need to replace the value, or we have to use solver to set a new key
         while(true) {
             // API(cogno): what if the struct doesn't have operator equals?
+            // API(cogno): instead of storing the key, if we store the hash we can check very easily if two elements are equal. The 2 main problems are 1. cache locality due to hash size and 2. hash collisions which should be less than 1 in a gagillion so it shouldn't be a huge deal
             if(current_finder->key == key) {
                 // key found, replace value
                 current_finder->value = value;

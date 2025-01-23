@@ -113,10 +113,6 @@ inline float tan_turns(float angle)  { return sin_turns(angle) / cos_turns(angle
 inline float cot_turns(float angle)  { return cos_turns(angle) / sin_turns(angle); }
 // API(cogno): implement other trigonometric functions as needed
 
-struct vec2; // forward decl to avoid circular reference
-struct vec3; // forward decl to avoid circular reference
-struct vec4; // forward decl to avoid circular reference
-
 struct vec2 {
     union {
         struct {float x, y;};
