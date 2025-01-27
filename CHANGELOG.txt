@@ -1,4 +1,21 @@
 ---------------------------------
+Version: 0.3.2
+---------------------------------
+In a nutshell:
+    > Restructured how GyoUtils is setupped and what it offers.
+      I feel like the GyoUtils project was starting to become a full fletched std-replacement library.
+      This is not what the project was set to aim towards. We do not wish to replace the entire std library.
+      This was only supposed to be a collection of utilities that could help during your normal development.
+      Because of this we have decided to tone back on what we offer, leaving only the essential.
+      Be sure to check the BREAKING CHANGES section to know more.
+
+BREAKING CHANGES:
+    > Removed hashmap.h. It wasn't a good hashmap anyway, so you shouldn't have been using it regardless.
+
+
+hashmap.h: REMOVED
+
+---------------------------------
 Version: 0.3.1   2025/01/27
 ---------------------------------
 In a nutshell:
