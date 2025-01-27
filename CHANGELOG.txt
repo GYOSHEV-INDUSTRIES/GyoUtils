@@ -1,5 +1,5 @@
 ---------------------------------
-Version: 0.3.1
+Version: 0.3.1   2025/01/27
 ---------------------------------
 In a nutshell:
     > Changed how ASSERTs work, by introducing ASSERT_ALWAYS and ASSERT_BOUNDS_ALWAYS, removing functionality to ASSERT and adding EXPECT.
@@ -7,7 +7,7 @@ In a nutshell:
     > Fixed common problems with min/max and For macros.
     > Restructured Allocators to be more efficient, convenient and useful.
     > Added new Circular allocator.
-    > Removed bivectors, making working with rotations faster to execute, to write and also more useful in general.
+    > Removed bivectors, making working with rotations faster to execute, faster and easier to write and also more useful in general.
 
 BREAKING CHANGES:
     > In first.h, ASSERT cannot be used anymore inside an if statement (like if(!ASSERT(...)) {...} )
@@ -15,8 +15,8 @@ BREAKING CHANGES:
     > In str.h removed str_to_u32 functions. You can use StrParser instead.
     > In str.h removed str_is_u32 function. You can use StrParser instead.
     > In str.h changed str_split_right if no split is performed, making it simpler to use.
-    > In win64_files changed win64_read_entire_file to return the file as a str, always containg the bytes read.
-    > Bump allocators and Arena allocators are now floating (you don't have to store the data yourself, we do it for you!).
+    > In win64_files changed win64_read_entire_file to return the file as a str, always containg the number of bytes read.
+    > Bump allocator is now floating (you don't have to store the data yourself, we do it for you!).
     > In allocators.h mem_free(...) needs to know how much you are deallocating.
     > In arena.h removed mem_realloc variant that looses some informations, leading to potential errors down the line.
     > Removed bivec and trivec structs in favor of vec3 and float.
