@@ -14,6 +14,8 @@ Configuration macros
 */
 
 #include "first.h"
+#include "performance_counter.h" // so it can be used by other modules to check performance elements
+
 #include "math.h"
 #include "allocators.h"
 
@@ -21,7 +23,6 @@ Configuration macros
 #include "str.h"
 #include "hashmap.h"
 
-#include "performance_counter.h"
 #include "simple_profiling.h"
 #include "profiling_v1.h"
 #include "simple_benchmark.h"

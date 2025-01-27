@@ -1,4 +1,126 @@
-Version: 0.3.0
+---------------------------------
+Version: 0.3.1   2025/01/27
+---------------------------------
+In a nutshell:
+    > Changed how ASSERTs work, by introducing ASSERT_ALWAYS and ASSERT_BOUNDS_ALWAYS, removing functionality to ASSERT and adding EXPECT.
+    > Improvements to str_parser, making it more versatile.
+    > Fixed common problems with min/max and For macros.
+    > Restructured Allocators to be more efficient, convenient and useful.
+    > Added new Circular allocator.
+    > Removed bivectors, making working with rotations faster to execute, faster and easier to write and also more useful in general.
+
+BREAKING CHANGES:
+    > In first.h, ASSERT cannot be used anymore inside an if statement (like if(!ASSERT(...)) {...} )
+    > In first.h, ASSERT_BOUNDS cannot be used anymore inside an if statement (like if(!ASSERT_BOUNDS(...)) {...} )
+    > In str.h removed str_to_u32 functions. You can use StrParser instead.
+    > In str.h removed str_is_u32 function. You can use StrParser instead.
+    > In str.h changed str_split_right if no split is performed, making it simpler to use.
+    > In win64_files changed win64_read_entire_file to return the file as a str, always containg the number of bytes read.
+    > Bump allocator is now floating (you don't have to store the data yourself, we do it for you!).
+    > In allocators.h mem_free(...) needs to know how much you are deallocating.
+    > In arena.h removed mem_realloc variant that looses some informations, leading to potential errors down the line.
+    > Removed bivec and trivec structs in favor of vec3 and float.
+    > In math.h renamed vec3.xz in vec3.zx, to fix math inconsistencies.
+    > Removed useless INFINITY and NAN macros (you can find them in the c std)
+
+first.h:
+    > Improved For macros to allow iteration of empty containers (instead of causing a out of bounds read / access violation exception).
+    > Added ASSERT_ALWAYS, a variant of ASSERT which can never be deactivated, useful for important/security checks.
+    > Added ASSERT_BOUNDS_ALWAYS, a variant of ASSERT_BOUNDS which can never be deactivated, useful for important/security checks.
+    > Changed how ASSERT and ASSERT_BOUNDS work when deactivated, now they can't be used inside an if anymore.
+    > Added EXPECT macro, an alternative to ASSERT with automatic quick message in case it's called.
+      In other words EXPECT(a, true) is a quick way to write ASSERT(a == true, "expected 'a' to be 'true' but was actually '%'", a)
+    > Increased printing buffer size to avoid common out of bounds errors.
+    > Changed how out of range enums are printed (so they don't cause an ASSERT/crash anymore).
+
+array.h:
+    > Added pointer+size versions of many functions, to aid in C-style programming.
+      These are: print_as_array, array_insert, array_remove_at, array_pop, array_dequeue, array_get_data, array_set and array_get_ptr.
+    > array_append now returns the index at which it just appended the element, so you don't have to calculate it yourself.
+    > Improved security of common array operations by always checking for out of bounds accesses/reads/writes (using new macros ASSERT_ALWAYS and ASSERT_BOUNDS_ALWAYS).
+    > Added ASSERT to check if memory was available when constructing an array.
+    > Fixed non-setupped arrays resulting into crashes due to asserts and general misbehaviours.
+
+str.h:
+    > Added str_contains.
+    > Added u8_is_digit.
+    > Added u8_is_whitespace.
+    > Added overload to str_copy that accepts ptr + len to the buffer to copy into.
+    > Added overload to str_to_c_string that accepts ptr + len
+    > Added overload to str_concat that accepts ptr + len
+    > Improved all trim operations to include all whitespace characters (space, tab, enter, carriage return, vertical tab and formfeed).
+    > Added null ptr checks to str_trim_left_inplace, str_trim_right_inplace and str_trim_inplace.
+    > Removed str_to_u32 and str_is_u32 functions. You can use StrParser instead.
+    > Improved str_split_left to accept NULL as valid input pointers, if you want to ignore values.
+    > Improved str_split_newline_left to accept NULL as valid input pointers, if you want to ignore values.
+    > Improved str_split_right to accept NULL as valid input pointers, if you want to ignore values.
+    > Changed str_split_right when no split is made.
+      The entire string is now put into the *right_side* input pointer.
+      Previously it would be placed into the left_side. This would lead to an extra bool check to handle
+      the final iteration while in loops. Now the check is not necessary.
+    > Optimized str_split_left, should be about 30% faster now.
+    > Optimized str_split_newline_left, as a consequence of str_split_left, should be about 30% faster now.
+    > Optimized str_split_right, should be about 30% faster now.
+    > Optimized str_starts_with, should be about 30% faster now.
+    > Fixed str_split_left overload with a string splitter as input not touching the left_side pointer when it should.
+    > Fixed str_split_left overload with a string splitter as input incorrectly splitting the right side.
+    > Also changed the same overload to accept NULL as valid inputs, if results are to be ignored.
+
+    str_parser:
+    > Fixed str_parser_starts_with_digit to not explode if the str_parser is empty.
+    > Added str_parser_starts_with u8 overload.
+    > Added str_parser_second_is to quickly check if the second byte is equal to a given one.
+    > Added str_parser_second_is_digit to quickly check if the second byte is an ascii digit.
+    > Added str_parser_starts_with_positive_number.
+    > Added str_parser_starts_with_integer_number.
+    > Improved each _parse function to accept a NULL pointer to optionally ignore the out value.
+      With this each function can also be used to quickly consume the next "token" while ignoring what it is,
+      instead of being forced to fill a discard value.
+    > Added str_parser_maybe_consume to optionally skip the next character.
+    > Improved str_parse_u8/u16/u32/u64 to have overflow prevention.
+    > Added str_parser_parse_s8/s16/s32/s64 with number range checking to avoid overflows/underflows.
+
+math.h:
+    > Added checks to not override min/max macros if already defined.
+    > Changed mat4_new to make an identity matrix by default if no input is provided.
+    > Changed how rotor prints (it now shows the plane of rotation).
+    > Added rotor_normalize to normalize rotations.
+    > Added vec3_inverse, to invert vectors (from geometric algebra).
+    > Added vec3_angle_between to know an angle between 2 vectors.
+    > Removed bivec and trivec structs in favor of vec3 and float. Bivector is now a union of vec3, leading to less code and easier to understand operations.
+    > Renamed vec3.xz to vec3.zx to more clearly state the change of convention used throught geometric algebra and rotors.
+    > Fixed rotor maths to correctly rotate elements on the zx plane (rotations from the z axis to the x axis).
+    > Fixed vec3_wedge having wrong calculations on the zx plane (vec3_cross should be equal to vec3_wedge, previously it wasn't).
+    > Fixed rotor_from_to reporting that directions are parallel when they are not.
+    > Improved rotor_from_to to ask a proper direction of rotation when trying to rotate 180°. This gives the possibility to rotate as you want every time instead of having to deal with edge cases on your side.
+
+win64_files.h:
+    > Changed win64_read_entire_file to return the file as a str, always containg the bytes read.
+
+NEW | circular.h:
+    > Added new Circular allocator, to handle allocations which would like to be freed in the same order they were allocated in.
+
+allocators.h:
+    > Changed how allocators data is stored, instead of a function pointer we know use an Enum, making it more useful to use and producing faster code in many cases.
+    > Since we changed Bump allocators to be floating it's now easier to construct and use them.
+    > mem_free needs to know how much you want to deallocate.
+      This is to improve efficiency and usability of allocators.
+      It also fixes a problem were some deallocations were called correctly but not freed because the allocation size information was completely lost.
+      Some future allocators might automatically track it themselves, so they might not need to know every time.
+
+arena.h:
+    > Removed mem_realloc variant that looses some informations, leading to potential errors down the line.
+
+bump.h:
+    > Changed Bump allocator to be floating, you don't have to store the data yourself, we do it for you!
+    > Fixed out of memory writes being possible when ASSERTS are deactivated
+    > Fixed allocations being made when size requested is 0 or less
+
+hashmap.h:
+    > Implemented basic map_free.
+
+---------------------------------
+Version: 0.3.0   2024/10/05
 The Allocators Revolution
 ---------------------------------
 
@@ -17,7 +139,7 @@ Since allocators control memory we've integrated them into Array.
 By default Array will use the default allocator (working identical to the old version of Array).
 By instead giving it a different allocator you can control how arrays access and use memory.
 For example by creating an array with a Bump allocator you can have an array which will *not* realloc, effectively making it a fixed array.
-Because of this **we've removed FixedArray**.
+Because of this **we've removed Array**.
 You'll see usage examples of arrays and allocators inside allocators.h/array.h/str.h
 
 BREAKING CHANGES:
@@ -114,6 +236,7 @@ simple_benchmark.h:
         Now some randomization is included so order does not matter as much, leading to more accurate results.
     > Added function to print benchmark time with input cpu_frequency, so it's not recalculated every time.
 
+---------------------------------
 Version: 0.2.0 2024/02/15
 ---------------------------------
 
@@ -167,6 +290,7 @@ dynamic_array.h:
     
     > Fixed array_insert not working if you wanted to append something.
     
+---------------------------------
 Version: 0.1.4 2023/11/04
 ---------------------------------
 
@@ -204,6 +328,7 @@ first.h:
     > Fixed a bug in the `count_digits` function (precision loss).
     > Fixed macro redefinition warning/error for INFINITY and NAN in first.h.
 
+---------------------------------
 Version: 0.1.3 2023/10/01
 ---------------------------------
 
@@ -222,12 +347,14 @@ simple_benchmark.h:
 math.h:
     > Fixed in gcc error about __m128 and {}.
 
+---------------------------------
 Version: 0.1.2 2023/09/24
 ---------------------------------
 
 > Fixed print for str and str_builder being printed as array of u8 instead of a string.
 
 
+---------------------------------
 Version: 0.1.1 2023/09/23
 ---------------------------------
 
@@ -253,6 +380,7 @@ math.h:
     > Added remap function, with overloads for float, vec2, vec3 and vec4.
     > struct col for colors can now be printed.
 
+---------------------------------
 Version: 0.1.0 2023/09/16
 ---------------------------------
 

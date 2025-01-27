@@ -28,25 +28,26 @@ void printsl_custom(Arena b) {
     printsl("Arena Allocator of % bytes (%\\% full), last allocation of % bytes (%\\%)", b.size_available, fill_percentage, last_alloc_size, last_alloc_percentage);
 }
 
-#define DEFAULT_ALIGNMENT (sizeof(char*))
+#define GYO_ARENA_DEFAULT_ALIGNMENT (16) // read in bump.h
 
 
 void arena_reset(Arena* a) {
     a->curr_offset = 0;
     a->prev_offset = 0;
+    maybe_remove_all_allocations(a->data);
 }
 
 // TODO(cogno): test memory alignment at 0, 4 and 8 bytes
 
 ArenaHeader* arena_get_header_before_data(void* arena_data) {
     if(arena_data == NULL) return NULL; // no header before no block duh
-    int header_size = sizeof(ArenaHeader) + DEFAULT_ALIGNMENT % sizeof(ArenaHeader);
+    int header_size = sizeof(ArenaHeader) + GYO_ARENA_DEFAULT_ALIGNMENT % sizeof(ArenaHeader);
     u8* header_start = (u8*)arena_data - header_size;
     return (ArenaHeader*)header_start;
 }
 
 void* arena_prepare_new_memory_block(Arena* arena, s32 size_requested, ArenaHeader* old_block) {
-    int header_size = sizeof(ArenaHeader) + DEFAULT_ALIGNMENT % sizeof(ArenaHeader);
+    int header_size = sizeof(ArenaHeader) + GYO_ARENA_DEFAULT_ALIGNMENT % sizeof(ArenaHeader);
     int alloc_size = size_requested + header_size; // TODO(cogno): default min size
     void* memory = calloc(alloc_size, sizeof(u8)); // TAG: MaybeWeShouldDoThisBetter
     
@@ -84,8 +85,8 @@ void* arena_handle(AllocOp op, void* alloc, s32 old_size, s32 size_requested, vo
         case AllocOp::ALLOC: {
             char* top = (char*)allocator->data + allocator->curr_offset;
             // TODO(cogno): this assumes the initial pointer is aligned, is it so? should we better align this?
-            int unaligned_by = allocator->curr_offset % DEFAULT_ALIGNMENT;
-            int space_left_in_block = DEFAULT_ALIGNMENT - unaligned_by;
+            int unaligned_by = allocator->curr_offset % GYO_ARENA_DEFAULT_ALIGNMENT;
+            int space_left_in_block = GYO_ARENA_DEFAULT_ALIGNMENT - unaligned_by;
             
             // NOTE(cogno): since the processor retrives data in chunks, if an allocation crosses a word boundary, you will require 1 extra access, which is slow! If we can fit the new allocation in the space remaining we do so, else we align to avoid being slow.
             if(unaligned_by != 0 && space_left_in_block < size_requested) allocator->curr_offset += space_left_in_block;
@@ -109,7 +110,6 @@ void* arena_handle(AllocOp op, void* alloc, s32 old_size, s32 size_requested, vo
             }
             
             maybe_add_tracking_info(allocator->data, allocator->size_available, allocator->curr_offset, size_requested);
-
             allocator->prev_offset = allocator->curr_offset;
             allocator->curr_offset += size_requested;
             return (void*)new_memory;
@@ -117,13 +117,14 @@ void* arena_handle(AllocOp op, void* alloc, s32 old_size, s32 size_requested, vo
         case AllocOp::FREE_ALL: {
             arena_reset(allocator);
             allocator->size_available = 0;
+            // TODO(cogno): this should NOT be free_all, this should be DEINIT!
+            // TODO(cogno): remove tracking of EACH block, not the current one
             // we need to go back every block until no more are left
             ArenaHeader* header_of_this_block = arena_get_header_before_data(allocator->data);
             while(header_of_this_block != NULL) {
                 ArenaHeader* header_of_prev_block = header_of_this_block->previous_block;
                 free((void*)header_of_this_block); // TAG: MaybeWeShouldDoThisBetter
-                int header_size = sizeof(ArenaHeader) + DEFAULT_ALIGNMENT % sizeof(ArenaHeader);
-                maybe_remove_all_allocations((void*)(header_of_this_block + header_size));
+                int header_size = sizeof(ArenaHeader) + GYO_ARENA_DEFAULT_ALIGNMENT % sizeof(ArenaHeader);
                 header_of_this_block = header_of_prev_block;
             }
             return NULL;
@@ -143,5 +144,4 @@ Arena make_arena_allocator(int min_size) {
 
 void  mem_free_all(Arena* a) { arena_handle(AllocOp::FREE_ALL, a, 0, 0, NULL); }
 void* mem_alloc(Arena* a, int size) { return arena_handle(AllocOp::ALLOC, a, 0, size, NULL); }
-void* mem_realloc(Arena* a, void* to_resize, int new_size) { return arena_handle(AllocOp::REALLOC, a, 0, new_size, to_resize); }
 void* mem_realloc(Arena* a, void* to_resize, int new_size, int old_size) { return arena_handle(AllocOp::REALLOC, a, old_size, new_size, to_resize); }

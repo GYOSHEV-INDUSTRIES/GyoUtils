@@ -12,6 +12,7 @@ In this file:
 - printsl, like print but without \n at the end
 - ASSERT macro which can be deactivated, prints a custom (optional) formatted message and returns the expression value
 - ASSERT_BOUNDS to make out of bounds checks easier
+- EXPECT macro, a quicker way to write single ASSERT checks with error message
 - defer macro, like golang's defer
 - For macro to provide a more convenient way to iterate over Array and similar structs
 */
@@ -45,13 +46,6 @@ typedef double   f64;
 #define MIN_S16 0x8000
 #define MIN_S32 0x80000000
 #define MIN_S64 0x8000000000000000
-
-#ifndef INFINITY
-#define INFINITY   ((float)(1e+300 * 1e+300))
-#endif
-#ifndef NAN
-#define NAN        (-(float)(INFINITY * 0.0F))
-#endif
 
 #define DEPRECATED(msg) __declspec(deprecated(msg))
 
@@ -92,7 +86,7 @@ typedef double   f64;
 #define _buffer_append(fmt, ...) __buffer_index += snprintf(__print_buff + __buffer_index, __BUFF_SIZE - __buffer_index, fmt, __VA_ARGS__)
 
 int __buffer_index = 0;
-const int __BUFF_SIZE = 0xFF;
+const int __BUFF_SIZE = 0xFFF;
 char __print_buff[__BUFF_SIZE] = "";
 inline void flush_to_stdout() {
     fwrite(__print_buff, 1, __buffer_index, stdout);
@@ -208,18 +202,23 @@ void print(const char* s, T t1, Types... others) {
 
 
 //
-// ASSERT macros. stops program execution with a given (optional) message if an expression is not satisfied.
-// can be deactivated by defining 'NO_ASSERT'. When deactivated the macro is turned into the expression, so it
-// can be used inside if to keep runtime checks.
-// Example:
-// if(!ASSERT(index < array_size, "attempting to read out of bounds! reading at %", index)) return;
-// array[index] = value;
-//
-// When this code is run with asserts enabled if the index is above array_size the program will stop with an info message
-// But when asserts are disabled this code is equivalent to
-// if(!(index < array_size)) return;
-// Which is very useful to keep the check even at runtime!
-//
+// ASSERT macros:
+// > ASSERT_ALWAYS(...)
+//   Stops program execution with a given (optional) message if an expression is not satisfied.
+//   Can never be deactivated. Useful for important/security checks.
+//   This macro is useful because:
+//   - It stops program execution when something is different than expected.
+//   - It shows on stdout a where the assert has been called from
+//   - It automatically puts a debugger breakpoint, leading to an easier time while debugging.
+// > ASSERT(...)
+//   Variant of ASSERT_ALWAYS which can be deactivated by defining 'NO_ASSERT'.
+// > ASSERT_BOUNDS
+//   Variant of ASSERT to quickly check if a variable is in a given range, with a pre-built message.
+//   ASSERT_BOUNDS(var, start, len) is basically ASSERT(var >= start && var < start + length, "OUT OF BOUNDS")
+//   Example usage: ASSERT_BOUNDS(index, 0, array.size);
+// > EXPECT(...)
+//   Variant of ASSERT to quickly check if a variable is equal to a given value, with a pre-built message.
+//   EXPECT(var, value) is basically ASSERT(var == value, "Variable was different than expected")
 //
 
 #ifdef _MSC_VER
@@ -260,13 +259,17 @@ inline bool assert_func(bool expr, const char* expression_as_string, const char*
     return expr;
 }
 
+#define ASSERT_ALWAYS(expr, ...) (assert_func(expr, #expr, __FILE__, __LINE__, __FUNCTION__,##__VA_ARGS__))
+#define ASSERT_BOUNDS_ALWAYS(var, start, length) ASSERT_ALWAYS(((var) >= (start)) && ((var) < ((start) + (length))), "OUT OF BOUNDS! expected between % and % but was %", (start), ((start) + (length)), (var))
 
 #ifndef NO_ASSERT
-#define ASSERT(expr, ...) (assert_func(expr, #expr, __FILE__, __LINE__, __FUNCTION__,##__VA_ARGS__))
+#define ASSERT(expr, ...) ASSERT_ALWAYS(expr, __VA_ARGS__)
 #define ASSERT_BOUNDS(var, start, length) ASSERT(((var) >= (start)) && ((var) < ((start) + (length))), "OUT OF BOUNDS! expected between % and % but was %", (start), ((start) + (length)), (var))
+#define EXPECT(value, wanted) (ASSERT((value) == (wanted), "expected '" #value "' to be '%' but was actually '%'", wanted, value))
 #else
-#define ASSERT(expr, ...) (expr)
-#define ASSERT_BOUNDS(var, start, length) (((var) >= (start)) && ((var) < ((start) + (length))))
+#define ASSERT(expr, ...)
+#define ASSERT_BOUNDS(var, start, length)
+#define EXPECT(value, wanted)
 #endif
 
 //
@@ -420,11 +423,12 @@ const int EnumName##Size = NUM_ARGS(__VA_ARGS__); \
 const char* EnumName##Strings[] = { STRINGIFY(__VA_ARGS__) }; \
 const char* to_string(EnumName to_convert) { \
     int index = (s32)to_convert; \
-    ASSERT_BOUNDS(index, 0, EnumName##Size); \
+    if(index >= EnumName##Size || index < 0) return "(out of range)"; \
     return EnumName##Strings[index]; \
 } \
 void printsl_custom(EnumName to_print) { \
     printsl("%::%", #EnumName, to_string(to_print)); \
+    if((s32)to_print >= EnumName##Size || (s32)to_print < 0) printsl("=>%", (s32)to_print); \
 }
 
 // 
@@ -443,19 +447,19 @@ void printsl_custom(EnumName to_print) { \
 // }
 //
 #define For(arr) \
-for(int it_index = 0, _=1;_;_=0) \
+for(int it_index = 0, _=1;_ && (arr).size > 0;_=0) \
     for(auto it = (arr).ptr[it_index]; it_index < (arr).size; it = (arr).ptr[++it_index])
 
 #define For_ptr(arr) \
-for(int it_index = 0, _=1;_;_=0) \
+for(int it_index = 0, _=1;_ && (arr).size > 0;_=0) \
     for(auto* it = &((arr).ptr[it_index]); it_index < (arr).size; it = &((arr).ptr[++it_index]))
 
 #define For_rev(arr) \
-for(int it_index = (arr).size - 1, _=1;_;_=0) \
+for(int it_index = (arr).size - 1, _=1;_ && (arr).size > 0;_=0) \
     for(auto it = (arr).ptr[it_index]; it_index >= 0; it = (arr).ptr[--it_index])
 
 #define For_ptr_rev(arr) \
-for(int it_index = (arr).size - 1, _=1;_;_=0) \
+for(int it_index = (arr).size - 1, _=1;_ && (arr).size > 0;_=0) \
     for(auto* it = &((arr).ptr[it_index]); it_index >= 0; it = &((arr).ptr[--it_index]))
 
 #define For_rev_ptr(arr) For_ptr_rev((arr))
