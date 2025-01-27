@@ -10,8 +10,11 @@ In a nutshell:
       Be sure to check the BREAKING CHANGES section to know more.
 
 BREAKING CHANGES:
-    > Removed hashmap.h. It wasn't a good hashmap anyway, so you shouldn't have been using it regardless.
-
+    > Removed hashmap.h.
+      It wasn't a good hashmap anyway, so you shouldn't have been using it regardless.
+    > In math.h removed Geometric Algebra, rotors, etc.
+      These are mostly some kind of obscure maths that most people don't understand how to use.
+      It was also used by us in a single project, so not much of an utility there.
 
 hashmap.h: REMOVED
 

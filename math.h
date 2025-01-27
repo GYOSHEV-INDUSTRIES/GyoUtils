@@ -775,6 +775,35 @@ inline float vec2_angle_between(vec2 a, vec2 b) {
     return abs(vec2_signed_angle_between(a, b));
 }
 
+
+inline float vec3_angle_between(vec3 a, vec3 b) {
+    float dot = vec3_dot(a, b);
+    float det = vec3_length(vec3_cross(a, b));
+    float angle = atan2f(det, dot) * RAD2DEG;
+    return angle;
+    /*
+    TODO(cogno): code from this link:
+    https://it.mathworks.com/matlabcentral/answers/2092961-how-to-calculate-the-angle-between-two-3d-vectors
+
+    // most robust, most accurate, recovers tiny angles very well, slowest
+    atan2(norm(cross(u,v)), dot(u,v)) 
+
+    // robust, does not recover tiny angles, faster
+    max(min(dot(u,v)/(norm(u)*norm(v)),1),-1)
+
+    // not robust (may get domain error), does not recover tiny angles, fasterer
+    acos(dot(u,v)/(norm(u)*norm(v)))
+
+    // not robust (may get domain error), does not recover tiny angles, fasterer
+    acos(dot(u/norm(u),v/norm(v)))
+
+    // not robust (may get domain error), does not recover tiny angles, fastest
+    acos(dot(u,v)/sqrt(dot(u,u)*dot(v,v)))
+
+    we should try them out and see, maybe we can use the second one and the precision loss is not a problem...
+    */
+}
+
 // TODO(cogno): same for vec3 and vec4
 inline vec2 vec2_limit(vec2 in, float max_length) {
     float magn = vec2_length(in);
@@ -826,218 +855,3 @@ inline vec3 vec3_project_on_plane(vec3 to_project, vec3 plane_norm) {
     return on_plane;
 }
 
-
-//
-// 3D Geometric Algebra
-//
-
-// basic operations:
-// we already have vec3 dot vec3
-vec3 vec3_wedge(vec3 a, vec3 b) {
-    vec3 out = {};
-    out.xy = a.x * b.y - a.y * b.x;
-    out.yz = a.y * b.z - a.z * b.y;
-    out.zx = a.z * b.x - a.x * b.z;
-    return out;
-}
-
-inline float vec3_angle_between(vec3 a, vec3 b) {
-    float dot = vec3_dot(a, b);
-    float det = vec3_length(vec3_wedge(a, b));
-    float angle = atan2f(det, dot) * RAD2DEG;
-    return angle;
-    /*
-    TODO(cogno): code from this link:
-    https://it.mathworks.com/matlabcentral/answers/2092961-how-to-calculate-the-angle-between-two-3d-vectors
-
-    // most robust, most accurate, recovers tiny angles very well, slowest
-    atan2(norm(cross(u,v)), dot(u,v)) 
-
-    // robust, does not recover tiny angles, faster
-    max(min(dot(u,v)/(norm(u)*norm(v)),1),-1)
-
-    // not robust (may get domain error), does not recover tiny angles, fasterer
-    acos(dot(u,v)/(norm(u)*norm(v)))
-
-    // not robust (may get domain error), does not recover tiny angles, fasterer
-    acos(dot(u/norm(u),v/norm(v)))
-
-    // not robust (may get domain error), does not recover tiny angles, fastest
-    acos(dot(u,v)/sqrt(dot(u,u)*dot(v,v)))
-
-    we should try them out and see, maybe we can use the second one and the precision loss is not a problem...
-    */
-}
-
-// now we use GA for real work, to substitute Quaternions!
-struct rotor {
-    float s = 1;
-    vec3 bivec;
-};
-
-void printsl_custom(rotor r) {
-    printsl("(%, xy=%, yz=%, zx=%)", r.s, r.bivec.xy, r.bivec.yz, r.bivec.zx);
-}
-
-// produces a rotation which rotates from one vector to another
-rotor rotor_from_to(vec3 from, vec3 to, vec3 backup) {
-    vec3 from_dir = vec3_normalize(from, vec3{0, 0, 0});
-    vec3 to_dir   = vec3_normalize(to, vec3{0, 0, 0});
-    
-    // if we multiply 2 vectors we get a rotor for a rotation in the plane of the 
-    // 2 vectors but with TWICE the angle. So we calculate the middle vector
-    // between the 2 input ones and use that.
-    // if the 2 vectors point opposite to each other the half will be 0, because we can
-    // rotate in ANY direction perpendicular to the input 2
-    vec3 half = vec3_normalize(from_dir + to_dir, backup);
-    ASSERT(half.x != 0 || half.y != 0 || half.z != 0, "attempted to create a rotation between vectors opposite of each other. There are INFINITELY many rotations, so we don't know which one to choose. You should handle this case separately. Rotation was from % to %", from_dir, to_dir);
-    
-    // the product of 2 vectors ab is the dot + the wedge
-    // ab = a . b + a ^ b;
-    rotor out = {};
-    out.s = vec3_dot(from_dir, half);
-    out.bivec = vec3_wedge(from_dir, half);
-    return out;
-}
-
-rotor rotor_from_axis_angle(vec3 rot_axis, float angle) {
-    rot_axis = vec3_normalize(rot_axis, vec3{0, 0, 0});
-    float c = cos_turns(angle / 2);
-    float s = sin_turns(angle / 2);
-    
-    // turn the axis into a bivector by flipping components,
-    // a rotation around the x axis is a rotation on the yz plane.
-    // then we embed the angle into each component following this post: 
-    // https://jacquesheunis.com/post/rotors/#axis-angle-representation-for-rotors
-
-    rotor r = {};
-    r.s        = c;
-    r.bivec.xy = rot_axis.xy * s;
-    r.bivec.yz = rot_axis.yz * s;
-    r.bivec.zx = rot_axis.zx * s;
-    return r;
-}
-
-// return a rotation of in.xy turns on the xy plane, in.yz turns in the yz plane and in.zx turns in the zx plane
-rotor rotor_from_turns(vec3 in) {
-    // converting from turns to rotors is really easy,
-    // you just split the full rotation into 3 separate ones one after another!
-    // first rotate on the xy plane, then the yz plane then the zx plane.
-    // we could just use rotor_from_axis_angle and rotor_combine to do so, but 
-    // that would be more expensive than what we need
-    // since we only rotate on 1 plane at a time we can avoid most calculations
-    
-    vec3 angles = in / 2; // rotors move by half the angle
-    float cos_xy = cos_turns(angles.xy);
-    float cos_yz = cos_turns(angles.yz);
-    float cos_zx = cos_turns(angles.zx);
-    float sin_xy = sin_turns(angles.xy);
-    float sin_yz = sin_turns(angles.yz);
-    float sin_zx = sin_turns(angles.zx);
-    
-    // again, paper calculations
-    rotor out = {};
-    out.s        = cos_xy * cos_yz * cos_zx - sin_xy * sin_yz * sin_zx;
-    out.bivec.xy = sin_xy * cos_yz * cos_zx + cos_xy * sin_yz * sin_zx;
-    out.bivec.yz = cos_xy * sin_yz * cos_zx - sin_xy * cos_yz * sin_zx;
-    out.bivec.zx = cos_xy * cos_yz * sin_zx + sin_xy * sin_yz * cos_zx;
-    return out;
-}
-
-// combines 2 rotation into 1 total one
-rotor rotor_combine(rotor a, rotor b) {
-    // API(cogno): maybe we can make a product overload so you can rotor * rotor ?
-    // API(cogno): we might also do this for rotor * scalar, rotor * vec3 and rotor * trivec
-    float a0 = a.s;
-    float a1 = a.bivec.xy;
-    float a2 = a.bivec.yz;
-    float a3 = a.bivec.zx;
-    float b0 = b.s;
-    float b1 = b.bivec.xy;
-    float b2 = b.bivec.yz;
-    float b3 = b.bivec.zx;
-    
-    // just tedious paper calculations, nothing exciting
-    rotor out = {};
-    out.s        = a0*b0 - a1*b1 - a2*b2 - a3*b3;
-    out.bivec.xy = a0*b1 + a1*b0 - a2*b3 + a3*b2;
-    out.bivec.yz = a0*b2 + a2*b0 + a1*b3 - a3*b1;
-    out.bivec.zx = a0*b3 + a3*b0 - a1*b2 + a2*b1;
-    return out;
-}
-
-// creates a rotation in the opposite direction
-rotor rotor_reverse(rotor in) {
-    rotor out = in;
-    out.bivec *= -1; // we just invert the bivector component, scalar doesn't change
-    return out;
-}
-
-// rotates a vector based on a rotor
-vec3 vec3_rotate(vec3 v, rotor r) {
-    // again, tedious paper calculations, not much to do
-    // it's the sandwich product R^-1 v R, where R^-1 is reverse(R) which just
-    // flips the sign of the bivec, so I did it here in one go to make it faster
-    // NOTE(cogno): Almost every resource says R v R^-1, but that's wrong,
-    // if you do it like that you will have *clockwise* rotations, not counter-clockwise!
-    // the proper rotation is seen in https://marctenbosch.com/quaternions/
-    
-    float r0 = r.s;
-    float r1 = r.bivec.xy;
-    float r2 = r.bivec.yz;
-    float r3 = r.bivec.zx;
-    
-    // S = R^-1 * v
-    float s1 =   v.x*r0 - v.y*r1 + v.z*r3;
-    float s2 =   v.y*r0 + v.x*r1 - v.z*r2;
-    float s3 =   v.z*r0 - v.x*r3 + v.y*r2;
-    float s4 = - v.z*r1 - v.x*r2 - v.y*r3;
-    
-    // as a check, when finishing the calculations, the trivector component should disappear (aka be zero)
-    #if !NO_ASSERT
-    float trivec = r0*s4 + r1*s3 + r2*s1 + r3*s2;
-    ASSERT(abs(trivec) <= 0.01f, "WRONG ROTOR CALCULATIONS. We expected the trivector component to disappear but it remained (was %).", trivec);
-    #endif
-    
-    // out = S * R
-    vec3 out = {};
-    out.x = r0*s1 - r1*s2 - r2*s4 + r3*s3;
-    out.y = r0*s2 + r1*s1 - r2*s3 - r3*s4;
-    out.z = r0*s3 - r1*s4 + r2*s2 - r3*s1;
-    return out;
-}
-
-mat4 make_matrix_from_rotor(rotor r){
-    vec3 new_x = vec3_rotate(vec3{1, 0, 0}, r);
-    vec3 new_y = vec3_rotate(vec3{0, 1, 0}, r);
-    vec3 new_z = vec3_rotate(vec3{0, 0, 1}, r);
-
-    mat4 out = {};
-    out.m11  = new_x.x;
-    out.m21  = new_x.y;
-    out.m31  = new_x.z;
-    out.m12  = new_y.x;
-    out.m22  = new_y.y;
-    out.m32  = new_y.z;
-    out.m13  = new_z.x;
-    out.m23  = new_z.y;
-    out.m33  = new_z.z;
-    out.m44 = 1;
-    return out;
-}
-
-rotor rotor_normalize(rotor to_norm) {
-    auto reverse = rotor_reverse(to_norm);
-    auto result = rotor_combine(to_norm, reverse);
-    ASSERT(result.bivec.zx == 0 && result.bivec.xy == 0 && result.bivec.yz == 0, "wrong math!, expected float only but got %", result);
-    rotor out = {};
-    out.s = to_norm.s / result.s;
-    out.bivec = to_norm.bivec / result.s;
-    return out;
-}
-
-// thanks to GA we can invert vectors!
-vec3 vec3_inverse(vec3 v) {
-    if(v == vec3{0, 0, 0}) return v;
-    return v / vec3_length_squared(v);
-}
