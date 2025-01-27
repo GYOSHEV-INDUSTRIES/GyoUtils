@@ -21,7 +21,6 @@ Configuration macros
 
 #include "array.h"
 #include "str.h"
-#include "hashmap.h"
 
 #include "simple_profiling.h"
 #include "profiling_v1.h"
