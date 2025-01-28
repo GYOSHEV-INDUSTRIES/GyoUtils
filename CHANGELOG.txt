@@ -15,6 +15,20 @@ BREAKING CHANGES:
     > In math.h removed Geometric Algebra, rotors, etc.
       These are mostly some kind of obscure maths that most people don't understand how to use.
       It was also used by us in a single project, so not much of an utility there.
+    > In first.h removed Range macro (used like for(Range(0, array.size))).
+      This was basically never used anyway. It's also so simple that if you really need it you can
+      just write it yourself.
+    > In math.h removed colors (rgb and hsv structs).
+      Again these were not a "utility" per se, they were just "code that was needed in *some* projects".
+      Off they go. Maybe the only utility is the hsv lerp, that might come back if useful enough,
+      but not for now. The only thing which is gonna stay is the vec4 union alias containing rgba as values.
+
+first.h:
+    > Removed Range(...) macro.
+
+math.h:
+    > Removed geometric algebra elements and rotors stuff.
+    > Removed rgb/hsv colors stuff.
 
 hashmap.h: REMOVED
 

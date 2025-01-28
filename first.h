@@ -5,13 +5,13 @@
 In this file:
 - better type names for common types (s8, u8, s16, u16, s32, u32, s64, u64, f32, f64)
 - max and min values for unsigned and signed types
-- INFINITY and NAN values for floats
 - DEPRECATED macro with custom message support
 - MSVC_BUG macro to automatically fix a msvc compiler bug related to macros
 - custom print replacement to printf, can be used to also print more complex custom types
 - printsl, like print but without \n at the end
 - ASSERT macro which can be deactivated, prints a custom (optional) formatted message and returns the expression value
 - ASSERT_BOUNDS to make out of bounds checks easier
+- ASSERT_ALWAYS and ASSERT_BOUNDS_ALWAYS, a version of ASSERT and ASSERT_BOUNDS which cannot be disabled
 - EXPECT macro, a quicker way to write single ASSERT checks with error message
 - defer macro, like golang's defer
 - For macro to provide a more convenient way to iterate over Array and similar structs
@@ -463,8 +463,3 @@ for(int it_index = (arr).size - 1, _=1;_ && (arr).size > 0;_=0) \
     for(auto* it = &((arr).ptr[it_index]); it_index >= 0; it = &((arr).ptr[--it_index]))
 
 #define For_rev_ptr(arr) For_ptr_rev((arr))
-
-// A simple macro to write for(Range(10, 30)) instead of for(int it = 10; it < 30; it++), just for brevity
-// TODO(cogno): what if you put an array inside another? "it" name conflict?
-#define FOR_RANGE(min, max) s32 it = min; it < max; it++
-#define Range(min, max) FOR_RANGE(min, max)

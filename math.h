@@ -7,8 +7,6 @@ Many math functions, constructs and concepts! saying all of them would be too mu
 - Typical use case functions and macros, like min, max, remap, npow, lerp, random_float, random_bool, etc.
 - sin_turns and cos_turns that use turns instead of radians/degrees (1 turn = 360 degrees), making them faster.
 - The very common vec2, vec3, vec4 and mat4. These last 2 use sse SIMD to speed them up substantially.
-- rotor, a replacement to Quaternion from a branch of math called Geometric Algebra.
-  Can be used in the same way as Quaternions, but often provide faster code, and they're easier to understand!
 */
 
 #ifndef DISABLE_INCLUDES
@@ -137,23 +135,24 @@ struct vec4 {
     };
 };
 
-// NOTE(cogno): In the past I had constructors to "simplify" creations of vec2/vec3/vec4 (like auto casting to float or auto making vec3 -> vec2 without vec3.z). I now find them basically useless. Most of the times you can just use vec2{...}, and the code is clearer. For example automatic conversion to float was used only in 3 occasions out of 290 (3/189 for vec2, 0/100 for vec3, 0/1 for vec4). Maybe we'll add back vec3->vec2 if usage increases, but most of the times people just forgets you can use vec2(...) so most stuff never gets used anyway.
-
-struct rgb {
-    union {
-        struct { u8 r, g, b, a; };
-        u8 ptr[4];
-    };
-};
-
-struct hsv {
-    union{
-        struct { float h, s, v, a; }; // h is [0, 1] in turns, s,v and a are [0, 1].
-        float ptr[4];
-    };
-};
-
-// NOTE(cogno): most of the times you want colors to be normalized. Without creating useless structs and stuff, a normalized color is just 4 floats, aka a vec4!
+// NOTE(cogno): In the past I had constructors to "simplify" creations of vec2/vec3/vec4,
+// like auto casting to float or auto making vec3 -> vec2 without vec3.z. 
+// I now find them basically useless.
+// Most of the times you can just use vec2{...}, and the code is clearer.
+// For example automatic conversion to float was used only in 3 occasions out of 290,
+// 3/189 for vec2, 0/100 for vec3, 0/1 for vec4.
+// Maybe we'll add back vec3->vec2 if usage increases, but most of the times
+// people just forgets you can use vec2(...) so most stuff never gets used anyway.
+// UPDATE:
+// I've had a project where a ton of times the compile would complain about
+// int to float casts when constructing vec2. I've also tried to
+// re-add it to avoid the problem, but it turns out C++ is stupid,
+// so some cool and useful things you can do become impossible when you
+// use custom constructors (like vec3{.xy = 20}).
+// Also you can just disable the compiler warning about int->float casts to
+// avoid the problem.
+// In other words: the auto float casts are most likely not gonna come back.
+//                - cogno 2025/01/28
 
 struct mat4{
     union{
@@ -180,8 +179,6 @@ struct mat4{
 inline void printsl_custom(vec2 v) {_buffer_append("(%.5f, %.5f)", v.x, v.y);}
 inline void printsl_custom(vec3 v) {_buffer_append("(%.5f, %.5f, %.5f)", v.x, v.y, v.z);}
 inline void printsl_custom(vec4 v) {_buffer_append("(%.5f, %.5f, %.5f, %.5f)", v.x, v.y, v.z, v.w);}
-inline void printsl_custom(rgb  c) {_buffer_append("rgb(%d, %d, %d, %d)", c.r, c.g, c.b, c.a);}
-inline void printsl_custom(hsv  c) {_buffer_append("hsv(%.5f, %.5f, %.5f, %.5f)", c.h, c.s, c.v, c.a);}
 inline void printsl_custom(mat4 m) {_buffer_append("|%.5f %.5f %.5f %.5f|\n|%.5f %.5f %.5f %.5f|\n|%.5f %.5f %.5f %.5f|\n|%.5f %.5f %.5f %.5f|\n", m.m11, m.m12, m.m13, m.m14, m.m21, m.m22, m.m23, m.m24, m.m31, m.m32, m.m33, m.m34, m.m41, m.m42, m.m43, m.m44);}
 
 
@@ -232,164 +229,6 @@ inline bool operator !=(vec2 a, vec2 b) {return !((a.x == b.x) && (a.y == b.y));
 inline bool operator !=(vec3 a, vec3 b) {return !((a.x == b.x) && (a.y == b.y) && (a.z == b.z));}
 inline bool operator !=(vec4 a, vec4 b) {return _mm_movemask_ps(_mm_cmpeq_ps(a.v, b.v)) != 0b1111;}
 
-
-
-inline vec4 rgb_normalize(rgb c) { return vec4{(float)c.r, (float)c.g, (float)c.b, (float)c.a} / 255; } // normalizes color from [0, 255] to [0, 1]
-inline rgb rgb_denormalize(vec4 c) { c *= 255; return rgb{(u8)c.r, (u8)c.g, (u8)c.b, (u8)c.a}; } // de-normalizes color from [0, 1] to [0, 255]
-
-inline rgb rgb_lerp(rgb a, rgb b, float t) {
-    return {
-        (u8)lerp(a.r, b.r, t),
-        (u8)lerp(a.g, b.g, t),
-        (u8)lerp(a.b, b.b, t),
-        (u8)lerp(a.a, b.a, t)
-    };
-}
-
-// converts a non normalized color to hsv notation
-inline hsv hsv_from_rgb(rgb in) {
-    // algorithm from https://math.stackexchange.com/questions/556341/rgb-to-hsv-color-conversion-algorithm
-    auto conv = rgb_normalize(in);
-    auto cmax = max(max(conv.r, conv.g), conv.b);
-    auto cmin = min(min(conv.r, conv.g), conv.b);
-    auto delta = cmax - cmin;
-    float sat = 0.0f;
-    float value = cmax;
-    if (delta == 0) return {0, 0, cmax, conv.a};
-    if (cmax != 0) sat = delta / cmax;
-    float hue = 0;
-    if (cmax == conv.r) hue = fmodf(    (conv.g - conv.b) / delta, 6) / 6;
-    if (cmax == conv.g) hue = fmodf(2 + (conv.b - conv.r) / delta, 6) / 6;
-    if (cmax == conv.b) hue = fmodf(4 + (conv.r - conv.g) / delta, 6) / 6;
-    if (hue < 0) hue += 1;
-    return {hue, sat, value, conv.a};
-}
-
-// converts an hsv valid color into non normalized rgb (so from 0 to 255 each)
-inline rgb rgb_from_hsv(hsv in) {
-    // algorithm from https://scratch.mit.edu/discuss/topic/694772/
-    auto c = in.v * in.s;
-    auto m = in.v - c;
-    auto x = c * (1 - abs(fmodf(in.h * 6, 2) - 1));
-    float r = 0;
-    float g = 0;
-    float b = 0;
-    if      (in.h < 1.0f / 6) { r=c; g=x; b=0; }
-    else if (in.h < 2.0f / 6) { r=x; g=c; b=0; }
-    else if (in.h < 3.0f / 6) { r=0; g=c; b=x; }
-    else if (in.h < 4.0f / 6) { r=0; g=x; b=c; }
-    else if (in.h < 5.0f / 6) { r=x; g=0; b=c; }
-    else if (in.h < 6.0f / 6) { r=c; g=0; b=x; }
-    auto out = rgb_denormalize({r+m, g+m, b+m, in.a});
-    
-    return out;
-}
-
-// interpolates between 2 colors using hsv interpolation, returns a non-normalized rgb color
-inline hsv hsv_lerp(hsv c1, hsv c2, float t) {
-    auto s = lerp(c1.s, c2.s, t);
-    auto v = lerp(c1.v, c2.v, t);
-    auto a = lerp(c1.a, c2.a, t);
-
-    auto maxh = max(c1.h, c2.h);
-    auto minh = min(c1.h, c2.h);
-    float h = 0;
-    if (maxh - minh < 0.5) h = lerp(c1.h, c2.h, t); // normal angle lerp
-    else {
-        // circular lerp (instead of going 0.9 to 0.1 we passing by 0.5 we pass by 0.0)
-        if (c1.h > c2.h) h = fmodf(lerp(c1.h, c2.h + 1, t), 1);
-        else             h = fmodf(lerp(c1.h + 1, c2.h, t), 1);
-    }
-    hsv out = {h, s, v, a};
-    return out;
-}
-
-inline vec4 hsv_normalize(hsv in) { return rgb_normalize(rgb_from_hsv(in)); }
-inline hsv hsv_denormalize(vec4 in) { return hsv_from_rgb(rgb_denormalize(in)); }
-
-// colors from raylib
-#ifndef GYO_NO_COLORS
-#define LIGHTGRAY  rgb_normalize({ 200, 200, 200, 255 })   // Light Gray
-#define GRAY       rgb_normalize({ 130, 130, 130, 255 })   // Gray
-#define DARKGRAY   rgb_normalize({ 80, 80, 80, 255 })      // Dark Gray
-#define YELLOW     rgb_normalize({ 253, 249, 0, 255 })     // Yellow
-#define GOLD       rgb_normalize({ 255, 203, 0, 255 })     // Gold
-#define ORANGE     rgb_normalize({ 255, 161, 0, 255 })     // Orange
-#define PINK       rgb_normalize({ 255, 109, 194, 255 })   // Pink
-#define RED        rgb_normalize({ 230, 41, 55, 255 })     // Red
-#define MAROON     rgb_normalize({ 190, 33, 55, 255 })     // Maroon
-#define GREEN      rgb_normalize({ 0, 228, 48, 255 })      // Green
-#define LIME       rgb_normalize({ 0, 158, 47, 255 })      // Lime
-#define DARKGREEN  rgb_normalize({ 0, 117, 44, 255 })      // Dark Green
-#define SKYBLUE    rgb_normalize({ 102, 191, 255, 255 })   // Sky Blue
-#define BLUE       rgb_normalize({ 0, 121, 241, 255 })     // Blue
-#define DARKBLUE   rgb_normalize({ 0, 82, 172, 255 })      // Dark Blue
-#define PURPLE     rgb_normalize({ 200, 122, 255, 255 })   // Purple
-#define VIOLET     rgb_normalize({ 135, 60, 190, 255 })    // Violet
-#define DARKPURPLE rgb_normalize({ 112, 31, 126, 255 })    // Dark Purple
-#define BEIGE      rgb_normalize({ 211, 176, 131, 255 })   // Beige
-#define BROWN      rgb_normalize({ 127, 106, 79, 255 })    // Brown
-#define DARKBROWN  rgb_normalize({ 76, 63, 47, 255 })      // Dark Brown
-#define WHITE      rgb_normalize({ 255, 255, 255, 255 })   // White
-#define BLACK      rgb_normalize({ 0, 0, 0, 255 })         // Black
-#define BLANK      rgb_normalize({ 0, 0, 0, 0 })           // Blank (Transparent)
-#define MAGENTA    rgb_normalize({ 255, 0, 255, 255 })     // Magenta
-#define RAYWHITE   rgb_normalize({ 245, 245, 245, 255 })   // My own White (raylib logo)
-
-#define RGB_LIGHTGRAY  rgb{ 200, 200, 200, 255 }   // Light Gray
-#define RGB_GRAY       rgb{ 130, 130, 130, 255 }   // Gray
-#define RGB_DARKGRAY   rgb{ 80, 80, 80, 255 }      // Dark Gray
-#define RGB_YELLOW     rgb{ 253, 249, 0, 255 }     // Yellow
-#define RGB_GOLD       rgb{ 255, 203, 0, 255 }     // Gold
-#define RGB_ORANGE     rgb{ 255, 161, 0, 255 }     // Orange
-#define RGB_PINK       rgb{ 255, 109, 194, 255 }   // Pink
-#define RGB_RED        rgb{ 230, 41, 55, 255 }     // Red
-#define RGB_MAROON     rgb{ 190, 33, 55, 255 }     // Maroon
-#define RGB_GREEN      rgb{ 0, 228, 48, 255 }      // Green
-#define RGB_LIME       rgb{ 0, 158, 47, 255 }      // Lime
-#define RGB_DARKGREEN  rgb{ 0, 117, 44, 255 }      // Dark Green
-#define RGB_SKYBLUE    rgb{ 102, 191, 255, 255 }   // Sky Blue
-#define RGB_BLUE       rgb{ 0, 121, 241, 255 }     // Blue
-#define RGB_DARKBLUE   rgb{ 0, 82, 172, 255 }      // Dark Blue
-#define RGB_PURPLE     rgb{ 200, 122, 255, 255 }   // Purple
-#define RGB_VIOLET     rgb{ 135, 60, 190, 255 }    // Violet
-#define RGB_DARKPURPLE rgb{ 112, 31, 126, 255 }    // Dark Purple
-#define RGB_BEIGE      rgb{ 211, 176, 131, 255 }   // Beige
-#define RGB_BROWN      rgb{ 127, 106, 79, 255 }    // Brown
-#define RGB_DARKBROWN  rgb{ 76, 63, 47, 255 }      // Dark Brown
-#define RGB_WHITE      rgb{ 255, 255, 255, 255 }   // White
-#define RGB_BLACK      rgb{ 0, 0, 0, 255 }         // Black
-#define RGB_BLANK      rgb{ 0, 0, 0, 0 }           // Blank (Transparent)
-#define RGB_MAGENTA    rgb{ 255, 0, 255, 255 }     // Magenta
-#define RGB_RAYWHITE   rgb{ 245, 245, 245, 255 }   // My own White (raylib logo)
-
-#define HSV_LIGHTGRAY  hsv_from_rgb({ 200, 200, 200, 255 })   // Light Gray
-#define HSV_GRAY       hsv_from_rgb({ 130, 130, 130, 255 })   // Gray
-#define HSV_DARKGRAY   hsv_from_rgb({ 80, 80, 80, 255 })      // Dark Gray
-#define HSV_YELLOW     hsv_from_rgb({ 253, 249, 0, 255 })     // Yellow
-#define HSV_GOLD       hsv_from_rgb({ 255, 203, 0, 255 })     // Gold
-#define HSV_ORANGE     hsv_from_rgb({ 255, 161, 0, 255 })     // Orange
-#define HSV_PINK       hsv_from_rgb({ 255, 109, 194, 255 })   // Pink
-#define HSV_RED        hsv_from_rgb({ 230, 41, 55, 255 })     // Red
-#define HSV_MAROON     hsv_from_rgb({ 190, 33, 55, 255 })     // Maroon
-#define HSV_GREEN      hsv_from_rgb({ 0, 228, 48, 255 })      // Green
-#define HSV_LIME       hsv_from_rgb({ 0, 158, 47, 255 })      // Lime
-#define HSV_DARKGREEN  hsv_from_rgb({ 0, 117, 44, 255 })      // Dark Green
-#define HSV_SKYBLUE    hsv_from_rgb({ 102, 191, 255, 255 })   // Sky Blue
-#define HSV_BLUE       hsv_from_rgb({ 0, 121, 241, 255 })     // Blue
-#define HSV_DARKBLUE   hsv_from_rgb({ 0, 82, 172, 255 })      // Dark Blue
-#define HSV_PURPLE     hsv_from_rgb({ 200, 122, 255, 255 })   // Purple
-#define HSV_VIOLET     hsv_from_rgb({ 135, 60, 190, 255 })    // Violet
-#define HSV_DARKPURPLE hsv_from_rgb({ 112, 31, 126, 255 })    // Dark Purple
-#define HSV_BEIGE      hsv_from_rgb({ 211, 176, 131, 255 })   // Beige
-#define HSV_BROWN      hsv_from_rgb({ 127, 106, 79, 255 })    // Brown
-#define HSV_DARKBROWN  hsv_from_rgb({ 76, 63, 47, 255 })      // Dark Brown
-#define HSV_WHITE      hsv_from_rgb({ 255, 255, 255, 255 })   // White
-#define HSV_BLACK      hsv_from_rgb({ 0, 0, 0, 255 })         // Black
-#define HSV_BLANK      hsv_from_rgb({ 0, 0, 0, 0 })           // Blank (Transparent)
-#define HSV_MAGENTA    hsv_from_rgb({ 255, 0, 255, 255 })     // Magenta
-#define HSV_RAYWHITE   hsv_from_rgb({ 245, 245, 245, 255 })   // My own White (raylib logo)
-#endif
 
 
 inline vec2 vec2_round(vec2 v) {return {round(v.x), round(v.y)};}
