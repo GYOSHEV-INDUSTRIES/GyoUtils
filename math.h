@@ -442,11 +442,11 @@ inline vec4 operator* (vec4 v, mat4 m) {
     res.v = _mm_or_ps(_mm_or_ps(_mm_dp_ps(mt.r1, v.v, 0b11110001), _mm_dp_ps(mt.r2, v.v, 0b11110010)), _mm_or_ps(_mm_dp_ps(mt.r3, v.v, 0b11110100), _mm_dp_ps(mt.r4, v.v, 0b11111000)));
     return res;
 }
-inline mat4 operator +=(mat4& m1, const mat4& m2) { m1 = m1 + m2; return m1;}
-inline mat4 operator -=(mat4& m1, const mat4& m2) { m1 = m1 - m2; return m1;}
-inline mat4 operator *=(mat4& m1, const float& b) { m1 = m1 * b; return m1; }
-inline mat4 operator *=(mat4& m1, const mat4& m2) { m1 = m1 * m2; return m2; }
-inline mat4 operator /=(mat4& m1, const float& b) { m1 = m1 / b; return m1; }
+inline mat4 operator +=(mat4& m1, const mat4& m2) { m1 = m1 + m2; return m1; }
+inline mat4 operator -=(mat4& m1, const mat4& m2) { m1 = m1 - m2; return m1; }
+inline mat4 operator *=(mat4& m1, const float& b) { m1 = m1 * b;  return m1; }
+inline mat4 operator *=(mat4& m1, const mat4& m2) { m1 = m1 * m2; return m1; }
+inline mat4 operator /=(mat4& m1, const float& b) { m1 = m1 / b;  return m1; }
 
 inline mat4 mat4_perspective_camera(float fov, float aspect_ratio, float z_near, float z_far) {
     mat4 res = {};

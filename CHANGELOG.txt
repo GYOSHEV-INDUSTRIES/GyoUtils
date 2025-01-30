@@ -29,6 +29,7 @@ first.h:
 math.h:
     > Removed geometric algebra elements and rotors stuff.
     > Removed rgb/hsv colors stuff.
+    > Fixed mat4 *= mat4 operator overload leading to wrong calculations.
 
 hashmap.h: REMOVED
 
