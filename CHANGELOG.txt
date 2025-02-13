@@ -6,18 +6,38 @@ In a nutshell:
       I feel like the GyoUtils project was starting to become a full fletched std-replacement library.
       This is not what the project was set to aim towards. We do not wish to replace the entire std library.
       This was only supposed to be a collection of utilities that could help during your normal development.
+      But since the project "escalated" so much, we became what we wanted to avoid,
+      a new layer of abstraction inbetween your code and your actual goal: making good software easily.
       Because of this we have decided to tone back on what we offer, leaving only the essential.
+      Most of the library will be destroyed, and some additions we wanted to avoid will become
+      part of the project.
+      Maybe we will actually make an std-like library in the future, that can still be useful,
+      but GyoUtils is not that library.
       Be sure to check the BREAKING CHANGES section to know more.
+
+TODO:
+    > remove the entirety of these files:
+        - allocators.h with arena.h / bump.h / circular.h
+        - math.h
+        - array.h
+        - str.h
+        - win64_basic and win64_files
+        these are NOT utilities,
+        they are just code you need to make the software, basically a new STD.
+        
+        The only things that *maybe* can stay here are:
+        - sin_turns/cos_turns from math.h
+        - unicode from str.h
 
 BREAKING CHANGES:
     > Removed hashmap.h.
       It wasn't a good hashmap anyway, so you shouldn't have been using it regardless.
-    > In math.h removed Geometric Algebra, rotors, etc.
-      These are mostly some kind of obscure maths that most people don't understand how to use.
-      It was also used by us in a single project, so not much of an utility there.
     > In first.h removed Range macro (used like for(Range(0, array.size))).
       This was basically never used anyway. It's also so simple that if you really need it you can
       just write it yourself.
+    > In math.h removed Geometric Algebra, rotors, etc.
+      These are mostly some kind of obscure maths that most people don't understand how to use.
+      It was also used by us in a single project, so not much of an utility there.
     > In math.h removed colors (rgb and hsv structs).
       Again these were not a "utility" per se, they were just "code that was needed in *some* projects".
       Off they go. Maybe the only utility is the hsv lerp, that might come back if useful enough,
