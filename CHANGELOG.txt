@@ -1,5 +1,5 @@
 ---------------------------------
-Version: 0.3.2
+Version: 0.4.0 The Next Generation
 ---------------------------------
 In a nutshell:
     > Restructured how GyoUtils is setupped and what it offers.
@@ -15,18 +15,6 @@ In a nutshell:
       but GyoUtils is not that library.
       Be sure to check the BREAKING CHANGES section to know more.
 
-TODO:
-    > remove the entirety of these files:
-        - allocators.h with arena.h / bump.h / circular.h
-        - array.h
-        - str.h
-        these are NOT utilities,
-        they are just code you need to make the software, basically a new STD.
-        
-        The only things that *maybe* can stay here are:
-        - sin_turns/cos_turns and hsv_lerp from math.h
-        - unicode from str.h
-
 BREAKING CHANGES:
     > Removed hashmap.h.
       It wasn't a good hashmap anyway, so you shouldn't have been using it regardless.
@@ -38,6 +26,12 @@ BREAKING CHANGES:
       Maybe we will bring back the ACTUAL utilities (sin_turns/cos_turns and hsv_lerp).
     > Removed win64_basic.h and win64_files.h
       Again, more non-utilities. Off they go.
+    > Removed str.h
+      Again, more non-utilities. Off they go.
+    > Removed array.h
+      Again, more non-utilities. Off they go.
+    > Removed allocators.h, bump.h, arena.h and circular.h
+      Again, more non-utilities. Off they go.
 
 first.h:
     > Removed Range(...) macro.
@@ -47,7 +41,16 @@ math.h:
     > Removed rgb/hsv colors stuff.
     > Fixed mat4 *= mat4 operator overload leading to wrong calculations.
 
-hashmap.h: REMOVED
+hashmap.h:    REMOVED
+str.h:        REMOVED
+allocators.h: REMOVED
+bump.h:       REMOVED
+arena.h:      REMOVED
+circular.h:   REMOVED
+math.h:       REMOVED
+array.h:      REMOVED
+win64_basic.h REMOVED
+win64_files.h REMOVED
 
 ---------------------------------
 Version: 0.3.1   2025/01/27

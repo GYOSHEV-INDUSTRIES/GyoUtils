@@ -15,12 +15,6 @@ Configuration macros
 
 #include "first.h"
 #include "performance_counter.h" // so it can be used by other modules to check performance elements
-
-#include "allocators.h"
-
-#include "array.h"
-#include "str.h"
-
 #include "simple_profiling.h"
 #include "profiling_v1.h"
 #include "simple_benchmark.h"
