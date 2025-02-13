@@ -18,7 +18,6 @@ In a nutshell:
 TODO:
     > remove the entirety of these files:
         - allocators.h with arena.h / bump.h / circular.h
-        - math.h
         - array.h
         - str.h
         - win64_basic and win64_files
@@ -26,7 +25,7 @@ TODO:
         they are just code you need to make the software, basically a new STD.
         
         The only things that *maybe* can stay here are:
-        - sin_turns/cos_turns from math.h
+        - sin_turns/cos_turns and hsv_lerp from math.h
         - unicode from str.h
 
 BREAKING CHANGES:
@@ -35,13 +34,9 @@ BREAKING CHANGES:
     > In first.h removed Range macro (used like for(Range(0, array.size))).
       This was basically never used anyway. It's also so simple that if you really need it you can
       just write it yourself.
-    > In math.h removed Geometric Algebra, rotors, etc.
-      These are mostly some kind of obscure maths that most people don't understand how to use.
-      It was also used by us in a single project, so not much of an utility there.
-    > In math.h removed colors (rgb and hsv structs).
-      Again these were not a "utility" per se, they were just "code that was needed in *some* projects".
-      Off they go. Maybe the only utility is the hsv lerp, that might come back if useful enough,
-      but not for now. The only thing which is gonna stay is the vec4 union alias containing rgba as values.
+    > Removed math.h
+      Again, this was basically a new std, not some utilities.
+      Maybe we will bring back the ACTUAL utilities (sin_turns/cos_turns and hsv_lerp).
 
 first.h:
     > Removed Range(...) macro.
