@@ -28,12 +28,12 @@ but you'll still be able to get quick info using this module.
 struct single_time_block {
     single_time_block(const char* func_name) {
         this->_label = func_name;
-        this->_start = read_cpu_timer();
+        this->_start = perf_cpu_timer();
     }
     
     ~single_time_block() {
-        u64 total = read_cpu_timer() - this->_start;
-        u64 cpu_freq = estimate_cpu_frequency();
+        u64 total = perf_cpu_timer() - this->_start;
+        u64 cpu_freq = perf_estimate_cpu_freq();
         f64 nanoseconds = total * 1000000000.0f / cpu_freq;
         if(nanoseconds < 1000) { print("function '%' took % cycles (%ns)", this->_label, total, nanoseconds); return; }
         nanoseconds /= 1000;

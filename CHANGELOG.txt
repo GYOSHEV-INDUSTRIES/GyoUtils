@@ -32,6 +32,12 @@ BREAKING CHANGES:
       Again, more non-utilities. Off they go.
     > Removed allocators.h, bump.h, arena.h and circular.h
       Again, more non-utilities. Off they go.
+    
+    > in performance_counter.h renamed some functions:
+        - get_os_trimer_freq -> perf_os_timer_freq
+        - read_os_timer -> perf_os_timer
+        - read_cpu_timer -> perf_cpu_timer
+        - estimate_cpu_frequency -> perf_estimate_cpu_freq
 
 first.h:
     > Removed Range(...) macro.
@@ -51,6 +57,13 @@ math.h:       REMOVED
 array.h:      REMOVED
 win64_basic.h REMOVED
 win64_files.h REMOVED
+
+performance_counter.h:
+    > renamed the following functions to improve consistency across the library:
+        - get_os_trimer_freq -> perf_os_timer_freq
+        - read_os_timer -> perf_os_timer
+        - read_cpu_timer -> perf_cpu_timer
+        - estimate_cpu_frequency -> perf_estimate_cpu_freq
 
 ---------------------------------
 Version: 0.3.1   2025/01/27

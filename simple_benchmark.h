@@ -43,7 +43,7 @@ void print_benchmark_time(u64 cycles, u64 cpu_frequency) {
 }
 
 void print_benchmark_time(u64 cycles) {
-    u64 cpu_frequency = estimate_cpu_frequency();
+    u64 cpu_frequency = perf_estimate_cpu_freq();
     print_benchmark_time(cycles, cpu_frequency);
 }
 
@@ -57,9 +57,9 @@ Usage: BENCHMARK_WITH_COUNT(10000, func_to_run, input1, input2);
 do { \
     u64 min_cycles = MAX_U64; \
     for(int i = 0; i < count; i++) { \
-        u64 start = read_cpu_timer(); \
+        u64 start = perf_cpu_timer(); \
         volatile auto temp = func_name(__VA_ARGS__); \
-        u64 current_cycles = read_cpu_timer() - start; \
+        u64 current_cycles = perf_cpu_timer() - start; \
         if(current_cycles < min_cycles) min_cycles = current_cycles; \
     } \
     printf("function '%s' x%-10d ", STRING_JOIN( STRING_JOIN( STRING_JOIN(#func_name, "("), #__VA_ARGS__  ) , ")" ), count); \
@@ -74,9 +74,9 @@ do { \
 do { \
     u64 min_cycles = MAX_U64; \
     for(int i = 0; i < count; i++) { \
-        u64 start = read_cpu_timer(); \
+        u64 start = perf_cpu_timer(); \
         func_name(__VA_ARGS__); \
-        u64 current_cycles = read_cpu_timer() - start; \
+        u64 current_cycles = perf_cpu_timer() - start; \
         if(current_cycles < min_cycles) min_cycles = current_cycles; \
     } \
     printf("function '%s' x%-10d ", STRING_JOIN( STRING_JOIN( STRING_JOIN(#func_name, "("), #__VA_ARGS__  ) , ")" ), count); \
@@ -109,9 +109,9 @@ do { \
     u64 tests_mins[TESTS_INPUTS_COUNT] = {}; \
     for(int test_index = 0; test_index < TESTS_INPUTS_COUNT; test_index++) { \
         for(int rep = 0; rep < count; rep++) { \
-            u64 start = read_cpu_timer(); \
+            u64 start = perf_cpu_timer(); \
             func_name(tests_inputs[test_index]); \
-            u64 current_cycles = read_cpu_timer() - start; \
+            u64 current_cycles = perf_cpu_timer() - start; \
             if(rep == 0 || current_cycles < tests_mins[test_index]) tests_mins[test_index] = current_cycles; \
         } \
         print("completed testing with input %", tests_inputs_names[test_index]); \
@@ -132,9 +132,9 @@ do { \
     u64 tests_mins[TESTS_INPUTS_COUNT] = {}; \
     for(int test_index = 0; test_index < TESTS_INPUTS_COUNT; test_index++) { \
         for(int rep = 0; rep < count; rep++) { \
-            u64 start = read_cpu_timer(); \
+            u64 start = perf_cpu_timer(); \
             volatile auto temp = func_name(tests_inputs[test_index]); \
-            u64 current_cycles = read_cpu_timer() - start; \
+            u64 current_cycles = perf_cpu_timer() - start; \
             if(rep == 0 || current_cycles < tests_mins[test_index]) tests_mins[test_index] = current_cycles; \
         } \
         print("completed testing with input %", tests_inputs_names[test_index]); \
@@ -154,21 +154,21 @@ Usage: BENCHMARK_FUNC(func_to_test, input_to_func);
 */
 #define BENCHMARK_FUNC(func_name, ...) \
 { \
-    u64 freq = estimate_cpu_frequency(); \
-    u64 timer_start = read_cpu_timer(); \
+    u64 freq = perf_estimate_cpu_freq(); \
+    u64 timer_start = perf_cpu_timer(); \
     u64 min_time = MAX_U64; \
     u64 count = 0; \
     while(true) { \
-        u64 current_time = read_cpu_timer(); \
+        u64 current_time = perf_cpu_timer(); \
         f64 seconds_elapsed = (current_time - timer_start) / freq; \
         if(seconds_elapsed > 10.0f) break; \
-        u64 start = read_cpu_timer(); \
+        u64 start = perf_cpu_timer(); \
         volatile auto temp = func_name(__VA_ARGS__); \
-        u64 end = read_cpu_timer(); \
+        u64 end = perf_cpu_timer(); \
         u64 elapsed_time = end - start; \
         if(elapsed_time < min_time) { \
             min_time = elapsed_time; \
-            timer_start = read_cpu_timer(); \
+            timer_start = perf_cpu_timer(); \
             print("new min time: %", min_time); \
         } \
         count++; \
@@ -181,21 +181,21 @@ Usage: BENCHMARK_FUNC(func_to_test, input_to_func);
 // if your function returns something you should use BENCHMARK_FUNC
 #define BENCHMARK_VOID_FUNC(func_name, ...) \
 { \
-    u64 freq = estimate_cpu_frequency(); \
-    u64 timer_start = read_cpu_timer(); \
+    u64 freq = perf_estimate_cpu_freq(); \
+    u64 timer_start = perf_cpu_timer(); \
     u64 min_time = MAX_U64; \
     u64 count = 0; \
     while(true) { \
-        u64 current_time = read_cpu_timer(); \
+        u64 current_time = perf_cpu_timer(); \
         f64 seconds_elapsed = (current_time - timer_start) / freq; \
         if(seconds_elapsed > 10.0f) break; \
-        u64 start = read_cpu_timer(); \
+        u64 start = perf_cpu_timer(); \
         func_name(__VA_ARGS__); \
-        u64 end = read_cpu_timer(); \
+        u64 end = perf_cpu_timer(); \
         u64 elapsed_time = end - start; \
         if(elapsed_time < min_time) { \
             min_time = elapsed_time; \
-            timer_start = read_cpu_timer(); \
+            timer_start = perf_cpu_timer(); \
             print("new min time: %", min_time); \
         } \
         count++; \
@@ -222,19 +222,19 @@ do { \
         bool switchup = random_bool(); \
         u64 current_cycles_f1, current_cycles_f2; \
         if (switchup) { \
-            u64 start_f1 = read_cpu_timer(); \
+            u64 start_f1 = perf_cpu_timer(); \
             func1(__VA_ARGS__); \
-            current_cycles_f1 = read_cpu_timer() - start_f1; \
-            u64 start_f2 = read_cpu_timer(); \
+            current_cycles_f1 = perf_cpu_timer() - start_f1; \
+            u64 start_f2 = perf_cpu_timer(); \
             func2(__VA_ARGS__); \
-            current_cycles_f2 = read_cpu_timer() - start_f2; \
+            current_cycles_f2 = perf_cpu_timer() - start_f2; \
         } else { \
-            u64 start_f2 = read_cpu_timer(); \
+            u64 start_f2 = perf_cpu_timer(); \
             func2(__VA_ARGS__); \
-            current_cycles_f2 = read_cpu_timer() - start_f2; \
-            u64 start_f1 = read_cpu_timer(); \
+            current_cycles_f2 = perf_cpu_timer() - start_f2; \
+            u64 start_f1 = perf_cpu_timer(); \
             func1(__VA_ARGS__); \
-            current_cycles_f1 = read_cpu_timer() - start_f1; \
+            current_cycles_f1 = perf_cpu_timer() - start_f1; \
         } \
         if(current_cycles_f1 < min_cycles_f1) min_cycles_f1 = current_cycles_f1; \
         if(current_cycles_f2 < min_cycles_f2) min_cycles_f2 = current_cycles_f2; \
@@ -265,19 +265,19 @@ do { \
         bool switchup = random_bool(); \
         u64 current_cycles_f1, current_cycles_f2; \
         if (switchup) { \
-            u64 start_f1 = read_cpu_timer(); \
+            u64 start_f1 = perf_cpu_timer(); \
             volatile auto temp1 = func1(__VA_ARGS__); \
-            current_cycles_f1 = read_cpu_timer() - start_f1; \
-            u64 start_f2 = read_cpu_timer(); \
+            current_cycles_f1 = perf_cpu_timer() - start_f1; \
+            u64 start_f2 = perf_cpu_timer(); \
             volatile auto temp2 = func2(__VA_ARGS__); \
-            current_cycles_f2 = read_cpu_timer() - start_f2; \
+            current_cycles_f2 = perf_cpu_timer() - start_f2; \
         } else { \
-            u64 start_f2 = read_cpu_timer(); \
+            u64 start_f2 = perf_cpu_timer(); \
             volatile auto temp2 = func2(__VA_ARGS__); \
-            current_cycles_f2 = read_cpu_timer() - start_f2; \
-            u64 start_f1 = read_cpu_timer(); \
+            current_cycles_f2 = perf_cpu_timer() - start_f2; \
+            u64 start_f1 = perf_cpu_timer(); \
             volatile auto temp1 = func1(__VA_ARGS__); \
-            current_cycles_f1 = read_cpu_timer() - start_f1; \
+            current_cycles_f1 = perf_cpu_timer() - start_f1; \
         } \
         if(current_cycles_f1 < min_cycles_f1) min_cycles_f1 = current_cycles_f1; \
         if(current_cycles_f2 < min_cycles_f2) min_cycles_f2 = current_cycles_f2; \

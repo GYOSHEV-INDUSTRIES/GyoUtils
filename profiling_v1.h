@@ -58,11 +58,11 @@ struct time_block {
         this->_old_elapsed_at_root = _anchors[counter].elapsed_inclusive;
         
         _current_parent_index = counter;
-        this->_start = read_cpu_timer();
+        this->_start = perf_cpu_timer();
     }
     
     ~time_block() {
-        u64 total = read_cpu_timer() - this->_start;
+        u64 total = perf_cpu_timer() - this->_start;
         _current_parent_index = this->_parent;
         
         _anchors[this->_parent ].elapsed_exclusive -= total;
@@ -85,7 +85,7 @@ struct time_block {
 #define END_OF_COMPILATION_UNIT static_assert(__COUNTER__ < ANCHORS_AMT, "Number of profile points exceeds size of profiler::Anchors array")
 
 void begin_profile() {
-    _profile_start = read_cpu_timer();
+    _profile_start = perf_cpu_timer();
 }
 
 void pad_right(int to_add) {
@@ -101,7 +101,7 @@ inline u8 _count_digits(u64 x){
 }
 
 void end_and_print_profile() {
-    _profile_end = read_cpu_timer();
+    _profile_end = perf_cpu_timer();
     u64 total_elapsed = _profile_end - _profile_start;
     
     //calculate lengths of texts for vertical formatting
