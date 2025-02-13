@@ -25,7 +25,3 @@ Configuration macros
 #include "profiling_v1.h"
 #include "simple_benchmark.h"
 
-#if _WIN32
-    #include "win64_basic.h"
-    #include "win64_files.h"
-#endif

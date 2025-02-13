@@ -20,7 +20,6 @@ TODO:
         - allocators.h with arena.h / bump.h / circular.h
         - array.h
         - str.h
-        - win64_basic and win64_files
         these are NOT utilities,
         they are just code you need to make the software, basically a new STD.
         
@@ -37,6 +36,8 @@ BREAKING CHANGES:
     > Removed math.h
       Again, this was basically a new std, not some utilities.
       Maybe we will bring back the ACTUAL utilities (sin_turns/cos_turns and hsv_lerp).
+    > Removed win64_basic.h and win64_files.h
+      Again, more non-utilities. Off they go.
 
 first.h:
     > Removed Range(...) macro.
