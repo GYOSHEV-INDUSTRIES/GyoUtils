@@ -318,39 +318,6 @@ int main() {
     // print("works 2: allocated: %, moved: %", allocated, moved);
     
     
-    // Arena ar;
-    // auto* a1 = (int*)arena_alloc(&ar, sizeof(int));
-    // *a1 = 0x12345678;
-    // print(a1);
-    // auto* a2 = (char*)arena_alloc(&ar, sizeof(char));
-    // *a2 = 186;
-    // print(a2);
-    
-    // int header_size = sizeof(ArenaHeader) + DEFAULT_ALIGNMENT % sizeof(ArenaHeader);
-    // u8* a2_middle = (u8*)a2;
-    // u8* a2_start = a2_middle - header_size;
-    // ArenaHeader* h2 = (ArenaHeader*)a2_start;
-    // print("block 2:");
-    // print("---------------");
-    // print(h2->previous_block);
-    // print("---------------");
-    // print(*a2_middle);
-    
-    // auto* h1_expected = h2->previous_block;
-    // u8* a1_middle = (u8*)a1;
-    // u8* a1_start = a1_middle - header_size;
-    // ArenaHeader* h1 = (ArenaHeader*)a1_start;
-    // auto* h1_actual = h1;
-    // print("block 1:");
-    // print("---------------");
-    // print("% (at %, expected %)", h1->previous_block, h1_actual, h1_expected);
-    // print("---------------");
-    // print(*(int*)a1_middle);
-    
-    // arena_free_all(&ar);
-    
-    // print("worked");
-    
     // Array<int> arr; // = make_fixed_array<int>(10);
     // print("initial allocator: %", arr.alloc);
     // array_append(&arr, 1);
