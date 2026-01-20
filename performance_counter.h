@@ -35,12 +35,12 @@ inline u64 perf_cpu_timer() {
 	return __rdtsc();
 }
 
-#else
-
 #ifndef DISABLE_INCLUDES
 	#include <x86intrin.h>
 	#include <sys/time.h>
 #endif
+
+#else
 
 static u64 perf_os_timer_freq() {
 	return 1000000;
