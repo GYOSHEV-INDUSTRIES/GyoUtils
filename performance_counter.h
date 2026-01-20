@@ -15,7 +15,8 @@ Mostly performance counter related functions.
 #ifndef DISABLE_INCLUDES
 	#include <windows.h>
     #ifdef __GNUC__
-	#include <x86intrin.h>
+    #include <x86intrin.h>
+    #include <sys/time.h>
     #endif
 #endif
 
@@ -35,12 +36,6 @@ inline u64 perf_cpu_timer() {
 	return __rdtsc();
 }
 
-#else
-
-#ifndef DISABLE_INCLUDES
-	#include <x86intrin.h>
-	#include <sys/time.h>
-#endif
 
 static u64 perf_os_timer_freq() {
 	return 1000000;
