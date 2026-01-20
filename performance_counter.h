@@ -37,6 +37,8 @@ inline u64 perf_cpu_timer() {
 }
 
 
+#else
+
 static u64 perf_os_timer_freq() {
 	return 1000000;
 }
