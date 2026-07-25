@@ -41,6 +41,9 @@ inline u64 perf_cpu_timer() {
 
 #ifndef DISABLE_INCLUDES
     #include <sys/time.h>
+    #if defined(__x86_64__) || defined(__i386__)
+    #include <x86intrin.h>
+    #endif
 #endif
 
 static u64 perf_os_timer_freq() {
@@ -55,8 +58,22 @@ static u64 perf_os_timer() {
 	return result;
 }
 
+// Fast monotonic counter for profiling. On x86 this is the TSC (rdtsc).
+// On ARM64 there is no userspace-equivalent of the core cycle counter;
+// CNTVCT_EL0 is the architectural virtual timer (fixed frequency, typically
+// ~24 MHz on Apple Silicon). Frequency is still recovered via
+// perf_estimate_cpu_freq(), so seconds come out correct either way.
 inline u64 perf_cpu_timer() {
-    return 0; //TODO(cogno): rdtsc on arm? I don't know which one to use
+#if defined(__aarch64__) || defined(__arm64__)
+    u64 value;
+    __asm__ volatile("mrs %0, cntvct_el0" : "=r"(value));
+    return value;
+#elif defined(__x86_64__) || defined(__i386__)
+    return __rdtsc();
+#else
+    // Last-resort platforms: fall back to the OS timer.
+    return perf_os_timer();
+#endif
 }
 #endif
 
