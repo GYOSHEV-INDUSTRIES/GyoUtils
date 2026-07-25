@@ -112,7 +112,7 @@ inline void printsl_custom() { }
 
 // default behaviour, unknown types prints "(unknown type)", while pointers are printed as such
 template<typename T> void printsl_custom(T v)  { printsl_custom("(unknown type)"); }
-template<typename T> void printsl_custom(T* to_print) {
+template<typename T> void printsl_custom(const T* to_print) {
     union Temp {
         T* ptr;
         u64 u64;
